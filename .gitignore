@@ -1,0 +1,20 @@
+# Credentials - never push to GitHub
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+
+# Test reports and screenshots
+reports/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Test images (add your own locally)
+assets/images/
