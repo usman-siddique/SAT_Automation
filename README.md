@@ -1,4 +1,8 @@
 # SAT Japan - Test Automation Framework
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Playwright](https://img.shields.io/badge/Playwright-Test%20Automation-green)
+![Pytest](https://img.shields.io/badge/Pytest-Test%20Runner-orange)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 An end-to-end test automation framework for the [SAT Japan](https://development.satjapan.info) vehicle selling platform, built with Python, Playwright, and pytest.
 
