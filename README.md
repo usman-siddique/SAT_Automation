@@ -31,21 +31,32 @@ It covers both positive (happy path) and negative (validation) test scenarios, f
 ```
 SAT_Automation/
 ├── assets/
-│   └── images/          # Test images for form uploads
+│   └── images/                # Test images for form uploads
+│
 ├── pages/
-│   ├── login_page.py    # Login page actions
-│   └── sell_page.py     # Sell My Car page actions
+│   ├── auth/
+│   │   └── login_page.py      # Login page actions
+│   │
+│   ├── car_services/
+│   │   ├── car_services_page.py     # Car Services landing page actions
+│   │   └── auction_service_page.py  # Auction Service page actions
+│   │
+│   └── sell_my_car/
+│       └── sell_page.py       # Sell My Car page actions
+│
 ├── reports/
-│   ├── report.html      # Generated HTML test report
-│   └── screenshots/     # Auto-captured screenshots on test failure
+│   ├── report.html            # Generated HTML test report
+│   └── screenshots/           # Auto-captured screenshots on test failure
+│
 ├── tests/
-│   ├── test_sell.py          # Positive test cases
-│   └── test_sell_negative.py # Negative test cases
-├── .env                 # Credentials (not pushed to GitHub)
+│   ├── test_sell.py           # Positive test cases
+│   └── test_sell_negative.py  # Negative test cases
+│
+├── .env                       # Credentials (not pushed to GitHub)
 ├── .gitignore
-├── config.py            # All test data and settings
-├── conftest.py          # Browser setup, login fixture, screenshot on failure
-├── pytest.ini           # pytest configuration
+├── config.py                  # All test data and settings
+├── conftest.py                # Browser setup, login fixture, screenshot on failure
+├── pytest.ini                 # pytest configuration
 └── README.md
 ```
 
