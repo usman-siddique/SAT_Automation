@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from config import PRICE_QUOTE_DATA, PRICE_QUOTE_STEP2_DATA, PRICE_QUOTE_STEP3_DATA
 from config import LIST_ON_SAT_PARAMS, AUCTION_DATA
-from pages.sell_page import SellPage
+from pages.sell_my_car.sell_page import SellPage
 
 
 def setup_sell_page(page):

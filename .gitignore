@@ -9,12 +9,10 @@ __pycache__/
 # Virtual environment
 venv/
 
-# Test reports and screenshots
-reports/
+# Ignore generated test reports but keep folder
+reports/report.html
+reports/screenshots/*
 
 # IDE settings
 .vscode/
 .idea/
-
-# Test images (add your own locally)
-assets/images/

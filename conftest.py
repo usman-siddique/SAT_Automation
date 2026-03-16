@@ -9,7 +9,7 @@
 import pytest
 import os
 from playwright.sync_api import sync_playwright
-from pages.login_page import LoginPage
+from pages.auth.login_page import LoginPage
 
 # --- Base directory (folder where conftest.py lives) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

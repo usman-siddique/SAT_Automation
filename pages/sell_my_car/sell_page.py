@@ -101,7 +101,7 @@ class SellPage:
         select_dropdown(self.page, "original_owner_list", step2_data["original_owner"])
 
         self.page.set_input_files("#imageInput", IMAGES["mitsubishi"])
-        self.page.wait_for_timeout(2000)
+        self.page.locator("#imageInput").wait_for(state="visible")
 
         self.page.get_by_role("button", name="Continue").click()
 
@@ -221,7 +221,7 @@ class SellPage:
         select_dropdown(self.page, "original_owner_list", step2_data["original_owner"])
 
         self.page.set_input_files("#imageInput", IMAGES["mitsubishi"])
-        self.page.wait_for_timeout(2000)
+        self.page.locator("#imageInput").wait_for(state="visible")
 
         self.page.get_by_role("button", name="Continue").click()
 
@@ -271,7 +271,6 @@ class SellPage:
         self.page.locator("#description").fill(data["description"])
 
         self.page.set_input_files("#imageInput", IMAGES[data["images"]])
-        self.page.wait_for_timeout(2000)
 
         self.page.locator("#phone").fill(data["phone"])
         self.page.get_by_role("button", name="Submit").click()
@@ -322,7 +321,6 @@ class SellPage:
         self.page.locator("#description").fill(data["description"])
 
         self.page.set_input_files("#imageInput", IMAGES["suzuki"])
-        self.page.wait_for_timeout(2000)
 
         self.page.locator("#phone").fill(data["phone"])
         self.page.get_by_role("button", name="Submit").click()
