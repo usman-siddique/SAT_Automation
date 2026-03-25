@@ -10,8 +10,8 @@ __pycache__/
 venv/
 
 # Ignore generated test reports but keep folder
-reports/report.html
-reports/screenshots/*
+reports/*
+!reports/.gitkeep
 
 # IDE settings
 .vscode/

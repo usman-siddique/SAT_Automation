@@ -7,6 +7,7 @@
 
 import os
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 # Load values from .env file into environment variables
 load_dotenv()
@@ -164,7 +165,7 @@ AUCTION_DATA = {
     "price": "655000",
     "engine": "1300",
     "transmission": "CVT",
-    "bidding_deadline": "2026-03-18T09:15",
+    "bidding_deadline": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%dT09:15"),
     "description": "Everything is in genuine condition. Condition is as good as a brand-new car.",
     "phone": "+447412000000",
 }
