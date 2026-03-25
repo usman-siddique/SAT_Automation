@@ -53,14 +53,20 @@ SAT_Automation/
 │   └── screenshots/           # Auto-captured screenshots on test failure
 │
 ├── tests/
-│   ├── test_sell.py           # Positive test cases
-│   └── test_sell_negative.py  # Negative test cases
+│   ├── sell_my_car/
+│   │   ├── __init__.py
+│   │   ├── test_sell.py           # Positive test cases
+│   │   └── test_sell_negative.py  # Negative test cases
+│   │
+│   └── car_services/
+│       ├── __init__.py
+│       └── test_auction_service.py  # Auction Service test cases
 │
-├── .env                       # Credentials (not pushed to GitHub)
+├── .env
 ├── .gitignore
-├── config.py                  # All test data and settings
-├── conftest.py                # Browser setup, login fixture, screenshot on failure
-├── pytest.ini                 # pytest configuration
+├── config.py
+├── conftest.py
+├── pytest.ini
 └── README.md
 ```
 
