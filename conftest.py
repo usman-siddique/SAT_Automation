@@ -37,20 +37,21 @@ def is_logged_in(page):
 # ============================================================
 
 @pytest.fixture(scope="session")
-def page():
+def context():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
-        context = browser.new_context(viewport=None)
-        pg = context.new_page()
-        pg.set_default_timeout(30000)
-
-        # Login using LoginPage - all login steps handled in pages/login_page.py
-        LoginPage(pg).login()
-
-        yield pg  # test runs here
-
-        context.close()
+        ctx = browser.new_context(viewport=None)
+        yield ctx
+        ctx.close()
         browser.close()
+
+
+@pytest.fixture(scope="session")
+def page(context):
+    pg = context.new_page()
+    pg.set_default_timeout(30000)
+    LoginPage(pg).login()
+    yield pg
 
 
 # ============================================================
