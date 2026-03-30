@@ -10,12 +10,18 @@ An end-to-end test automation framework for the [SAT Japan](https://development.
 
 ## About the Project
 
-This framework automates the core selling workflows on the SAT Japan platform, including:
+This framework automates the core workflows on the SAT Japan platform, including:
+
+**Sell My Car Module:**
 - Getting a price quote for a vehicle
 - Listing a vehicle for sale
 - Auctioning a vehicle
 
-It covers both positive (happy path) and negative (validation) test scenarios, following the Page Object Model (POM) design pattern for clean and maintainable test code.
+**Car Services Module:**
+- Auction Service - Bid on vehicles
+- Shipping Schedule - Filter and view shipping schedules
+
+It covers both positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean and maintainable test code.
 
 ---
 
@@ -35,32 +41,34 @@ It covers both positive (happy path) and negative (validation) test scenarios, f
 ```
 SAT_Automation/
 ├── assets/
-│   └── images/                # Test images for form uploads
+│ └── images/ # Test images for form uploads
 │
 ├── pages/
-│   ├── auth/
-│   │   └── login_page.py      # Login page actions
-│   │
-│   ├── car_services/
-│   │   ├── car_services_page.py     # Car Services landing page actions
-│   │   └── auction_service_page.py  # Auction Service page actions
-│   │
-│   └── sell_my_car/
-│       └── sell_page.py       # Sell My Car page actions
+│ ├── auth/
+│ │ └── login_page.py # Login page actions
+│ │
+│ ├── car_services/
+│ │ ├── car_services_page.py # Car Services hover menu navigation
+│ │ ├── auction_service_page.py # Auction Service page actions
+│ │ └── shipping_schedule_page.py # Shipping Schedule page actions
+│ │
+│ └── sell_my_car/
+│ └── sell_page.py # Sell My Car page actions
 │
 ├── reports/
-│   ├── report.html            # Generated HTML test report
-│   └── screenshots/           # Auto-captured screenshots on test failure
+│ ├── report.html # Generated HTML test report
+│ └── screenshots/ # Auto-captured screenshots on test failure
 │
 ├── tests/
-│   ├── sell_my_car/
-│   │   ├── __init__.py
-│   │   ├── test_sell.py           # Positive test cases
-│   │   └── test_sell_negative.py  # Negative test cases
-│   │
-│   └── car_services/
-│       ├── __init__.py
-│       └── test_auction_service.py  # Auction Service test cases
+│ ├── sell_my_car/
+│ │ ├── init.py
+│ │ ├── test_sell.py # Positive test cases (8 tests)
+│ │ └── test_sell_negative.py # Negative test cases (3 tests)
+│ │
+│ └── car_services/
+│ ├── init.py
+│ ├── test_auction_service.py # Auction Service test cases (4 tests)
+│ └── test_shipping_schedule.py # Shipping Schedule test cases (5 tests)
 │
 ├── .env
 ├── .gitignore
@@ -141,25 +149,23 @@ pytest SAT_Automation/tests/test_sell.py::test_get_price_quote
 
 ---
 
-## Test Cases
+## Test Cases Summary
 
-### Positive Tests (test_sell.py)
+### Sell My Car Module (11 tests)
 
-| Test | Description |
-|------|-------------|
-| test_get_price_quote | Completes all 3 steps of Get Price Quote and verifies success |
-| test_list_on_sat[list_data0] | Lists a Toyota AQUA from United Kingdom |
-| test_list_on_sat[list_data1] | Lists a Nissan Fairlady Z from Thailand |
-| test_list_on_sat[list_data2] | Lists a Honda FIT from Australia |
-| test_auction_with_sat | Submits a vehicle for auction and verifies success |
+| Test File | Test Count | Description |
+|-----------|------------|-------------|
+| test_sell.py | 8 | Positive tests (Price Quote, List on SAT with 3 params, Auction) |
+| test_sell_negative.py | 3 | Negative tests (empty fields, partial validation, terms unchecked) |
 
-### Negative Tests (test_sell_negative.py)
+### Car Services Module (9 tests)
 
-| Test | Description |
-|------|-------------|
-| test_get_price_quote_empty_fields | All fields empty - verifies all error messages appear |
-| test_get_price_quote_partial_validation | Only Year filled - verifies Make and Model errors appear |
-| test_get_price_quote_terms_validation | Terms checkbox unchecked - verifies terms error appears |
+| Test File | Test Count | Description |
+|-----------|------------|-------------|
+| test_auction_service.py | 4 | Auction Service - vehicle search and bid submission |
+| test_shipping_schedule.py | 5 | Shipping Schedule - page verification, dropdown filters, date filters |
+
+### Total Tests: 20
 
 ---
 
@@ -167,11 +173,13 @@ pytest SAT_Automation/tests/test_sell.py::test_get_price_quote
 
 - Page Object Model (POM) - Each page has its own class
 - Secure credentials - Login details stored in .env file, never hardcoded
-- Relative paths - Works on any machine without changing file paths
 - Session-based login - Logs in once and reuses session across all tests
-- Auto screenshots - Captures and attaches screenshots on any test failure
-- Parametrized tests - List on SAT runs with 3 different data sets automatically
+- Auto screenshots - Captures screenshots on any test failure
+- Parameterized tests - List on SAT runs with 3 different data sets; Shipping Schedule runs with valid/invalid scenarios
 - Positive and negative tests - Covers both happy path and validation scenarios
+- Proper waits - No hardcoded sleeps; uses Playwright's built-in wait methods
+- Select2 dropdown handling - Custom handling for Select2 dropdowns
+- Datepicker handling - Uses `:visible` selector for dynamic calendars
 
 ---
 
@@ -179,7 +187,7 @@ pytest SAT_Automation/tests/test_sell.py::test_get_price_quote
 
 After running tests, open the HTML report:
 ```
-SAT_Automation/reports/report.html
+reports/report.html
 ```
 
 The report includes pass/fail status, test duration, and screenshots for any failed test.
