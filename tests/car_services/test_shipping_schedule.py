@@ -98,7 +98,7 @@ def test_all_date_filters(page, scenario):
     shipping.select_date(".arrival_date_to", 30)
     shipping.click_search()
     
-    # Check based on expected outcome hghggf
+    # Check based on expected outcome
     if scenario["expected"] == "no_results":
         shipping.verify_no_results()
         print("✅ No results found - test passed (filters returned empty)")
