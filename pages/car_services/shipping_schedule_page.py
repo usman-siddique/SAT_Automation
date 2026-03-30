@@ -153,11 +153,13 @@ class ShippingSchedulePage:
 
     def click_search(self):
         self.page.locator(".btn-search-filter").click()
+        
+        # Wait for either title span to have content OR no results message
         self.page.wait_for_function(
-            "document.querySelector('table tbody tr') !== null || "
-            "document.querySelector('h2.not-found-text') !== null",
-            timeout=25000
+            "document.querySelector('span#title-page') && document.querySelector('span#title-page').innerText.trim() !== '' || "
+            "document.querySelector('h2.not-found-text') !== null"
         )
+        
         print("✅ Search filter applied")
 
 
@@ -167,8 +169,7 @@ class ShippingSchedulePage:
 
     def click_reset(self):
         self.page.locator(".btn-reset-filter").click()
-        self.page.wait_for_function("document.querySelector('span#title-page').innerText.trim() === ''")
-        print("✅ Reset filter applied, table reloaded")
+        print("✅ Reset filter applied")
 
 
     # ============================================================

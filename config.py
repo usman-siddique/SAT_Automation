@@ -169,3 +169,28 @@ AUCTION_DATA = {
     "description": "Everything is in genuine condition. Condition is as good as a brand-new car.",
     "phone": "+447412000000",
 }
+
+# -------------------------------------------------------
+# Shipping Schedule - Test Data (Multiple Scenarios)
+# -------------------------------------------------------
+SHIPPING_SCHEDULE_SCENARIOS = [
+    {
+        "name": "Valid filters - shows results",
+        "departure_port": "Yokohama",
+        "region": "Africa",
+        "arrival_port": "Durban",
+        "ship_name": "Orion Leader",
+        "expected": "results"
+    },
+    {
+        "name": "Invalid filters - shows no results",
+        "departure_port": "Moji",
+        "region": "Chile",
+        "arrival_port": "Iquique",
+        "ship_name": "Orion Leader",
+        "expected": "no_results"
+    },
+]
+
+# Keep original single data for backward compatibility
+SHIPPING_SCHEDULE_DATA = SHIPPING_SCHEDULE_SCENARIOS[0]
