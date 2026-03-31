@@ -1,0 +1,64 @@
+@echo off
+echo ========================================
+echo SAT Automation Test Runner
+echo ========================================
+echo.
+echo 1. Run all tests
+echo 2. Run Sell My Car tests
+echo 3. Run Car Services tests
+echo 4. Run Shipping Schedule tests
+echo 5. Run Insurance Services tests
+echo 6. Run Finance Service tests
+echo 7. Run Non Stolen Vehicle tests
+echo 8. Exit
+echo.
+set /p choice="Enter your choice (1-8): "
+
+if "%choice%"=="1" goto all
+if "%choice%"=="2" goto sell
+if "%choice%"=="3" goto car_services
+if "%choice%"=="4" goto shipping
+if "%choice%"=="5" goto insurance
+if "%choice%"=="6" goto finance
+if "%choice%"=="7" goto non_stolen
+if "%choice%"=="8" goto end
+
+:all
+echo Running all tests...
+pytest -v -s
+goto end
+
+:sell
+echo Running Sell My Car tests...
+pytest tests/sell_my_car/ -v -s
+goto end
+
+:car_services
+echo Running Car Services tests...
+pytest tests/car_services/ -v -s
+goto end
+
+:shipping
+echo Running Shipping Schedule tests...
+pytest tests/car_services/test_shipping_schedule.py -v -s
+goto end
+
+:insurance
+echo Running Insurance Services tests...
+pytest tests/car_services/test_insurance_services.py -v -s
+goto end
+
+:finance
+echo Running Finance Service tests...
+pytest tests/car_services/test_finance_service.py -v -s
+goto end
+
+:non_stolen
+echo Running Non Stolen Vehicle tests...
+pytest tests/car_services/test_non_stolen_vehicle.py -v -s
+goto end
+
+:end
+echo.
+echo Done!
+pause
