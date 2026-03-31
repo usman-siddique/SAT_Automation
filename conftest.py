@@ -10,6 +10,7 @@ import pytest
 import os
 from playwright.sync_api import sync_playwright
 from pages.auth.login_page import LoginPage
+from config import BASE_URL
 
 # --- Base directory (folder where conftest.py lives) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -46,12 +47,31 @@ def context():
         browser.close()
 
 
-@pytest.fixture(scope="session")
+# ============================================================
+# Fixture: For tests that require login
+# ============================================================
+
+@pytest.fixture(scope="function")
 def page(context):
     pg = context.new_page()
     pg.set_default_timeout(30000)
     LoginPage(pg).login()
     yield pg
+    pg.close()
+
+
+# ============================================================
+# Fixture: For tests that do NOT require login
+# (Static pages like Insurance, Storage, Finance, Car Carrier, etc.)
+# ============================================================
+
+@pytest.fixture(scope="function")
+def page_no_login(context):
+    pg = context.new_page()
+    pg.set_default_timeout(30000)
+    pg.goto(BASE_URL, wait_until="domcontentloaded")
+    yield pg
+    pg.close()
 
 
 # ============================================================
@@ -66,7 +86,8 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
 
     if report.when == "call" and report.failed:
-        page = item.funcargs.get("page")
+        # Try to get page from either 'page' or 'page_no_login' fixture
+        page = item.funcargs.get("page") or item.funcargs.get("page_no_login")
 
         if page:
             try:

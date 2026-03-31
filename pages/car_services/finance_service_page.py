@@ -70,7 +70,7 @@ class FinanceServicePage:
         
         # Click play button
         play_button.click()
-        print("🎬 Play button clicked")
+        print("✅ Play button clicked")
         
         # Wait 5 seconds to observe video playing
         self.page.wait_for_timeout(5000)

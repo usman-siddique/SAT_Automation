@@ -13,58 +13,26 @@ from pages.car_services.car_services_page import CarServicesPage
 from pages.car_services.storage_service_page import StorageServicePage
 
 
-def setup_storage_page(page):
-    CarServicesPage(page).go_to_storage_service()
-    return StorageServicePage(page)
+def setup_storage_page(page_no_login):
+    CarServicesPage(page_no_login).go_to_storage_service()
+    return StorageServicePage(page_no_login)
 
 
 # ============================================================
-# Test 1: Verify Storage Service page loads with main heading
+# Test: Verify all Storage Service page elements
 # ============================================================
 
-def test_storage_page_loads(page):
+def test_storage_service_all(page_no_login):
     print("\n" + "="*60)
-    print("🚢 TEST 1: STORAGE SERVICE PAGE LOAD")
+    print("✅ STORAGE SERVICE - COMPLETE VERIFICATION")
     print("="*60)
     
-    storage = setup_storage_page(page)
+    storage = setup_storage_page(page_no_login)
+    
+    # Verify all elements on single page
     storage.verify_main_heading()
-
-
-# ============================================================
-# Test 2: Verify Countries section heading
-# ============================================================
-
-def test_countries_section(page):
-    print("\n" + "="*60)
-    print("🌍 TEST 2: COUNTRIES SECTION")
-    print("="*60)
-    
-    storage = setup_storage_page(page)
     storage.verify_countries_heading()
-
-
-# ============================================================
-# Test 3: Verify Benefits section heading
-# ============================================================
-
-def test_benefits_section(page):
-    print("\n" + "="*60)
-    print("⭐ TEST 3: BENEFITS SECTION")
-    print("="*60)
-    
-    storage = setup_storage_page(page)
     storage.verify_benefits_heading()
-
-
-# ============================================================
-# Test 4: Verify Why Store section heading
-# ============================================================
-
-def test_why_store_section(page):
-    print("\n" + "="*60)
-    print("❓ TEST 4: WHY STORE SECTION")
-    print("="*60)
-    
-    storage = setup_storage_page(page)
     storage.verify_why_store_heading()
+    
+    print("\n✅ STORAGE SERVICE COMPLETE")

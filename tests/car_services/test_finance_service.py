@@ -13,21 +13,21 @@ from pages.car_services.car_services_page import CarServicesPage
 from pages.car_services.finance_service_page import FinanceServicePage
 
 
-def setup_finance_page(page):
-    CarServicesPage(page).go_to_finance_service()
-    return FinanceServicePage(page)
+def setup_finance_page(page_no_login):
+    CarServicesPage(page_no_login).go_to_finance_service()
+    return FinanceServicePage(page_no_login)
 
 
 # ============================================================
 # Test 1: Verify all Finance Service page elements
 # ============================================================
 
-def test_finance_service_all(page):
+def test_finance_service_all(page_no_login):
     print("\n" + "="*60)
-    print("💰 FINANCE SERVICE - COMPLETE VERIFICATION")
+    print("✅ FINANCE SERVICE - COMPLETE VERIFICATION")
     print("="*60)
     
-    finance = setup_finance_page(page)
+    finance = setup_finance_page(page_no_login)
     
     # Verify banner
     finance.verify_banner_image()
