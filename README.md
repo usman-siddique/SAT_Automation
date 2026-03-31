@@ -42,6 +42,7 @@ It covers both positive and negative test scenarios, following the Page Object M
 | Playwright | Browser automation |
 | pytest | Test runner |
 | pytest-html | HTML test reports |
+| pytest-rerunfailures | Auto-retry failed tests |
 | python-dotenv | Secure credentials management |
 
 ---
@@ -131,7 +132,7 @@ source venv/bin/activate
 
 ### 3. Install dependencies
 ```
-pip install playwright pytest pytest-html python-dotenv
+pip install playwright pytest pytest-html pytest-rerunfailures python-dotenv
 playwright install
 ```
 
@@ -225,6 +226,18 @@ The report includes pass/fail status, test duration, and screenshots for any fai
 
 ---
 
+## pytest Configuration
+The pytest.ini file includes:
+```
+[pytest]
+testpaths = tests
+addopts = -v --html=reports/report.html --self-contained-html --reruns 2 --reruns-delay 2
+```
+--reruns 2 - Retry failed tests up to 2 times
+
+--reruns-delay 2 - Wait 2 seconds between retries
+
+---
 ## Future Plans
 
 - Add negative test cases for List on SAT and Auction with SAT
