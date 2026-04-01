@@ -1,4 +1,5 @@
 # SAT Japan - Test Automation Framework
+
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Playwright](https://img.shields.io/badge/Playwright-Test%20Automation-green)
 ![Pytest](https://img.shields.io/badge/Pytest-Test%20Runner-orange)
@@ -20,6 +21,14 @@ This framework automates the core workflows on the SAT Japan platform, including
 **Car Services Module:**
 - Auction Service - Bid on vehicles
 - Shipping Schedule - Filter and view shipping schedules
+- Insurance Services - Static page verification
+- Storage Service - Static page verification
+- Finance Service - Static page with video
+- Car Carrier Service - Static page verification
+- Customs Clearance - Static page verification
+- Pre Export Inspection - Static page with PDF download
+- Marine Insurance - Static page verification
+- Non Stolen Vehicle - Form submission with payment
 
 It covers both positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean and maintainable test code.
 
@@ -33,7 +42,13 @@ It covers both positive and negative test scenarios, following the Page Object M
 | Playwright | Browser automation |
 | pytest | Test runner |
 | pytest-html | HTML test reports |
+| pytest-rerunfailures | Auto-retry failed tests |
 | python-dotenv | Secure credentials management |
+
+---
+
+## Project Structure
+
 
 ---
 
@@ -50,7 +65,15 @@ SAT_Automation/
 │ ├── car_services/
 │ │ ├── car_services_page.py # Car Services hover menu navigation
 │ │ ├── auction_service_page.py # Auction Service page actions
-│ │ └── shipping_schedule_page.py # Shipping Schedule page actions
+│ │ ├── shipping_schedule_page.py # Shipping Schedule page actions
+│ │ ├── insurance_services_page.py # Insurance Services page actions
+│ │ ├── storage_service_page.py # Storage Service page actions
+│ │ ├── finance_service_page.py # Finance Service page actions
+│ │ ├── car_carrier_page.py # Car Carrier Service page actions
+│ │ ├── customs_clearance_page.py # Customs Clearance page actions
+│ │ ├── pre_export_inspection_page.py # Pre Export Inspection page actions
+│ │ ├── marine_insurance_page.py # Marine Insurance page actions
+│ │ └── non_stolen_vehicle_page.py # Non Stolen Vehicle page actions
 │ │
 │ └── sell_my_car/
 │ └── sell_page.py # Sell My Car page actions
@@ -62,13 +85,21 @@ SAT_Automation/
 ├── tests/
 │ ├── sell_my_car/
 │ │ ├── init.py
-│ │ ├── test_sell.py # Positive test cases (8 tests)
+│ │ ├── test_sell.py # Positive test cases (5 tests)
 │ │ └── test_sell_negative.py # Negative test cases (3 tests)
 │ │
 │ └── car_services/
 │ ├── init.py
 │ ├── test_auction_service.py # Auction Service test cases (4 tests)
-│ └── test_shipping_schedule.py # Shipping Schedule test cases (5 tests)
+│ ├── test_shipping_schedule.py # Shipping Schedule test cases (1 combined)
+│ ├── test_insurance_services.py # Insurance Services test cases (1 combined)
+│ ├── test_storage_service.py # Storage Service test cases (1 combined)
+│ ├── test_finance_service.py # Finance Service test cases (1 combined)
+│ ├── test_car_carrier.py # Car Carrier Service test cases (1 combined)
+│ ├── test_customs_clearance.py # Customs Clearance test cases (1 combined)
+│ ├── test_pre_export_inspection.py # Pre Export Inspection test cases (1 combined)
+│ ├── test_marine_insurance.py # Marine Insurance test cases (1 combined)
+│ └── test_non_stolen_vehicle.py # Non Stolen Vehicle test cases (5 tests)
 │
 ├── .env
 ├── .gitignore
@@ -101,7 +132,7 @@ source venv/bin/activate
 
 ### 3. Install dependencies
 ```
-pip install playwright pytest pytest-html python-dotenv
+pip install playwright pytest pytest-html pytest-rerunfailures python-dotenv
 playwright install
 ```
 
@@ -127,46 +158,47 @@ Place your test images inside SAT_Automation/assets/images/. Required images:
 
 ## How to Run Tests
 
-Run all tests:
+### Run all tests:
 ```
-pytest
+pytest -v -s
 ```
-
-Run only positive tests:
+### Run specific modules:
+#### Sell My Car module
 ```
-pytest SAT_Automation/tests/test_sell.py
+pytest tests/sell_my_car/ -v -s
 ```
-
-Run only negative tests:
+#### Car Services module
 ```
-pytest SAT_Automation/tests/test_sell_negative.py
+pytest tests/car_services/ -v -s
 ```
-
-Run a single specific test:
+#### Using batch files (Windows):
 ```
-pytest SAT_Automation/tests/test_sell.py::test_get_price_quote
+.\run_tests.bat
 ```
-
 ---
 
 ## Test Cases Summary
 
-### Sell My Car Module (11 tests)
+| Module | Test File | Tests | Description |
+|--------|-----------|-------|-------------|
+| **Sell My Car** | `test_sell.py` | 5 | Positive tests (Price Quote, List on SAT with 3 params, Auction) |
+| | `test_sell_negative.py` | 3 | Negative tests (empty fields, partial validation, terms unchecked) |
+| **Car Services** | `test_auction_service.py` | 4 | Auction Service - vehicle search and bid submission |
+| | `test_shipping_schedule.py` | 1 | Shipping Schedule - filters, date picker, table validation |
+| | `test_insurance_services.py` | 1 | Insurance Services - static page content verification |
+| | `test_storage_service.py` | 1 | Storage Service - static page content verification |
+| | `test_finance_service.py` | 1 | Finance Service - page content with video play |
+| | `test_car_carrier.py` | 1 | Car Carrier Service - static page with images |
+| | `test_customs_clearance.py` | 1 | Customs Clearance - static page content verification |
+| | `test_pre_export_inspection.py` | 1 | Pre Export Inspection - static page with PDF download |
+| | `test_marine_insurance.py` | 1 | Marine Insurance - static page content verification |
+| | `test_non_stolen_vehicle.py` | 5 | Non Stolen Vehicle - form submission (1 positive, 4 negative) |
+| **Total** | | **25** | |
 
-| Test File | Test Count | Description |
-|-----------|------------|-------------|
-| test_sell.py | 8 | Positive tests (Price Quote, List on SAT with 3 params, Auction) |
-| test_sell_negative.py | 3 | Negative tests (empty fields, partial validation, terms unchecked) |
+### Module Breakdown
 
-### Car Services Module (9 tests)
-
-| Test File | Test Count | Description |
-|-----------|------------|-------------|
-| test_auction_service.py | 4 | Auction Service - vehicle search and bid submission |
-| test_shipping_schedule.py | 5 | Shipping Schedule - page verification, dropdown filters, date filters |
-
-### Total Tests: 20
-
+- **Sell My Car:** 8 tests (5 positive + 3 negative)
+- **Car Services:** 17 tests (10 static pages + 7 dynamic/interactive)
 ---
 
 ## Key Features
@@ -194,6 +226,18 @@ The report includes pass/fail status, test duration, and screenshots for any fai
 
 ---
 
+## pytest Configuration
+The pytest.ini file includes:
+```
+[pytest]
+testpaths = tests
+addopts = -v --html=reports/report.html --self-contained-html --reruns 2 --reruns-delay 2
+```
+--reruns 2 - Retry failed tests up to 2 times
+
+--reruns-delay 2 - Wait 2 seconds between retries
+
+---
 ## Future Plans
 
 - Add negative test cases for List on SAT and Auction with SAT
