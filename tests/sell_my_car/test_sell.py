@@ -1,5 +1,5 @@
 # ============================================================
-# tests/test_sell.py
+# tests/sell_my_car/test_sell.py
 #
 # HOW TO RUN:
 #   pytest SAT_Automation/tests/test_sell.py -v --html=SAT_Automation/reports/report.html

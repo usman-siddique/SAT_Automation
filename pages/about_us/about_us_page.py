@@ -106,6 +106,7 @@ class AboutUsPage:
         self.page.locator(".glance--1 .glance-track").wait_for(state="visible")
         assert self.page.locator(".glance--1 .glance-track").is_visible(), \
             "❌ Glance slider 1 not visible"
+        self.page.locator(".glance--2 .glance-track").wait_for(state="visible")   # add this line
         assert self.page.locator(".glance--2 .glance-track").is_visible(), \
             "❌ Glance slider 2 not visible"
 

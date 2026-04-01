@@ -47,9 +47,11 @@ class LoyaltyProgramPage:
         assert sign_up_btn.is_visible(), "❌ Sign Up button not visible"
 
         sign_up_btn.click()
-        self.page.wait_for_url("**/login", wait_until="domcontentloaded")
+        self.page.locator("#login_email").wait_for(state="visible")
         assert "login" in self.page.url, "❌ Sign Up did not redirect to /login"
 
+        # Return to a stable page so next test starts clean
+        self.page.goto(f"{BASE_URL}", wait_until="domcontentloaded")
         print("✅ Loyalty Program logged out state verified")
 
 
@@ -60,9 +62,17 @@ class LoyaltyProgramPage:
     # ============================================================
 
     def verify_logged_in_state(self):
-        self.page.goto(f"{BASE_URL}/loyalty-program", wait_until="domcontentloaded")
+        # Wait for the dashboard to be fully loaded (Sell My Car link is a reliable indicator)
+        self.page.get_by_role("link", name="Sell My Car").wait_for(state="visible")
 
-        # Welcome message - dynamic text, verify it contains expected static part
+        # Navigate to Loyalty Program via the About Us hover menu (stable)
+        self.page.locator("p.cnm-cls", has_text="About Us").hover()
+        link = self.page.locator(".dropdown_content_header").get_by_role("link", name="Loyalty Program", exact=True)
+        link.wait_for(state="visible")
+        link.click()
+        self.page.wait_for_url("**/loyalty-program", wait_until="domcontentloaded")
+
+        # Verify logged-in welcome message
         welcome = self.page.locator("h2.login-sat-user")
         welcome.wait_for(state="visible")
         assert welcome.is_visible(), "❌ Welcome message not visible"
