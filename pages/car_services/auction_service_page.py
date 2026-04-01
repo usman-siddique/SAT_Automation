@@ -25,12 +25,20 @@ class AuctionServicePage:
 
     def select_destination_dropdown(self, block_id, li_class, value):
         block = self.page.locator(f"#{block_id}")
-        block.locator("button.satSelectBtn").click()
-
-        item = block.locator(f"li.{li_class}", has_text=value)
-        item.wait_for(state="visible")
-        item.scroll_into_view_if_needed()
-        item.click()
+        
+        # Retry up to 2 times if dropdown fails
+        for attempt in range(2):
+            try:
+                block.locator("button.satSelectBtn").click()
+                item = block.locator(f"li.{li_class}", has_text=value)
+                item.wait_for(state="visible", timeout=5000)
+                item.scroll_into_view_if_needed()
+                item.click()
+                return
+            except:
+                if attempt == 1:
+                    raise
+                self.page.wait_for_timeout(1000)
 
 
     # ============================================================

@@ -86,19 +86,22 @@ class ShippingSchedulePage:
         
         if container_id == "select2-arrival_port-container":
             option = self.page.locator(".select2-results__option", has_text=value)
-            option.wait_for(state="visible", timeout=5000)
+            option.wait_for(state="visible")
             option.click()
-            self.page.wait_for_timeout(500)  # Wait for selection to register
+            # Wait for selection to be reflected in the dropdown display
+            selected = self.page.locator(f"#{container_id} span.select2-selection__rendered")
+            selected.wait_for(state="visible")
         else:
             search_input = self.page.locator(".select2-search__field")
             search_input.wait_for(state="visible")
             search_input.fill(value)
-            self.page.wait_for_timeout(500)
             
             option = self.page.locator(".select2-results__option", has_text=value)
-            option.wait_for(state="visible", timeout=5000)
+            option.wait_for(state="visible")
             option.click()
-            self.page.wait_for_timeout(500)
+            # Wait for selection to be reflected
+            selected = self.page.locator(f"#{container_id} span.select2-selection__rendered")
+            selected.wait_for(state="visible")
         
         print(f"✅ {container_id} selected - {value}")
 
