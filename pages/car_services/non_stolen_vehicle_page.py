@@ -145,7 +145,7 @@ class NonStolenVehiclePage:
         # Card number
         if card_number:
             card_input = stripe_iframe.locator("input[name='cardnumber']")
-            card_input.wait_for(state="visible", timeout=10000)
+            card_input.wait_for(state="visible", timeout=30000)  # Increase from 10s to 30s
             card_input.fill(card_number)
         
         # Expiry date

@@ -6,22 +6,24 @@ echo.
 echo 1. Run all tests
 echo 2. Run Sell My Car tests
 echo 3. Run Car Services tests
-echo 4. Run Shipping Schedule tests
-echo 5. Run Insurance Services tests
-echo 6. Run Finance Service tests
-echo 7. Run Non Stolen Vehicle tests
-echo 8. Exit
+echo 4. Run About Us tests
+echo 5. Run Shipping Schedule tests
+echo 6. Run Insurance Services tests
+echo 7. Run Finance Service tests
+echo 8. Run Non Stolen Vehicle tests
+echo 9. Exit
 echo.
-set /p choice="Enter your choice (1-8): "
+set /p choice="Enter your choice (1-9): "
 
 if "%choice%"=="1" goto all
 if "%choice%"=="2" goto sell
 if "%choice%"=="3" goto car_services
-if "%choice%"=="4" goto shipping
-if "%choice%"=="5" goto insurance
-if "%choice%"=="6" goto finance
-if "%choice%"=="7" goto non_stolen
-if "%choice%"=="8" goto end
+if "%choice%"=="4" goto about_us
+if "%choice%"=="5" goto shipping
+if "%choice%"=="6" goto insurance
+if "%choice%"=="7" goto finance
+if "%choice%"=="8" goto non_stolen
+if "%choice%"=="9" goto end
 
 :all
 echo Running all tests...
@@ -36,6 +38,11 @@ goto end
 :car_services
 echo Running Car Services tests...
 pytest tests/car_services/ -v -s
+goto end
+
+:about_us
+echo Running About Us tests...
+pytest tests/about_us/ -v -s
 goto end
 
 :shipping
