@@ -78,32 +78,59 @@ class ShippingSchedulePage:
 
 
     # ============================================================
-    # Helper: Select value from Select2 dropdown
+    # Helper: Select value from Select2 dropdown (for Departure Port, Region, Ship Name)
     # ============================================================
 
     def select_select2_dropdown(self, container_id, value):
         self.page.locator(f"#{container_id}").click()
-        
-        if container_id == "select2-arrival_port-container":
-            option = self.page.locator(".select2-results__option", has_text=value)
-            option.wait_for(state="visible")
-            option.click()
-            # Wait for selection to be reflected in the dropdown display
-            selected = self.page.locator(f"#{container_id} span.select2-selection__rendered")
-            selected.wait_for(state="visible")
-        else:
-            search_input = self.page.locator(".select2-search__field")
-            search_input.wait_for(state="visible")
-            search_input.fill(value)
-            
-            option = self.page.locator(".select2-results__option", has_text=value)
-            option.wait_for(state="visible")
-            option.click()
-            # Wait for selection to be reflected
-            selected = self.page.locator(f"#{container_id} span.select2-selection__rendered")
-            selected.wait_for(state="visible")
-        
+
+        search_input = self.page.locator(".select2-search__field")
+        search_input.wait_for(state="visible")
+        search_input.click()
+        search_input.fill(value)
+
+        option = self.page.locator(".select2-results__option", has_text=value)
+        option.wait_for(state="visible")
+        option.click()
+
+        # Wait for dropdown to fully close before proceeding
+        self.page.locator(".select2-results__options").wait_for(state="hidden")
         print(f"✅ {container_id} selected - {value}")
+
+
+    # ============================================================
+    # Action: Select Arrival Port (separate method with fix for search issue)
+    # ============================================================
+
+    def select_arrival_port(self, value):
+        # Click to open dropdown
+        dropdown = self.page.locator("#select2-arrival_port-container")
+        dropdown.click()
+
+        # Get search input
+        search_input = self.page.locator(".select2-search__field")
+        search_input.wait_for(state="visible")
+        
+        # Focus the search input first
+        search_input.focus()
+        
+        # Clear any existing text
+        search_input.click()
+        search_input.press("Control+a")
+        search_input.press("Backspace")
+        
+        # Type slowly to trigger events
+        for char in value:
+            search_input.type(char, delay=50)
+        
+        # Wait for options and select
+        option = self.page.locator(".select2-results__option", has_text=value)
+        option.wait_for(state="visible", timeout=10000)
+        option.click()
+
+        # Wait for dropdown to close
+        self.page.locator(".select2-results__options").wait_for(state="hidden")
+        print(f"✅ select2-arrival_port-container selected - {value}")
 
 
     # ============================================================
@@ -135,14 +162,6 @@ class ShippingSchedulePage:
 
 
     # ============================================================
-    # Action: Select Arrival Port
-    # ============================================================
-
-    def select_arrival_port(self, value):
-        self.select_select2_dropdown("select2-arrival_port-container", value)
-
-
-    # ============================================================
     # Action: Select Ship Name
     # ============================================================
 
@@ -152,17 +171,15 @@ class ShippingSchedulePage:
 
     # ============================================================
     # Action: Click Search
+    # Waits for results or no-results message to confirm search completed
     # ============================================================
 
     def click_search(self):
         self.page.locator(".btn-search-filter").click()
-        
-        # Wait for either title span to have content OR no results message
         self.page.wait_for_function(
-            "document.querySelector('span#title-page') && document.querySelector('span#title-page').innerText.trim() !== '' || "
+            "document.querySelector('span#title-page')?.innerText?.trim() !== '' || "
             "document.querySelector('h2.not-found-text') !== null"
         )
-        
         print("✅ Search filter applied")
 
 
@@ -172,6 +189,8 @@ class ShippingSchedulePage:
 
     def click_reset(self):
         self.page.locator(".btn-reset-filter").click()
+        # Wait for table to reload after reset
+        self.page.locator("table tbody tr:has-text('Ship Name')").first.wait_for(state="visible")
         print("✅ Reset filter applied")
 
 
@@ -180,21 +199,16 @@ class ShippingSchedulePage:
     # ============================================================
 
     def verify_filter_results(self, expected_title_text=None):
-        """Verifies filter results - either title contains text, or table loads, or no results"""
-        
-        # Check if no results message appears
         if self.page.locator("h2.not-found-text").is_visible():
             self.verify_no_results()
             return False
-        
-        # Check if title span has expected text
+
         if expected_title_text:
             try:
                 self.verify_title_contains(expected_title_text)
                 return True
             except:
                 pass
-        
-        # Fallback: verify table loaded
+
         self.verify_table_loads()
         return True

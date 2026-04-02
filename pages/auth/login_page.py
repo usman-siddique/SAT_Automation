@@ -49,4 +49,7 @@ class LoginPage:
         # Wait for Sell My Car link to confirm login success
         self.page.get_by_role("link", name="Sell My Car").wait_for(state="visible")
 
+        # Wait for all redirects to fully complete before any navigation
+        self.page.wait_for_load_state("networkidle")
+
         print("✅ Login: PASS")

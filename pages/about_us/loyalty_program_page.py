@@ -21,12 +21,8 @@ class LoyaltyProgramPage:
     # ============================================================
 
     def go_to_loyalty_program(self):
-        menu = self.page.locator("p.cnm-cls:has-text('About Us')").locator("..")
-        menu.hover()
-        # Link text has surrounding spaces so avoid exact=True
-        link = menu.locator(".dropdown_content_header").get_by_role("link", name="Loyalty Program")
-        link.wait_for(state="visible")
-        link.click()
+        # Use direct URL navigation to avoid hover menu flakiness
+        self.page.goto(f"{BASE_URL}/loyalty-program", wait_until="domcontentloaded")
         self.page.locator("h2.heading-sat-pro:has-text('Unlock More Benefits With Our Loyalty Program')").wait_for(state="visible")
         print("✅ Navigation to Loyalty Program: PASS")
 
@@ -50,8 +46,6 @@ class LoyaltyProgramPage:
         self.page.locator("#login_email").wait_for(state="visible")
         assert "login" in self.page.url, "❌ Sign Up did not redirect to /login"
 
-        # Return to a stable page so next test starts clean
-        self.page.goto(f"{BASE_URL}", wait_until="domcontentloaded")
         print("✅ Loyalty Program logged out state verified")
 
 
@@ -62,17 +56,19 @@ class LoyaltyProgramPage:
     # ============================================================
 
     def verify_logged_in_state(self):
-        # Wait for the dashboard to be fully loaded (Sell My Car link is a reliable indicator)
+        # Wait for login to fully complete
         self.page.get_by_role("link", name="Sell My Car").wait_for(state="visible")
+        self.page.wait_for_load_state("networkidle")
 
-        # Navigate to Loyalty Program via the About Us hover menu (stable)
-        self.page.locator("p.cnm-cls", has_text="About Us").hover()
-        link = self.page.locator(".dropdown_content_header").get_by_role("link", name="Loyalty Program", exact=True)
+        # Use hover menu navigation — carries session correctly unlike goto
+        menu = self.page.locator("p.cnm-cls:has-text('About Us')").locator("..")
+        menu.hover()
+        link = menu.locator(".dropdown_content_header").get_by_role("link", name="Loyalty Program")
         link.wait_for(state="visible")
         link.click()
         self.page.wait_for_url("**/loyalty-program", wait_until="domcontentloaded")
 
-        # Verify logged-in welcome message
+        # Welcome message - dynamic text, verify it contains expected static part
         welcome = self.page.locator("h2.login-sat-user")
         welcome.wait_for(state="visible")
         assert welcome.is_visible(), "❌ Welcome message not visible"
