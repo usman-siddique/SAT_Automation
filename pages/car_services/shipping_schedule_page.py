@@ -176,6 +176,8 @@ class ShippingSchedulePage:
 
     def click_search(self):
         self.page.locator(".btn-search-filter").click()
+        # Wait for network to settle after search
+        self.page.wait_for_load_state("networkidle")
         self.page.wait_for_function(
             "document.querySelector('span#title-page')?.innerText?.trim() !== '' || "
             "document.querySelector('h2.not-found-text') !== null"
