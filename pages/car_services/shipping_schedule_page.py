@@ -141,10 +141,11 @@ class ShippingSchedulePage:
         self.page.locator(input_locator).click()
         calendar = self.page.locator(".container__main:visible")
         calendar.wait_for(state="visible")
+        # Wait for at least one day element to be present
+        calendar.locator(".day-item").first.wait_for(state="visible")
         calendar.locator(".day-item", has_text=str(day)).click()
         print(f"✅ Date selected - day {day}")
-
-
+ 
     # ============================================================
     # Action: Select Departure Port
     # ============================================================
