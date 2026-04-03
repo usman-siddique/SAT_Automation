@@ -16,3 +16,4 @@ reports/*
 # IDE settings
 .vscode/
 .idea/
+SAT_Automation/reports/report.html
