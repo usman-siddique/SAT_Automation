@@ -43,11 +43,12 @@ def context():
     headless = os.getenv("HEADLESS", "false").lower() == "true"
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=headless)
-        ctx = browser.new_context(viewport=None)
+        # Use a fixed viewport for headless; headed uses whatever screen you have
+        viewport = {"width": 1280, "height": 720} if headless else None
+        ctx = browser.new_context(viewport=viewport)
         yield ctx
         ctx.close()
         browser.close()
-
 
 # ============================================================
 # Fixture: For tests that require login
