@@ -125,7 +125,7 @@ class ShippingSchedulePage:
         
         # Wait for options and select
         option = self.page.locator(".select2-results__option", has_text=value)
-        option.wait_for(state="visible", timeout=10000)
+        option.wait_for(state="visible")
         option.click()
 
         # Wait for dropdown to close
@@ -134,16 +134,18 @@ class ShippingSchedulePage:
 
 
     # ============================================================
-    # Helper: Select date from custom datepicker
+    # Helper: Select date from custom datepicker (stable: uses days 5 and 25)
     # ============================================================
 
     def select_date(self, input_locator, day):
         self.page.locator(input_locator).click()
+        # Target only the visible calendar (the one that opened)
         calendar = self.page.locator(".container__main:visible")
         calendar.wait_for(state="visible")
-        # Wait for at least one day element to be present
-        calendar.locator(".day-item").first.wait_for(state="visible")
-        calendar.locator(".day-item", has_text=str(day)).click()
+        # Wait for the specific day to be visible within that calendar
+        day_element = calendar.locator(f".day-item:text-is('{day}')")
+        day_element.wait_for(state="visible")
+        day_element.click()
         print(f"✅ Date selected - day {day}")
  
     # ============================================================
@@ -177,10 +179,13 @@ class ShippingSchedulePage:
 
     def click_search(self):
         self.page.locator(".btn-search-filter").click()
+        # Wait for title to have non-empty text
         self.page.wait_for_function(
-            "document.querySelector('span#title-page')?.innerText?.trim() !== '' || "
-            "document.querySelector('h2.not-found-text') !== null"
+            "document.querySelector('span#title-page')?.innerText?.trim() !== ''",
+            timeout=30000
         )
+        # Small delay to let the DOM settle (50ms is enough)
+        self.page.wait_for_timeout(50)
         print("✅ Search filter applied")
 
 

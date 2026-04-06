@@ -87,16 +87,15 @@ class JoinSatProPage:
         self.go_to_sat_pro()
 
         if self._is_logged_in():
-            # Session already active from a previous test — skip login step
             print("⚠️ Session already active - skipping login redirect step")
+            # Wait for page to be stable before clicking Join again
+            self.page.wait_for_load_state("networkidle")
             self.click_join_button()
         else:
-            # Truly logged out — click Join and expect redirect to /login
             self.click_join_button()
             self.page.locator("#login_email").wait_for(state="visible")
             assert "login" in self.page.url, "❌ Join SAT Pro did not redirect to /login"
             print("✅ Redirected to login page")
-
             LoginPage(self.page).login()
             self.go_to_sat_pro()
             self.click_join_button()
@@ -111,8 +110,9 @@ class JoinSatProPage:
     # ============================================================
 
     def flow_logged_in(self):
+        # Wait for any pending redirects to finish after login
+        self.page.wait_for_load_state("networkidle")
         self.go_to_sat_pro()
         self.click_join_button()
-
         self.page.wait_for_url("**/sat-pro-payment", wait_until="domcontentloaded")
         self.verify_payment_page()

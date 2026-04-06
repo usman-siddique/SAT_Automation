@@ -106,7 +106,7 @@ class AboutUsPage:
         self.page.locator(".glance--1 .glance-track").wait_for(state="visible")
         assert self.page.locator(".glance--1 .glance-track").is_visible(), \
             "❌ Glance slider 1 not visible"
-        self.page.locator(".glance--2 .glance-track").wait_for(state="visible")   # add this line
+        self.page.locator(".glance--2 .glance-track").wait_for(state="visible")
         assert self.page.locator(".glance--2 .glance-track").is_visible(), \
             "❌ Glance slider 2 not visible"
 
@@ -169,16 +169,25 @@ class AboutUsPage:
 
     def verify_terms_and_conditions(self):
         self.page.locator("h1.term-main-hdr:has-text('Terms and Conditions')").wait_for(state="visible")
-        assert self.page.locator("h1.term-main-hdr:has-text('Terms and Conditions')").is_visible(), \
-            "❌ Terms and Conditions heading not visible"
+        assert self.page.locator("h1.term-main-hdr:has-text('Terms and Conditions')").is_visible()
 
-        with self.page.context.expect_page() as new_tab_info:
-            self.page.locator("a:has-text('vehicle purchase agreement')").click()
-        new_tab = new_tab_info.value
-        new_tab.wait_for_load_state("domcontentloaded")
-        assert "vehicle-sales-agreement.pdf" in new_tab.url, \
-            "❌ Vehicle purchase agreement PDF did not open"
-        new_tab.close()
+        link = self.page.locator("a:has-text('vehicle purchase agreement')")
+        link.wait_for(state="visible")
+        href = link.get_attribute("href")
+        assert "vehicle-sales-agreement.pdf" in href
+
+        # Only open the PDF in headed mode (where it actually opens a new tab)
+        headless = os.getenv("HEADLESS", "false").lower() == "true"
+        if not headless:
+            with self.page.context.expect_page() as new_tab_info:
+                link.click() 
+            new_tab = new_tab_info.value
+            # Removed hardcoded timeout; uses default 30s
+            new_tab.wait_for_url("**/vehicle-sales-agreement.pdf")
+            assert "vehicle-sales-agreement.pdf" in new_tab.url
+            new_tab.close()
+        else:
+            print("⚠️ Headless mode: PDF link verified, but opening skipped (PDF would download)")
 
         print("✅ Terms and Conditions content verified")
 

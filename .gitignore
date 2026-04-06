@@ -9,10 +9,15 @@ __pycache__/
 # Virtual environment
 venv/
 
-# Ignore generated test reports but keep folder
-reports/*
+# Ignore all generated report files but keep the folders
+reports/
 !reports/.gitkeep
+reports/*.html
+reports/assets/
+reports/screenshots/
 
 # IDE settings
 .vscode/
 .idea/
+
+# No need to ignore pytest.ini — it contains no secrets

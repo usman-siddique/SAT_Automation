@@ -35,17 +35,20 @@ def is_logged_in(page):
 # Fixture: Browser Setup & Teardown
 # Uses domcontentloaded for faster page loads
 # Waits for specific elements instead of full page load
+# Supports headless/headed mode via HEADLESS environment variable
 # ============================================================
 
 @pytest.fixture(scope="session")
 def context():
+    headless = os.getenv("HEADLESS", "false").lower() == "true"
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=False)
-        ctx = browser.new_context(viewport=None)
+        browser = playwright.chromium.launch(headless=headless)
+        # Use a fixed viewport for headless; headed uses whatever screen you have
+        viewport = {"width": 1280, "height": 720} if headless else None
+        ctx = browser.new_context(viewport=viewport)
         yield ctx
         ctx.close()
         browser.close()
-
 
 # ============================================================
 # Fixture: For tests that require login
