@@ -92,7 +92,6 @@ class ShippingSchedulePage:
         option = self.page.locator(".select2-results__option", has_text=value)
         option.wait_for(state="visible")
         option.click()
-        #testts
 
         # Wait for dropdown to fully close before proceeding
         self.page.locator(".select2-results__options").wait_for(state="hidden")
