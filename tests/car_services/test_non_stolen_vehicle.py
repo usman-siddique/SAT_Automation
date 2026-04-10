@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import pytest
 from pages.car_services.car_services_page import CarServicesPage
 from pages.car_services.non_stolen_vehicle_page import NonStolenVehiclePage
+from config import NON_STOLEN_VEHICLE_DATA
 
 
 def setup_non_stolen_page(page_no_login):
@@ -41,21 +42,21 @@ def test_non_stolen_vehicle_positive(page_no_login):
     
     non_stolen = open_modal(page_no_login)
     
-    # Enter valid Stock ID
-    non_stolen.enter_stock_id("SAT-35052425")
+    # Enter valid Stock ID from config
+    non_stolen.enter_stock_id(NON_STOLEN_VEHICLE_DATA["valid_stock_id"])
     non_stolen.verify_car_details_loaded()
     
-    # Fill all details correctly
+    # Fill all details correctly from config
     non_stolen.fill_personal_info(
-        full_name="QA Testing Automation",
-        email="qa.testmail007021@gmail.com",
-        phone="07400000000",
+        full_name=NON_STOLEN_VEHICLE_DATA["full_name"],
+        email=NON_STOLEN_VEHICLE_DATA["email"],
+        phone=NON_STOLEN_VEHICLE_DATA["phone"],
         select_country=True
     ).fill_payment_details(
-        card_number="5555555555554444",
-        expiry="1234",
-        cvc="123",
-        zip_code="54000"
+        card_number=NON_STOLEN_VEHICLE_DATA["card_number_valid"],
+        expiry=NON_STOLEN_VEHICLE_DATA["expiry"],
+        cvc=NON_STOLEN_VEHICLE_DATA["cvc"],
+        zip_code=NON_STOLEN_VEHICLE_DATA["zip_code"]
     ).submit_form()
     
     # Verify modal closes on success
@@ -75,8 +76,8 @@ def test_non_stolen_vehicle_invalid_stock_id(page_no_login):
     
     non_stolen = open_modal(page_no_login)
     
-    # Enter invalid Stock ID
-    non_stolen.enter_stock_id("INVALID-ID-12345")
+    # Enter invalid Stock ID from config
+    non_stolen.enter_stock_id(NON_STOLEN_VEHICLE_DATA["invalid_stock_id"])
     
     # Verify error message appears
     error = non_stolen.get_stock_id_error()
@@ -98,14 +99,14 @@ def test_non_stolen_vehicle_no_country_code(page_no_login):
     
     non_stolen = open_modal(page_no_login)
     
-    # Enter valid Stock ID
-    non_stolen.enter_stock_id("SAT-35052425")
+    # Enter valid Stock ID from config
+    non_stolen.enter_stock_id(NON_STOLEN_VEHICLE_DATA["valid_stock_id"])
     
     # Fill personal info without selecting country code
     non_stolen.fill_personal_info(
-        full_name="QA Testing Automation",
-        email="qa.testmail007021@gmail.com",
-        phone="07400000000",
+        full_name=NON_STOLEN_VEHICLE_DATA["full_name"],
+        email=NON_STOLEN_VEHICLE_DATA["email"],
+        phone=NON_STOLEN_VEHICLE_DATA["phone"],
         select_country=False  # Skip country code selection
     )
     
@@ -132,22 +133,22 @@ def test_non_stolen_vehicle_incomplete_card(page_no_login):
     
     non_stolen = open_modal(page_no_login)
     
-    # Enter valid Stock ID
-    non_stolen.enter_stock_id("SAT-35052425")
+    # Enter valid Stock ID from config
+    non_stolen.enter_stock_id(NON_STOLEN_VEHICLE_DATA["valid_stock_id"])
     
     # Fill personal info correctly
     non_stolen.fill_personal_info(
-        full_name="QA Testing Automation",
-        email="qa.testmail007021@gmail.com",
-        phone="07400000000",
+        full_name=NON_STOLEN_VEHICLE_DATA["full_name"],
+        email=NON_STOLEN_VEHICLE_DATA["email"],
+        phone=NON_STOLEN_VEHICLE_DATA["phone"],
         select_country=True
     )
     
     # Fill incomplete card (only 12 digits)
     non_stolen.fill_payment_details(
-        card_number="555555555555",  # Incomplete
-        expiry="1234",
-        cvc="123"
+        card_number=NON_STOLEN_VEHICLE_DATA["card_number_incomplete"],
+        expiry=NON_STOLEN_VEHICLE_DATA["expiry"],
+        cvc=NON_STOLEN_VEHICLE_DATA["cvc"]
     )
     
     # Try to submit
@@ -173,22 +174,22 @@ def test_non_stolen_vehicle_missing_zip(page_no_login):
     
     non_stolen = open_modal(page_no_login)
     
-    # Enter valid Stock ID
-    non_stolen.enter_stock_id("SAT-35052425")
+    # Enter valid Stock ID from config
+    non_stolen.enter_stock_id(NON_STOLEN_VEHICLE_DATA["valid_stock_id"])
     
     # Fill personal info correctly
     non_stolen.fill_personal_info(
-        full_name="QA Testing Automation",
-        email="qa.testmail007021@gmail.com",
-        phone="07400000000",
+        full_name=NON_STOLEN_VEHICLE_DATA["full_name"],
+        email=NON_STOLEN_VEHICLE_DATA["email"],
+        phone=NON_STOLEN_VEHICLE_DATA["phone"],
         select_country=True
     )
     
     # Fill card without ZIP
     non_stolen.fill_payment_details(
-        card_number="5555555555554444",
-        expiry="1234",
-        cvc="123",
+        card_number=NON_STOLEN_VEHICLE_DATA["card_number_valid"],
+        expiry=NON_STOLEN_VEHICLE_DATA["expiry"],
+        cvc=NON_STOLEN_VEHICLE_DATA["cvc"],
         zip_code=""  # Missing ZIP
     )
     

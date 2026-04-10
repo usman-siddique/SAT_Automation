@@ -10,7 +10,7 @@ class PaymentPage:
         credit_card = self.page.locator("input[name='payment'][value='paygent']")
         credit_card.wait_for(state="visible")
         # Ensure the radio button is not disabled
-        credit_card.wait_for(state="enabled")
+        credit_card.wait_for(state="visible")
         credit_card.check()
         # Now wait for the card input fields container to become visible (the collapse expands)
         self.page.locator("#paygentBlock").wait_for(state="visible", timeout=10000)

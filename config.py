@@ -55,6 +55,22 @@ IMAGES = {
 # --- Test Data ---
 
 # -------------------------------------------------------
+# Non Stolen Vehicle Test Data
+# -------------------------------------------------------
+NON_STOLEN_VEHICLE_DATA = {
+    "valid_stock_id": "SAT-44013688",
+    "invalid_stock_id": "INVALID-ID-12345",
+    "full_name": "QA Testing Automation",
+    "email": "qa.testmail007021@gmail.com",
+    "phone": "07400000000",
+    "card_number_valid": "5555555555554444",
+    "card_number_incomplete": "555555555555",
+    "expiry": "1234",
+    "cvc": "123",
+    "zip_code": "54000",
+}
+
+# -------------------------------------------------------
 # Get Price Quote - Step 1: Basic car details
 # -------------------------------------------------------
 PRICE_QUOTE_DATA = {

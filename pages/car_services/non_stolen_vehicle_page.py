@@ -48,7 +48,7 @@ class NonStolenVehiclePage:
 
 
     # ============================================================
-    # Enter Stock ID and verify auto-filled car details
+    # Enter Stock ID
     # ============================================================
 
     def enter_stock_id(self, stock_id):
@@ -56,40 +56,39 @@ class NonStolenVehiclePage:
         stock_input.fill(stock_id)
         stock_input.press("Enter")
         
-        # Wait for either car details or error message
-        self.page.wait_for_function(
-            "document.querySelector('#car_name')?.innerText?.trim() !== '' || "
-            "document.querySelector('#stockInfo .text-danger')?.offsetParent !== null",
-            timeout=30000
-        )
+        # Wait a moment for the server to respond
+        self.page.wait_for_timeout(3000)
         
         return self
 
 
     # ============================================================
-    # Get stock ID error message
+    # Get stock ID error message (if present)
     # ============================================================
 
     def get_stock_id_error(self):
         error = self.page.locator("#stockInfo .text-danger")
-        error.wait_for(state="visible", timeout=5000)
-        return error.inner_text()
+        if error.is_visible():
+            return error.inner_text().strip()
+        return None
 
 
     # ============================================================
-    # Verify car details are loaded
+    # Verify car details are loaded (fails if error message is present)
     # ============================================================
 
     def verify_car_details_loaded(self):
-        # Wait for car name to be populated
+        # First check if error message is visible
+        error = self.get_stock_id_error()
+        if error:
+            raise AssertionError(f"Stock ID error: {error}")
+        
+        # If no error, wait for car name to be populated
         self.page.wait_for_function(
             "document.querySelector('#car_name')?.innerText?.trim() !== ''",
             timeout=30000
         )
         car_name = self.page.locator("#car_name").inner_text()
-        # Check if error message appears instead
-        if self.page.locator("#stockInfo .text-danger").is_visible():
-            raise AssertionError(f"Stock ID error: {self.page.locator('#stockInfo .text-danger').inner_text()}")
         assert car_name.strip() != "", "Car details not loaded"
         print(f"✅ Car details loaded: {car_name}")
 
@@ -141,7 +140,7 @@ class NonStolenVehiclePage:
     def get_phone_error(self):
         error = self.page.locator(".call_phone-error-text")
         if error.is_visible():
-            return error.inner_text()
+            return error.inner_text().strip()
         return None
 
 

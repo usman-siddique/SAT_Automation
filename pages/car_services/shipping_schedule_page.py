@@ -103,32 +103,28 @@ class ShippingSchedulePage:
     # ============================================================
 
     def select_arrival_port(self, value):
-        # Click to open dropdown
         dropdown = self.page.locator("#select2-arrival_port-container")
         dropdown.click()
 
-        # Get search input
         search_input = self.page.locator(".select2-search__field")
         search_input.wait_for(state="visible")
-        
-        # Focus the search input first
-        search_input.focus()
-        
-        # Clear any existing text
         search_input.click()
+        
+        # Clear existing text 
         search_input.press("Control+a")
         search_input.press("Backspace")
         
-        # Type slowly to trigger events
-        for char in value:
-            search_input.type(char, delay=50)
+        # Type slowly to trigger keyboard events
+        search_input.press_sequentially(value, delay=100)
         
-        # Wait for options and select
+        # Move mouse to trigger any focus/blur events
+        self.page.mouse.move(0, 0)
+        self.page.mouse.move(10, 10)
+        
         option = self.page.locator(".select2-results__option", has_text=value)
-        option.wait_for(state="visible")
+        option.wait_for(state="visible", timeout=10000)
         option.click()
 
-        # Wait for dropdown to close
         self.page.locator(".select2-results__options").wait_for(state="hidden")
         print(f"✅ select2-arrival_port-container selected - {value}")
 
