@@ -26,6 +26,16 @@ if "%mode%"=="1" (
 )
 
 echo.
+echo Run tests in parallel? (y/n)
+set /p parallel="Enter choice: "
+if /i "%parallel%"=="y" (
+    set PARALLEL=-n auto
+    echo Parallel execution enabled (using all CPU cores^)
+) else (
+    set PARALLEL=
+)
+
+echo.
 echo ========================================
 echo Test Selection Menu
 echo ========================================
@@ -38,9 +48,10 @@ echo 5. Run Shipping Schedule tests
 echo 6. Run Insurance Services tests
 echo 7. Run Finance Service tests
 echo 8. Run Non Stolen Vehicle tests
-echo 9. Exit
+echo 9. Run Buy Now / Order Placement tests
+echo 10. Exit
 echo.
-set /p choice="Enter your choice (1-9): "
+set /p choice="Enter your choice (1-10): "
 
 if "%choice%"=="1" goto all
 if "%choice%"=="2" goto sell
@@ -50,54 +61,61 @@ if "%choice%"=="5" goto shipping
 if "%choice%"=="6" goto insurance
 if "%choice%"=="7" goto finance
 if "%choice%"=="8" goto non_stolen
-if "%choice%"=="9" goto end
+if "%choice%"=="9" goto buy_flow
+if "%choice%"=="10" goto end
 
 :all
 echo Running all tests...
 set HEADLESS=%HEADLESS%
-pytest %PYTEST_ARGS%
+pytest %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :sell
 echo Running Sell My Car tests...
 set HEADLESS=%HEADLESS%
-pytest tests/sell_my_car/ %PYTEST_ARGS%
+pytest tests/sell_my_car/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :car_services
 echo Running Car Services tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/ %PYTEST_ARGS%
+pytest tests/car_services/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :about_us
 echo Running About Us tests...
 set HEADLESS=%HEADLESS%
-pytest tests/about_us/ %PYTEST_ARGS%
+pytest tests/about_us/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :shipping
 echo Running Shipping Schedule tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_shipping_schedule.py %PYTEST_ARGS%
+pytest tests/car_services/test_shipping_schedule.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :insurance
 echo Running Insurance Services tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_insurance_services.py %PYTEST_ARGS%
+pytest tests/car_services/test_insurance_services.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :finance
 echo Running Finance Service tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_finance_service.py %PYTEST_ARGS%
+pytest tests/car_services/test_finance_service.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :non_stolen
 echo Running Non Stolen Vehicle tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_non_stolen_vehicle.py %PYTEST_ARGS%
+pytest tests/car_services/test_non_stolen_vehicle.py %PYTEST_ARGS% %PARALLEL%
+goto end
+
+:buy_flow
+echo Running Buy Now / Order Placement tests...
+set HEADLESS=%HEADLESS%
+pytest tests/buy_flow/test_order_placement.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :end
