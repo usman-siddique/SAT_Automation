@@ -11,26 +11,14 @@ An end-to-end test automation framework for the [SAT Japan](https://development.
 
 ## About the Project
 
-This framework automates the core workflows on the SAT Japan platform, including:
+This framework automates core workflows on the SAT Japan platform, including:
 
-**Sell My Car Module:**
-- Getting a price quote for a vehicle
-- Listing a vehicle for sale
-- Auctioning a vehicle
+- **Sell My Car Module:** Price quote, listing, auction
+- **Car Services Module:** Auction, Shipping Schedule, Insurance, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
+- **About Us Module:** Company info, loyalty program, SAT Pro membership
+- **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation
 
-**Car Services Module:**
-- Auction Service - Bid on vehicles
-- Shipping Schedule - Filter and view shipping schedules
-- Insurance Services - Static page verification
-- Storage Service - Static page verification
-- Finance Service - Static page with video
-- Car Carrier Service - Static page verification
-- Customs Clearance - Static page verification
-- Pre Export Inspection - Static page with PDF download
-- Marine Insurance - Static page verification
-- Non Stolen Vehicle - Form submission with payment
-
-It covers both positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean and maintainable test code.
+It covers positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean, maintainable test code.
 
 ---
 
@@ -48,64 +36,35 @@ It covers both positive and negative test scenarios, following the Page Object M
 ---
 
 ## Project Structure
-
-
----
-
-## Project Structure
 ```
 SAT_Automation/
 ├── assets/
-│ └── images/ # Test images for form uploads
+│   └── images/                 # Test images for form uploads
 │
 ├── pages/
-│ ├── auth/
-│ │ └── login_page.py # Login page actions
-│ │
-│ ├── car_services/
-│ │ ├── car_services_page.py # Car Services hover menu navigation
-│ │ ├── auction_service_page.py # Auction Service page actions
-│ │ ├── shipping_schedule_page.py # Shipping Schedule page actions
-│ │ ├── insurance_services_page.py # Insurance Services page actions
-│ │ ├── storage_service_page.py # Storage Service page actions
-│ │ ├── finance_service_page.py # Finance Service page actions
-│ │ ├── car_carrier_page.py # Car Carrier Service page actions
-│ │ ├── customs_clearance_page.py # Customs Clearance page actions
-│ │ ├── pre_export_inspection_page.py # Pre Export Inspection page actions
-│ │ ├── marine_insurance_page.py # Marine Insurance page actions
-│ │ └── non_stolen_vehicle_page.py # Non Stolen Vehicle page actions
-│ │
-│ └── sell_my_car/
-│ └── sell_page.py # Sell My Car page actions
+│   ├── auth/
+│   │   └── login_page.py       # Login page actions
+│   ├── about_us/               # About Us module page objects
+│   ├── buy_flow/               # End‑to‑end order placement page objects
+│   ├── car_services/           # Car Services module page objects
+│   └── sell_my_car/            # Sell My Car module page objects
 │
 ├── reports/
-│ ├── report.html # Generated HTML test report
-│ └── screenshots/ # Auto-captured screenshots on test failure
+│   ├── report.html             # Generated HTML test report
+│   └── screenshots/            # Auto‑captured screenshots on test failure
 │
 ├── tests/
-│ ├── sell_my_car/
-│ │ ├── init.py
-│ │ ├── test_sell.py # Positive test cases (5 tests)
-│ │ └── test_sell_negative.py # Negative test cases (3 tests)
-│ │
-│ └── car_services/
-│ ├── init.py
-│ ├── test_auction_service.py # Auction Service test cases (4 tests)
-│ ├── test_shipping_schedule.py # Shipping Schedule test cases (1 combined)
-│ ├── test_insurance_services.py # Insurance Services test cases (1 combined)
-│ ├── test_storage_service.py # Storage Service test cases (1 combined)
-│ ├── test_finance_service.py # Finance Service test cases (1 combined)
-│ ├── test_car_carrier.py # Car Carrier Service test cases (1 combined)
-│ ├── test_customs_clearance.py # Customs Clearance test cases (1 combined)
-│ ├── test_pre_export_inspection.py # Pre Export Inspection test cases (1 combined)
-│ ├── test_marine_insurance.py # Marine Insurance test cases (1 combined)
-│ └── test_non_stolen_vehicle.py # Non Stolen Vehicle test cases (5 tests)
+│   ├── about_us/               # About Us tests
+│   ├── buy_flow/               # End‑to‑end order placement tests
+│   ├── car_services/           # Car Services tests
+│   └── sell_my_car/            # Sell My Car tests (positive and negative)
 │
 ├── .env
 ├── .gitignore
 ├── config.py
 ├── conftest.py
 ├── pytest.ini
+├── run_tests.bat               # Windows batch file to run tests with menu
 └── README.md
 ```
 
@@ -144,16 +103,6 @@ BASE_URL=https://development.satjapan.info
 LOGIN_EMAIL=your_email@example.com
 LOGIN_PASSWORD=your_password
 ```
-
-### 5. Add test images
-
-Place your test images inside SAT_Automation/assets/images/. Required images:
-- aqua1.jpeg, aqua2.jpeg, aqua3.jpeg
-- suzuki1.jpeg, suzuki2.jpeg
-- mitsubishi.PNG
-- Nissan1.jpg, Nissan2.jpg, Nissan3.jpg, Nissan4.jpg, Nissan5.jpg
-- honda1.jpg, honda2.jpg, honda3.jpg
-
 ---
 
 ## How to Run Tests
@@ -179,39 +128,32 @@ pytest tests/car_services/ -v -s
 
 ## Test Cases Summary
 
-| Module | Test File | Tests | Description |
-|--------|-----------|-------|-------------|
-| **Sell My Car** | `test_sell.py` | 5 | Positive tests (Price Quote, List on SAT with 3 params, Auction) |
-| | `test_sell_negative.py` | 3 | Negative tests (empty fields, partial validation, terms unchecked) |
-| **Car Services** | `test_auction_service.py` | 4 | Auction Service - vehicle search and bid submission |
-| | `test_shipping_schedule.py` | 1 | Shipping Schedule - filters, date picker, table validation |
-| | `test_insurance_services.py` | 1 | Insurance Services - static page content verification |
-| | `test_storage_service.py` | 1 | Storage Service - static page content verification |
-| | `test_finance_service.py` | 1 | Finance Service - page content with video play |
-| | `test_car_carrier.py` | 1 | Car Carrier Service - static page with images |
-| | `test_customs_clearance.py` | 1 | Customs Clearance - static page content verification |
-| | `test_pre_export_inspection.py` | 1 | Pre Export Inspection - static page with PDF download |
-| | `test_marine_insurance.py` | 1 | Marine Insurance - static page content verification |
-| | `test_non_stolen_vehicle.py` | 5 | Non Stolen Vehicle - form submission (1 positive, 4 negative) |
-| **Total** | | **25** | |
+| Module | Tests | Description |
+|--------|-------|-------------|
+| **Sell My Car** | 8 | Positive and negative tests for price quote, listing, auction |
+| **Car Services** | 17 | Auction, Shipping Schedule, Insurance, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
+| **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
+| **Buy Flow (End‑to‑End)** | 1 | Complete order placement from car selection to payment confirmation |
+| **Total** | **36** | |
 
 ### Module Breakdown
 
-- **Sell My Car:** 8 tests (5 positive + 3 negative)
-- **Car Services:** 17 tests (10 static pages + 7 dynamic/interactive)
+- **Sell My Car:** 8 tests
+- **Car Services:** 17 tests
+- **About Us:** 10 tests
+- **Buy Flow (End‑to‑End):** 1 test
+
 ---
 
 ## Key Features
 
-- Page Object Model (POM) - Each page has its own class
-- Secure credentials - Login details stored in .env file, never hardcoded
-- Session-based login - Logs in once and reuses session across all tests
-- Auto screenshots - Captures screenshots on any test failure
-- Parameterized tests - List on SAT runs with 3 different data sets; Shipping Schedule runs with valid/invalid scenarios
-- Positive and negative tests - Covers both happy path and validation scenarios
-- Proper waits - No hardcoded sleeps; uses Playwright's built-in wait methods
-- Select2 dropdown handling - Custom handling for Select2 dropdowns
-- Datepicker handling - Uses `:visible` selector for dynamic calendars
+- Page Object Model (POM) – Clean separation of page logic
+- Secure credentials – Login details stored in `.env` file, never hardcoded
+- Session‑based login – Logs in once and reuses session across all tests
+- Auto screenshots – Captures screenshots on any test failure
+- Parameterized tests – Runs multiple data sets efficiently
+- Proper waits – No hardcoded sleeps; uses Playwright’s built‑in wait methods
+
 
 ---
 
