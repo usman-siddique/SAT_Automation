@@ -1,9 +1,8 @@
 # ============================================================
 # conftest.py
 # pytest automatically loads this file -- no need to import it.
-# It does two things:
-# 1. Provides the 'page' fixture to all test files
-# 2. Takes a screenshot if any test fails and attaches it to the HTML report
+# It provides fixtures and hooks for the test framework.
+# Supports browser selection via BROWSER environment variable.
 # ============================================================
 
 import pytest
@@ -12,16 +11,9 @@ from playwright.sync_api import sync_playwright
 from pages.auth.login_page import LoginPage
 from config import BASE_URL
 
-# --- Base directory (folder where conftest.py lives) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# --- Screenshots directory ---
 SCREENSHOTS_DIR = os.path.join(BASE_DIR, "reports", "screenshots")
 
-
-# ============================================================
-# Helper: Check if user is actually logged in
-# ============================================================
 
 def is_logged_in(page):
     try:
@@ -32,23 +24,27 @@ def is_logged_in(page):
 
 
 # ============================================================
-# Fixture: Browser Setup & Teardown
-# Uses domcontentloaded for faster page loads
-# Waits for specific elements instead of full page load
-# Supports headless/headed mode via HEADLESS environment variable
+# Fixture: Browser Setup – supports multiple browsers
+# Set BROWSER environment variable to 'chromium' (default), 'firefox', or 'webkit'
 # ============================================================
 
 @pytest.fixture(scope="session")
 def context():
     headless = os.getenv("HEADLESS", "false").lower() == "true"
+    browser_name = os.getenv("BROWSER", "chromium").lower()
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=headless)
-        # Use a fixed viewport for headless; headed uses whatever screen you have
+        if browser_name == "firefox":
+            browser = playwright.firefox.launch(headless=headless)
+        elif browser_name == "webkit":
+            browser = playwright.webkit.launch(headless=headless)
+        else:
+            browser = playwright.chromium.launch(headless=headless)
         viewport = {"width": 1280, "height": 720} if headless else None
         ctx = browser.new_context(viewport=viewport)
         yield ctx
         ctx.close()
         browser.close()
+
 
 # ============================================================
 # Fixture: For tests that require login
@@ -65,7 +61,6 @@ def page(context):
 
 # ============================================================
 # Fixture: For tests that do NOT require login
-# (Static pages like Insurance, Storage, Finance, Car Carrier, etc.)
 # ============================================================
 
 @pytest.fixture(scope="function")
@@ -78,9 +73,7 @@ def page_no_login(context):
 
 
 # ============================================================
-# Hook: Runs automatically after every single test
-# If the test failed, captures a screenshot and
-# attaches it to the HTML report
+# Hook: Takes screenshot on test failure
 # ============================================================
 
 @pytest.hookimpl(hookwrapper=True)
@@ -89,9 +82,7 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
 
     if report.when == "call" and report.failed:
-        # Try to get page from either 'page' or 'page_no_login' fixture
         page = item.funcargs.get("page") or item.funcargs.get("page_no_login")
-
         if page:
             try:
                 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)

@@ -26,6 +26,21 @@ if "%mode%"=="1" (
 )
 
 echo.
+echo Select browser:
+echo 1. Chromium (default)
+echo 2. Firefox
+echo.
+set /p browser_choice="Enter choice (1 or 2): "
+
+if "%browser_choice%"=="2" (
+    set BROWSER=firefox
+    echo Running with Firefox
+) else (
+    set BROWSER=chromium
+    echo Running with Chromium
+)
+
+echo.
 echo Run tests in parallel? (y/n)
 set /p parallel="Enter choice: "
 if /i "%parallel%"=="y" (
@@ -67,55 +82,64 @@ if "%choice%"=="10" goto end
 :all
 echo Running all tests...
 set HEADLESS=%HEADLESS%
-pytest %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :sell
 echo Running Sell My Car tests...
 set HEADLESS=%HEADLESS%
-pytest tests/sell_my_car/ %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/sell_my_car/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :car_services
 echo Running Car Services tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/ %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/car_services/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :about_us
 echo Running About Us tests...
 set HEADLESS=%HEADLESS%
-pytest tests/about_us/ %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/about_us/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :shipping
 echo Running Shipping Schedule tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_shipping_schedule.py %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/car_services/test_shipping_schedule.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :insurance
 echo Running Insurance Services tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_insurance_services.py %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/car_services/test_insurance_services.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :finance
 echo Running Finance Service tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_finance_service.py %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/car_services/test_finance_service.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :non_stolen
 echo Running Non Stolen Vehicle tests...
 set HEADLESS=%HEADLESS%
-pytest tests/car_services/test_non_stolen_vehicle.py %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/car_services/test_non_stolen_vehicle.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :buy_flow
 echo Running Buy Now / Order Placement tests...
 set HEADLESS=%HEADLESS%
-pytest tests/buy_flow/test_order_placement.py %PYTEST_ARGS% %PARALLEL%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/buy_flow/test_order_placement.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :end
