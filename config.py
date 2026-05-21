@@ -58,13 +58,9 @@ IMAGES = {
 # Non Stolen Vehicle Test Data
 # -------------------------------------------------------
 NON_STOLEN_VEHICLE_DATA = {
-<<<<<<< HEAD
-    "valid_stock_id": "SAT-92703581",
-=======
     "valid_stock_id": "sat-73234041",
->>>>>>> personal_work
     "invalid_stock_id": "INVALID-ID-12345",
-    "full_name": "QA Testing Automation",
+    "full_name": "QA Testing Automation",   
     "email": "qa.testmail007021@gmail.com",
     "phone": "07400000000",
     "card_number_valid": "5555555555554444",
