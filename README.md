@@ -4,7 +4,7 @@
 ![Playwright](https://img.shields.io/badge/Playwright-Test%20Automation-green)
 ![Pytest](https://img.shields.io/badge/Pytest-Test%20Runner-orange)
 
-An end-to-end test automation framework for the [SAT Japan](https://development.satjapan.info) vehicle selling platform, built with Python, Playwright, and pytest.
+An end-to-end test automation framework for the [SAT Japan] vehicle selling platform, built with Python, Playwright, and pytest.
 
 ---
 
