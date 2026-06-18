@@ -21,19 +21,38 @@ class AboutUsPage:
 
 
     # ============================================================
+    # Helper: Human‑like scrolling with visual delay
+    # ============================================================
+
+    def _human_scroll(self, steps=6, step_distance=350, pause_between=0.8):
+        """
+        Scrolls down the page in multiple small steps with pauses,
+        simulating human behaviour. Then scrolls to the bottom.
+        """
+        for _ in range(steps):
+            self.page.mouse.wheel(0, step_distance)
+            self.page.wait_for_timeout(pause_between * 1000)
+        # Final scroll to bottom
+        self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        self.page.wait_for_load_state("networkidle")
+        # Extra pause to see the bottom
+        self.page.wait_for_timeout(500)
+
+
+    # ============================================================
     # Helper: Hover About Us menu and click a sub-link
-    # Scoped to About Us parent container to avoid footer conflicts
-    # p.cnm-cls and dropdown_content_header are siblings inside
-    # the same div.hov-nav-items parent
     # ============================================================
 
     def _navigate_to(self, link_name, wait_for_locator):
         menu = self.page.locator("p.cnm-cls:has-text('About Us')").locator("..")
         menu.hover()
+        self.page.wait_for_timeout(300)  # Visual pause after hover
         link = menu.locator(".dropdown_content_header").get_by_role("link", name=link_name, exact=True)
         link.wait_for(state="visible")
         link.click()
+        self.page.wait_for_timeout(300)  # Visual pause before waiting for new page
         self.page.locator(wait_for_locator).wait_for(state="visible")
+        self.page.wait_for_timeout(500)  # Visual pause after page loads
 
 
     # ============================================================
@@ -95,25 +114,33 @@ class AboutUsPage:
     # ============================================================
 
     def verify_about_sat(self):
+        self._human_scroll(steps=10, step_distance=280, pause_between=0.8)
+
         self.page.locator("h2:has-text('Our Mission, Vision, and Values')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator("h2:has-text('Our Mission, Vision, and Values')").is_visible(), \
             "❌ Mission heading not visible"
 
         self.page.locator("h2.about-heading:has-text('SAT Japan at a Glance')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator("h2.about-heading:has-text('SAT Japan at a Glance')").is_visible(), \
             "❌ Glance heading not visible"
 
         self.page.locator(".glance--1 .glance-track").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator(".glance--1 .glance-track").is_visible(), \
             "❌ Glance slider 1 not visible"
         self.page.locator(".glance--2 .glance-track").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator(".glance--2 .glance-track").is_visible(), \
             "❌ Glance slider 2 not visible"
 
         self.page.locator("h2:has-text('Our Milestones')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator("h2:has-text('Our Milestones')").is_visible(), \
             "❌ Milestones heading not visible"
 
+        self.page.wait_for_timeout(500)  # Final pause to see everything
         print("✅ About SAT content verified")
 
 
@@ -122,9 +149,13 @@ class AboutUsPage:
     # ============================================================
 
     def verify_company_profile(self):
+        self._human_scroll(steps=5, step_distance=350, pause_between=0.8)
+
         heading = self.page.locator("h1.comp-profile-hdr:has-text('SAT - Your Trusted Partner in the Automotive Industry')")
         heading.wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert heading.is_visible(), "❌ Company Profile heading not visible"
+        self.page.wait_for_timeout(500)
         print("✅ Company Profile content verified")
 
 
@@ -133,13 +164,17 @@ class AboutUsPage:
     # ============================================================
 
     def verify_why_choose_sat(self):
+        self._human_scroll(steps=5, step_distance=300, pause_between=0.8)
+
         self.page.locator("h1.why-title:has-text('Why Choose SAT Japan?')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator("h1.why-title:has-text('Why Choose SAT Japan?')").is_visible(), \
             "❌ Why Choose SAT heading not visible"
 
         assert self.page.locator("h2:has-text('Exceptional Customer Support')").is_visible(), \
             "❌ Exceptional Customer Support section not visible"
 
+        self.page.wait_for_timeout(500)
         print("✅ Why Choose SAT content verified")
 
 
@@ -148,67 +183,76 @@ class AboutUsPage:
     # ============================================================
 
     def verify_privacy_policy(self):
-        # Scope to main content section to avoid matching repeated headings
+        self._human_scroll(steps=6, step_distance=280, pause_between=0.8)
+
         main = self.page.locator("section.cookies-polices-main")
         main.locator("h2.cookies-polices-comman-hdr:has-text('Privacy Policy')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert main.locator("h2.cookies-polices-comman-hdr:has-text('Privacy Policy')").is_visible(), \
             "❌ Privacy Policy heading not visible"
 
-        # Contact us is outside the section, scoped to its own div
         contact = self.page.locator("div.contact-us-section h2.cookies-polices-comman-hdr:has-text('Contact us')")
         contact.wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert contact.is_visible(), "❌ Contact us section not visible"
 
+        self.page.wait_for_timeout(500)
         print("✅ Privacy Policy content verified")
 
 
     # ============================================================
     # Verify: Terms and Conditions page content
-    # Opens vehicle purchase agreement in new tab and verifies URL
     # ============================================================
 
     def verify_terms_and_conditions(self):
+        self._human_scroll(steps=5, step_distance=350, pause_between=0.8)
+
         self.page.locator("h1.term-main-hdr:has-text('Terms and Conditions')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator("h1.term-main-hdr:has-text('Terms and Conditions')").is_visible()
 
         link = self.page.locator("a:has-text('vehicle purchase agreement')")
         link.wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         href = link.get_attribute("href")
         assert "vehicle-sales-agreement.pdf" in href
 
-        # Only open the PDF in headed mode (where it actually opens a new tab)
         headless = os.getenv("HEADLESS", "false").lower() == "true"
         if not headless:
             with self.page.context.expect_page() as new_tab_info:
-                link.click() 
+                link.click()
+                self.page.wait_for_timeout(300)
             new_tab = new_tab_info.value
-            # Removed hardcoded timeout; uses default 30s
             new_tab.wait_for_url("**/vehicle-sales-agreement.pdf")
+            self.page.wait_for_timeout(500)
             assert "vehicle-sales-agreement.pdf" in new_tab.url
             new_tab.close()
         else:
             print("⚠️ Headless mode: PDF link verified, but opening skipped (PDF would download)")
 
+        self.page.wait_for_timeout(500)
         print("✅ Terms and Conditions content verified")
 
 
     # ============================================================
     # Verify: Shipping Agents page content
-    # Verifies map image, then applies Sri Lanka country filter
-    # Scoped to div.filter-by-country to avoid strict mode violation
     # ============================================================
 
     def verify_shipping_agents(self):
+        self._human_scroll(steps=5, step_distance=300, pause_between=0.8)
+
         self.page.locator("h1.title-shipagent:has-text('Explore Our International Office Map')").wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert self.page.locator("h1.title-shipagent:has-text('Explore Our International Office Map')").is_visible(), \
             "❌ Shipping Agents heading not visible"
 
         assert self.page.locator("img[alt='sat agent map']").is_visible(), \
             "❌ Agent map image not visible"
 
-        # Verify filter label is present (appears twice for mobile/desktop, use first)
         filter_label = self.page.locator("span.title:has-text('Filter by country:')").first
         filter_label.wait_for(state="visible")
+        self.page.wait_for_timeout(300)
         assert filter_label.is_visible(), "❌ Filter by country label not visible"
 
+        self.page.wait_for_timeout(500)
         print("✅ Shipping Agents content verified")
