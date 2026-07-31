@@ -58,7 +58,7 @@ IMAGES = {
 # Non Stolen Vehicle Test Data
 # -------------------------------------------------------
 NON_STOLEN_VEHICLE_DATA = {
-    "valid_stock_id": "SAT-88491192",
+    "valid_stock_id": "sat-30230916",
     "invalid_stock_id": "INVALID-ID-12345",
     "full_name": "QA Testing Automation",
     "email": "qa.testmail007021@gmail.com",
@@ -105,7 +105,7 @@ PRICE_QUOTE_STEP3_DATA = {
 LIST_ON_SAT_PARAMS = [
     {
         "make": "Toyota",
-        "model": "AQUA",
+        "model": "VITZ",
         "year": "2024",
         "fuel": "Petrol",
         "steering": "RHD",
@@ -124,7 +124,7 @@ LIST_ON_SAT_PARAMS = [
     },
     {
         "make": "Nissan",
-        "model": "FAIRLADY Z",
+        "model": "X-TRAIL",
         "year": "2022",
         "fuel": "Diesel",
         "steering": "RHD",
@@ -143,7 +143,7 @@ LIST_ON_SAT_PARAMS = [
     },
     {
         "make": "Honda",
-        "model": "FIT",
+        "model": "VEZEL",
         "year": "2023",
         "fuel": "Petrol",
         "steering": "RHD",
