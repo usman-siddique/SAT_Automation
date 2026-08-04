@@ -35,6 +35,19 @@ def select_dropdown(page, list_id, value):
     item.click()
 
 
+def select_phone_country(page, country):
+    """Select a country in the international telephone input."""
+    page.locator(".iti__selected-country").click()
+
+    search_input = page.locator(".iti__search-input")
+    if search_input.is_visible():
+        search_input.fill(country)
+
+    country_option = page.locator(f".iti__country-list .iti__country:has-text('{country}')")
+    country_option.wait_for(state="visible")
+    country_option.click()
+
+
 # ============================================================
 # Page Class: Sell My Car Page
 # ============================================================
@@ -100,7 +113,7 @@ class SellPage:
         select_dropdown(self.page, "car_keys_list", step2_data["keys"])
         select_dropdown(self.page, "original_owner_list", step2_data["original_owner"])
 
-        self.page.set_input_files("#imageInput", IMAGES["mitsubishi"])
+        self.page.set_input_files("#imageInput", IMAGES["price_quote"])
         self.page.locator("#imageInput").wait_for(state="visible")
 
         self.page.get_by_role("button", name="Continue").click()
@@ -220,7 +233,7 @@ class SellPage:
         select_dropdown(self.page, "car_keys_list", step2_data["keys"])
         select_dropdown(self.page, "original_owner_list", step2_data["original_owner"])
 
-        self.page.set_input_files("#imageInput", IMAGES["mitsubishi"])
+        self.page.set_input_files("#imageInput", IMAGES["price_quote"])
         self.page.locator("#imageInput").wait_for(state="visible")
 
         self.page.get_by_role("button", name="Continue").click()
@@ -229,6 +242,8 @@ class SellPage:
         self.page.locator("#phone").wait_for(state="visible")
 
         # ----- Step 3: Submit without checking terms checkbox -----
+        select_phone_country(self.page, "United Kingdom")
+        self.page.locator("#phone").fill(step3_data["phone"])
         self.page.get_by_role("button", name="Submit Quote Request").click()
 
         # Assert terms error message is visible
@@ -243,8 +258,20 @@ class SellPage:
     # ============================================================
 
     def list_on_sat(self, data):
-        self.page.locator("span.user-select-none", has_text="List on SAT").click()
-        self.page.get_by_role("link", name="Post My Ad").click()
+        list_tab = self.page.locator("span.user-select-none", has_text="List on SAT")
+        post_ad = self.page.get_by_role("link", name="Post My Ad")
+
+        list_tab.wait_for(state="visible")
+        list_tab.click()
+
+        # Retry the tab once if the first click does not activate its content.
+        try:
+            post_ad.wait_for(state="visible", timeout=5000)
+        except:
+            list_tab.click()
+            post_ad.wait_for(state="visible")
+
+        post_ad.click()
         self.page.wait_for_load_state("domcontentloaded")
 
         # Wait for dropdown button to be ready
@@ -270,7 +297,7 @@ class SellPage:
         select_dropdown(self.page, "transmissions_list", data["transmission"])
         self.page.locator("#description").fill(data["description"])
 
-        self.page.set_input_files("#imageInput", IMAGES[data["images"]])
+        self.page.set_input_files("#imageInput", data["images"])
 
         self.page.locator("#phone").fill(data["phone"])
         self.page.get_by_role("button", name="Submit").click()
@@ -320,7 +347,7 @@ class SellPage:
         self.page.locator("#bidding_deadline").fill(data["bidding_deadline"])
         self.page.locator("#description").fill(data["description"])
 
-        self.page.set_input_files("#imageInput", IMAGES["suzuki"])
+        self.page.set_input_files("#imageInput", IMAGES["auction"])
 
         self.page.locator("#phone").fill(data["phone"])
         self.page.get_by_role("button", name="Submit").click()

@@ -26,29 +26,12 @@ LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
 IMAGES_DIR = os.path.join(BASE_DIR, "assets", "images")
 
 IMAGES = {
-    "aqua": [
-        os.path.join(IMAGES_DIR, "aqua1.jpeg"),
-        os.path.join(IMAGES_DIR, "aqua2.jpeg"),
-        os.path.join(IMAGES_DIR, "aqua3.jpeg"),
+    "price_quote": [
+        os.path.join(IMAGES_DIR, "Honda Vezel White.jpg"),
     ],
-    "suzuki": [
-        os.path.join(IMAGES_DIR, "suzuki1.jpeg"),
-        os.path.join(IMAGES_DIR, "suzuki2.jpeg"),
-    ],
-    "mitsubishi": [
-        os.path.join(IMAGES_DIR, "mitsubishi.PNG"),
-    ],
-    "nissan": [
-        os.path.join(IMAGES_DIR, "Nissan1.jpg"),
-        os.path.join(IMAGES_DIR, "Nissan2.jpg"),
-        os.path.join(IMAGES_DIR, "Nissan3.jpg"),
-        os.path.join(IMAGES_DIR, "Nissan4.jpg"),
-        os.path.join(IMAGES_DIR, "Nissan5.jpg"),
-    ],
-    "honda": [
-        os.path.join(IMAGES_DIR, "honda1.jpg"),
-        os.path.join(IMAGES_DIR, "honda2.jpg"),
-        os.path.join(IMAGES_DIR, "honda3.jpg"),
+    "auction": [
+        os.path.join(IMAGES_DIR, "Suzuki Alto Red.jpeg"),
+        os.path.join(IMAGES_DIR, "Suzuki Alto White.jpeg"),
     ],
 }
 
@@ -98,69 +81,6 @@ PRICE_QUOTE_STEP2_DATA = {
 PRICE_QUOTE_STEP3_DATA = {
     "phone": "+447412000000",
 }
-
-# -------------------------------------------------------
-# List on SAT - Parametrized data sets
-# -------------------------------------------------------
-LIST_ON_SAT_PARAMS = [
-    {
-        "make": "Toyota",
-        "model": "VITZ",
-        "year": "2024",
-        "fuel": "Petrol",
-        "steering": "RHD",
-        "drivetrain": "2WD",
-        "seats": "5 Seats",
-        "country": "United Kingdom",
-        "city": "Bristol",
-        "color": "Blue",
-        "mileage": "5500",
-        "price": "5550000",
-        "engine": "1300",
-        "transmission": "CVT",
-        "description": "Everything is in genuine condition. Condition is as good as a brand-new car.",
-        "phone": "+447412000000",
-        "images": "aqua",
-    },
-    {
-        "make": "Nissan",
-        "model": "X-TRAIL",
-        "year": "2022",
-        "fuel": "Diesel",
-        "steering": "RHD",
-        "drivetrain": "2WD",
-        "seats": "5 Seats",
-        "country": "Thailand",
-        "city": "Bangkok",
-        "color": "Black",
-        "mileage": "12000",
-        "price": "3500000",
-        "engine": "2000",
-        "transmission": "CVT",
-        "description": "Low mileage vehicle with full service history. Well maintained and in excellent condition.",
-        "phone": "+66812345678",
-        "images": "nissan",
-    },
-    {
-        "make": "Honda",
-        "model": "VEZEL",
-        "year": "2023",
-        "fuel": "Petrol",
-        "steering": "RHD",
-        "drivetrain": "2WD",
-        "seats": "5 Seats",
-        "country": "Australia",
-        "city": "Melbourne",
-        "color": "White",
-        "mileage": "8000",
-        "price": "2800000",
-        "engine": "1500",
-        "transmission": "CVT",
-        "description": "Single owner vehicle. All original parts. Never been in an accident.",
-        "phone": "+61412345678",
-        "images": "honda",
-    },
-]
 
 # -------------------------------------------------------
 # Auction with SAT
