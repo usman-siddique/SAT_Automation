@@ -37,6 +37,9 @@ It covers positive and negative test scenarios, following the Page Object Model 
 ## Project Structure
 ```
 SAT_Automation/
+├── data/
+│   └── list_on_sat_data.py      # Data-driven List on SAT vehicle records
+│
 ├── assets/
 │   └── images/                 # Test images for form uploads
 │
@@ -129,15 +132,15 @@ pytest tests/car_services/ -v -s
 
 | Module | Tests | Description |
 |--------|-------|-------------|
-| **Sell My Car** | 8 | Positive and negative tests for price quote, listing, auction |
+| **Sell My Car** | 22 | Price quote, 17 data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 17 | Auction, Shipping Schedule, Insurance, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Buy Flow (End‑to‑End)** | 1 | Complete order placement from car selection to payment confirmation |
-| **Total** | **36** | |
+| **Total** | **50** | |
 
 ### Module Breakdown
 
-- **Sell My Car:** 8 tests
+- **Sell My Car:** 22 tests
 - **Car Services:** 17 tests
 - **About Us:** 10 tests
 - **Buy Flow (End‑to‑End):** 1 test
@@ -172,9 +175,9 @@ The pytest.ini file includes:
 ```
 [pytest]
 testpaths = tests
-addopts = -v --html=reports/report.html --self-contained-html --reruns 2 --reruns-delay 2
+addopts = -v --html=reports/report.html --self-contained-html --reruns 1 --reruns-delay 2
 ```
---reruns 2 - Retry failed tests up to 2 times
+--reruns 1 - Retry each failed test once
 
 --reruns-delay 2 - Wait 2 seconds between retries
 
