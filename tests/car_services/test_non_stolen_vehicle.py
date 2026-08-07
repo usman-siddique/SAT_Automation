@@ -35,7 +35,7 @@ def open_modal(page_no_login):
 # Positive Test: Verify Non Stolen Vehicle form submission
 # ============================================================
 
-def test_non_stolen_vehicle_positive(page_no_login):
+def test_non_stolen_vehicle_positive(require_state_changing_tests, page_no_login):
     print("\n" + "="*60)
     print("✅ NON STOLEN VEHICLE - POSITIVE TEST")
     print("="*60)
@@ -92,7 +92,7 @@ def test_non_stolen_vehicle_invalid_stock_id(page_no_login):
 # Negative Test 2: Phone without country code
 # ============================================================
 
-def test_non_stolen_vehicle_no_country_code(page_no_login):
+def test_non_stolen_vehicle_no_country_code(require_state_changing_tests, page_no_login):
     print("\n" + "="*60)
     print("❎ NON STOLEN VEHICLE - NEGATIVE: NO COUNTRY CODE")
     print("="*60)
@@ -126,7 +126,7 @@ def test_non_stolen_vehicle_no_country_code(page_no_login):
 # Negative Test 3: Incomplete card number
 # ============================================================
 
-def test_non_stolen_vehicle_incomplete_card(page_no_login):
+def test_non_stolen_vehicle_incomplete_card(require_state_changing_tests, page_no_login):
     print("\n" + "="*60)
     print("❎ NON STOLEN VEHICLE - NEGATIVE: INCOMPLETE CARD")
     print("="*60)
@@ -167,7 +167,7 @@ def test_non_stolen_vehicle_incomplete_card(page_no_login):
 # Negative Test 4: Missing ZIP code
 # ============================================================
 
-def test_non_stolen_vehicle_missing_zip(page_no_login):
+def test_non_stolen_vehicle_missing_zip(require_state_changing_tests, page_no_login):
     print("\n" + "="*60)
     print("❎ NON STOLEN VEHICLE - NEGATIVE: MISSING ZIP CODE")
     print("="*60)

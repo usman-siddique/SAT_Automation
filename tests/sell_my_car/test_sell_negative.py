@@ -45,7 +45,7 @@ def test_get_price_quote_partial_validation(page):
 # Negative Test 3: Get Price Quote - Step 3 Terms Checkbox Unchecked
 # ============================================================
 
-def test_get_price_quote_terms_validation(page):
+def test_get_price_quote_terms_validation(require_state_changing_tests, page):
     print("\n📝 Starting Get Price Quote Terms Validation...")
     sell_page = setup_sell_page(page)
     sell_page.get_price_quote_terms_validation(PRICE_QUOTE_DATA, PRICE_QUOTE_STEP2_DATA, PRICE_QUOTE_STEP3_DATA)

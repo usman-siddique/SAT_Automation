@@ -6,7 +6,7 @@ from pages.buy_flow.car_details_page import CarDetailsPage
 from pages.buy_flow.checkout_page import CheckoutPage
 from pages.buy_flow.payment_page import PaymentPage
 
-def test_complete_order_placement(page):
+def test_complete_order_placement(require_state_changing_tests, page):
     print("\n" + "="*60)
     print("🚗 E2E ORDER PLACEMENT FLOW")
     print("="*60)

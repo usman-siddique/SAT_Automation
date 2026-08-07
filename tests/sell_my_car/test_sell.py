@@ -26,7 +26,7 @@ def setup_sell_page(page):
 # Test 1: Get Price Quote - all 3 steps
 # ============================================================
 
-def test_get_price_quote(page):
+def test_get_price_quote(require_state_changing_tests, page):
     print("\n📝 Starting Get Price Quote...")
     sell_page = setup_sell_page(page)
     sell_page.get_price_quote(PRICE_QUOTE_DATA, PRICE_QUOTE_STEP2_DATA, PRICE_QUOTE_STEP3_DATA)
@@ -37,7 +37,7 @@ def test_get_price_quote(page):
 # ============================================================
 
 @pytest.mark.parametrize("list_data", LIST_ON_SAT_PARAMS)
-def test_list_on_sat(page, list_data):
+def test_list_on_sat(require_state_changing_tests, page, list_data):
     print(f"\n📝 Starting List on SAT - {list_data['make']} {list_data['model']}...")
     sell_page = setup_sell_page(page)
     sell_page.list_on_sat(list_data)
@@ -47,7 +47,7 @@ def test_list_on_sat(page, list_data):
 # Test 3: Auction with SAT
 # ============================================================
 
-def test_auction_with_sat(page):
+def test_auction_with_sat(require_state_changing_tests, page):
     print("\n📝 Starting Auction with SAT...")
     sell_page = setup_sell_page(page)
     sell_page.auction_with_sat(AUCTION_DATA)
