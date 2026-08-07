@@ -13,7 +13,7 @@ An end-to-end test automation framework for the [SAT Japan] vehicle selling plat
 This framework automates core workflows on the SAT Japan platform, including:
 
 - **Sell My Car Module:** Price quote, listing, auction
-- **Car Services Module:** Auction, Shipping Schedule, Insurance, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
+- **Car Services Module:** Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
 - **About Us Module:** Company info, loyalty program, SAT Pro membership
 - **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation
 
@@ -155,7 +155,7 @@ pytest tests/car_services/ -v -s
 | Module | Tests | Description |
 |--------|-------|-------------|
 | **Sell My Car** | 22 | Price quote, 17 data-driven List on SAT cases, auction, and negative validation tests |
-| **Car Services** | 17 | Auction, Shipping Schedule, Insurance, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
+| **Car Services** | 17 | Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Buy Flow (End‑to‑End)** | 1 | Complete order placement from car selection to payment confirmation |
 | **Total** | **50** | |

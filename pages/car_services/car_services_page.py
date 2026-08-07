@@ -42,16 +42,17 @@ class CarServicesPage:
 
 
     # ============================================================
-    # Navigation: Hover Car Services menu, click Insurance Services
+    # Navigation: Hover Car Services menu, click Warranty Service
     # ============================================================
 
-    def go_to_insurance_services(self):
+    def go_to_warranty_service(self):
         self.page.locator("p.cnm-cls", has_text="Car Services").hover()
-        link = self.page.get_by_role("link", name="Insurance Service", exact=True)
+        link = self.page.get_by_role("link", name="Warranty Service", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("h1.insurance-bannar-title").wait_for(state="visible")
-        print("✅ Navigation to Insurance Services: PASS")
+        self.page.wait_for_url("**/sat-warranty")
+        self.page.get_by_role("heading", name="SAT Japan Warranty", exact=True).wait_for(state="visible")
+        print("✅ Navigation to Warranty Service: PASS")
 
 
     # ============================================================

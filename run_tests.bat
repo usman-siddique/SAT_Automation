@@ -77,7 +77,7 @@ echo 2. Run Sell My Car tests
 echo 3. Run Car Services tests
 echo 4. Run About Us tests
 echo 5. Run Shipping Schedule tests
-echo 6. Run Insurance Services tests
+echo 6. Run Warranty Service tests
 echo 7. Run Finance Service tests
 echo 8. Run Non Stolen Vehicle tests
 echo 9. Run Buy Now / Order Placement tests
@@ -90,7 +90,7 @@ if "%choice%"=="2" goto sell
 if "%choice%"=="3" goto car_services
 if "%choice%"=="4" goto about_us
 if "%choice%"=="5" goto shipping
-if "%choice%"=="6" goto insurance
+if "%choice%"=="6" goto warranty
 if "%choice%"=="7" goto finance
 if "%choice%"=="8" goto non_stolen
 if "%choice%"=="9" goto buy_flow
@@ -134,11 +134,11 @@ set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/test_shipping_schedule.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
-:insurance
-echo Running Insurance Services tests...
+:warranty
+echo Running Warranty Service tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/car_services/test_insurance_services.py %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest tests/car_services/test_warranty_service.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :finance
