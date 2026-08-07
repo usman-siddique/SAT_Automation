@@ -13,9 +13,19 @@ def test_warranty_service_all(page_no_login):
     print("=" * 60)
 
     warranty = setup_warranty_page(page_no_login)
-    warranty.verify_main_heading()
-    warranty.verify_coverage_section()
-    warranty.verify_claim_process()
-    warranty.verify_faq_section()
+
+    assert warranty.get_main_heading() == "SAT Japan Warranty"
+    assert (
+        warranty.get_coverage_heading()
+        == "What Does the SAT Japan Warranty Cover?"
+    )
+    assert warranty.get_claim_process_headings() == [
+        "How to Report an Issue",
+        "Step 1: Contact Us Within 48 Hours",
+        "Step 2: We Assess Your Claim",
+        "Step 3: Repair Begins",
+        "Step 4: You Get Reimbursed",
+    ]
+    assert warranty.get_faq_heading() == "Frequently Asked Questions"
 
     print("\n✅ WARRANTY SERVICE COMPLETE")

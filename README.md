@@ -93,13 +93,26 @@ source venv/bin/activate
 
 ### 3. Install dependencies
 ```
-pip install playwright pytest pytest-html pytest-rerunfailures python-dotenv
+pip install -r requirements.txt
 playwright install
 ```
 
 ### 4. Create .env file
 
-Create a .env file inside the SAT_Automation/ folder:
+Copy the provided environment template:
+
+```powershell
+# Windows
+Copy-Item .env.example .env
+```
+
+```bash
+# Mac/Linux
+cp .env.example .env
+```
+
+Then update `.env` with your development credentials:
+
 ```
 BASE_URL=https://development.satjapan.info
 LOGIN_EMAIL=your_email@example.com

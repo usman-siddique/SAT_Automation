@@ -28,11 +28,19 @@ def test_storage_service_all(page_no_login):
     print("="*60)
     
     storage = setup_storage_page(page_no_login)
-    
-    # Verify all elements on single page
-    storage.verify_main_heading()
-    storage.verify_countries_heading()
-    storage.verify_benefits_heading()
-    storage.verify_why_store_heading()
+
+    assert (
+        storage.get_main_heading()
+        == "Secure Storage Service For Your Vehicle's Safety"
+    )
+    assert (
+        storage.get_countries_heading()
+        == "Countries Where We Offer Storage Service"
+    )
+    assert (
+        storage.get_benefits_heading()
+        == "Benefits of SAT Vehicle Storage Service"
+    )
+    assert storage.get_why_store_heading() == "Why Store a New Vehicle?"
     
     print("\n✅ STORAGE SERVICE COMPLETE")
