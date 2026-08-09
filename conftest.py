@@ -1,10 +1,3 @@
-# ============================================================
-# conftest.py
-# pytest automatically loads this file -- no need to import it.
-# It provides fixtures and hooks for the test framework.
-# Supports browser selection via BROWSER environment variable.
-# ============================================================
-
 import pytest
 import os
 from playwright.sync_api import sync_playwright
