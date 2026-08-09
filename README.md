@@ -118,6 +118,19 @@ BASE_URL=https://development.satjapan.info
 LOGIN_EMAIL=your_email@example.com
 LOGIN_PASSWORD=your_password
 ```
+
+Create `.env.local` for inventory records that expire or change frequently.
+This file is ignored by Git:
+
+```text
+BUY_FLOW_URL=your_current_unreserved_used-car URL
+AUCTION_CALCULATOR_STOCK_ID=your_current_auction stock ID
+NON_STOLEN_VEHICLE_STOCK_ID=your_current stock ID for Non-Stolen verification
+```
+
+Update these values before a state-changing regression run whenever the
+configured form records are no longer available. The buy flow automatically
+selects a visible, unreserved vehicle from `BUY_FLOW_URL`.
 ---
 
 ## How to Run Tests
@@ -167,16 +180,16 @@ pytest tests/car_services/ -v -s
 
 | Module | Tests | Description |
 |--------|-------|-------------|
-| **Sell My Car** | 22 | Price quote, 17 data-driven List on SAT cases, auction, and negative validation tests |
-| **Car Services** | 17 | Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
+| **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
+| **Car Services** | 34 | Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Buy Flow (End‑to‑End)** | 1 | Complete order placement from car selection to payment confirmation |
-| **Total** | **50** | |
+| **Total** | **52** | |
 
 ### Module Breakdown
 
-- **Sell My Car:** 22 tests
-- **Car Services:** 17 tests
+- **Sell My Car:** 7 tests
+- **Car Services:** 34 tests
 - **About Us:** 10 tests
 - **Buy Flow (End‑to‑End):** 1 test
 
@@ -189,6 +202,7 @@ pytest tests/car_services/ -v -s
 - Session‑based login – Logs in once and reuses session across all tests
 - Auto screenshots – Captures screenshots on any test failure
 - Parameterized tests – Runs multiple data sets efficiently
+- Independent test items – Retries only the failed flow or verification
 - Proper waits – No hardcoded sleeps; uses Playwright’s built‑in wait methods
 
 
@@ -210,11 +224,13 @@ The pytest.ini file includes:
 ```
 [pytest]
 testpaths = tests
-addopts = -v --html=reports/report.html --self-contained-html --reruns 1 --reruns-delay 2
+addopts = -v -rR --html=reports/report.html --self-contained-html --reruns 1 --reruns-delay 2
 ```
 --reruns 1 - Retry each failed test once
 
 --reruns-delay 2 - Wait 2 seconds between retries
+
+-rR - Show which individual test items were rerun in the terminal summary
 
 ---
 ## Future Plans

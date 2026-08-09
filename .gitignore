@@ -1,5 +1,6 @@
 # Credentials - never push to GitHub
 .env
+.env.local
 
 # Python cache files
 __pycache__/

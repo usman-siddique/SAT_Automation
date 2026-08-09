@@ -19,9 +19,12 @@ class NonStolenVehiclePage:
     # ============================================================
 
     def verify_page_heading(self):
-        heading = self.page.locator("h1.title-stolen:has-text('Steps to get a Non-Stolen Verification Certificate')")
-        if not heading.is_visible():
-            raise AssertionError("Page heading not visible")
+        heading = self.page.get_by_role(
+            "heading",
+            name="Steps to get a Non-Stolen Verification Certificate",
+            exact=True,
+        )
+        heading.wait_for(state="visible")
         print(f"✅ Page heading verified: {heading.inner_text()}")
 
 
@@ -52,6 +55,12 @@ class NonStolenVehiclePage:
     # ============================================================
 
     def enter_stock_id(self, stock_id):
+        if not stock_id:
+            raise AssertionError(
+                "NON_STOLEN_VEHICLE_STOCK_ID is missing. "
+                "Update it in .env.local before running."
+            )
+
         stock_input = self.page.locator("#stock_id")
         stock_input.fill(stock_id)
         stock_input.press("Enter")

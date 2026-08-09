@@ -1,30 +1,73 @@
-# pages/buy_flow/used_cars_page.py
 from playwright.sync_api import Page
+
 
 class UsedCarsPage:
     def __init__(self, page: Page):
         self.page = page
 
-    def open(self, unreserved: bool = True):
-        """Open the used cars listing page, optionally filtering to unreserved cars."""
-        url = "https://development.satjapan.info/used-cars?sort_by=new_arrival&per_page=25&page=1"
-        if unreserved:
-            url += "&unreserved=1"
-        self.page.goto(url, wait_until="domcontentloaded")
-        # Wait for the loader to disappear
-        self.page.locator(".loader").wait_for(state="hidden", timeout=10000)
-        # Short wait for AJAX content to settle (acceptable for dynamic lists)
-        self.page.wait_for_timeout(1500)
+    def open(self, listing_url: str):
+        """Open the configured unreserved Used inventory and verify its tab."""
+        if not listing_url:
+            raise AssertionError(
+                "BUY_FLOW_URL is missing. Update it in .env.local before running."
+            )
+
+        self.page.goto(listing_url, wait_until="domcontentloaded")
+        self.page.locator(".loader").wait_for(state="hidden", timeout=30000)
+
+        used_tab = self.page.locator(".nav-link", has_text="Used").first
+        auction_tab = self.page.locator(".nav-link", has_text="Auction").first
+        used_tab.wait_for(state="visible")
+
+        assert "active" in (used_tab.get_attribute("class") or ""), (
+            "Used inventory tab is not active. Update BUY_FLOW_URL in .env.local."
+        )
+        assert "active" not in (auction_tab.get_attribute("class") or ""), (
+            "Auction inventory became active; refusing to select an auction car."
+        )
+        assert "/auction_cars" not in self.page.url, (
+            "Buy flow opened the Auction inventory instead of Used inventory."
+        )
         return self
 
-    def select_any_car_with_inquire_now(self):
-        """Find the first car card that has an 'Inquire Now' button and click its title link."""
-        car_titles = self.page.locator("a.search-car--title").all()
-        for title in car_titles:
-            # Locate the parent car card (adjust XPath as needed)
-            card = title.locator("xpath=./ancestor::div[contains(@class, 'car--detail')]")
-            if card.locator("button.btnCarPriceQuote").count() > 0:
-                title.click()
-                print("✅ Selected car with Inquire Now button")
-                return True
-        raise Exception("No car with 'Inquire Now' button found")
+    def select_any_available_used_car(self):
+        """Select the first visible, unreserved Used car with Inquire Now."""
+        for title in self.page.locator("a.search-car--title").all():
+            if not title.is_visible():
+                continue
+
+            href = title.get_attribute("href") or ""
+            card = title.locator(
+                "xpath=./ancestor::div[contains(@class, 'car--detail')]"
+            ).first
+            card_text = card.inner_text().lower()
+            inquire_button = card.locator(
+                "button.btnCarPriceQuote", has_text="Inquire Now"
+            )
+
+            is_available_used_car = (
+                "/auction_cars" not in href
+                and "sold" not in card_text
+                and "reserved" not in card_text
+                and inquire_button.count() > 0
+                and inquire_button.is_visible()
+            )
+            if not is_available_used_car:
+                continue
+
+            stock_id = href.rstrip("/").rsplit("/", 1)[-1]
+            title.click()
+            self.page.wait_for_url(
+                f"**/used-cars/**/{stock_id}",
+                wait_until="domcontentloaded",
+            )
+            assert "/auction_cars" not in self.page.url, (
+                "Selected vehicle redirected to Auction inventory."
+            )
+            print(f"Selected available used car: {stock_id.upper()}")
+            return stock_id
+
+        raise AssertionError(
+            "No visible, unreserved Used car with Inquire Now was available "
+            "on BUY_FLOW_URL."
+        )

@@ -1,69 +1,131 @@
-# pages/buy_flow/payment_page.py
+import re
+
 from playwright.sync_api import Page
+
+
+PAYMENT_STABILIZATION_MS = 3000
+
 
 class PaymentPage:
     def __init__(self, page: Page):
         self.page = page
 
     def select_credit_card(self):
-        # Wait for the radio button to be present and enabled
+        self.page.wait_for_load_state("domcontentloaded")
+        loader = self.page.locator(".loader")
+        if loader.count() > 0:
+            loader.wait_for(state="hidden", timeout=30000)
+
         credit_card = self.page.locator("input[name='payment'][value='paygent']")
         credit_card.wait_for(state="visible")
-        # Ensure the radio button is not disabled
-        credit_card.wait_for(state="visible")
         credit_card.check()
-        # Now wait for the card input fields container to become visible (the collapse expands)
         self.page.locator("#paygentBlock").wait_for(state="visible", timeout=10000)
-        print("✅ Selected credit card payment")
+        # Allow payment details and the final displayed total to render fully.
+        self.page.wait_for_timeout(PAYMENT_STABILIZATION_MS)
+        print("Selected credit card payment")
         return self
 
     def fill_card_details(self, card_number: str, expiry: str, cvc: str):
-        """Fill the credit card fields (direct inputs, no iframe)."""
         card_input = self.page.locator("#card_number")
         card_input.wait_for(state="visible")
         card_input.fill(card_number)
-
-        expiry_input = self.page.locator("#expire_date")
-        expiry_input.fill(expiry)
-
-        cvc_input = self.page.locator("#cvc")
-        cvc_input.fill(cvc)
-        print("✅ Card details filled")
+        self.page.locator("#expire_date").fill(expiry)
+        self.page.locator("#cvc").fill(cvc)
+        print("Card details filled")
         return self
 
     def accept_terms(self):
-        """Check the terms and conditions checkbox."""
         terms = self.page.locator("#term_conditions")
         terms.wait_for(state="visible")
         if not terms.is_checked():
             terms.check()
-        print("✅ Accepted terms")
+        print("Accepted terms")
         return self
 
+    @staticmethod
+    def _normalize_price(price_text: str):
+        """Normalize values such as '$2,351' for reliable comparisons."""
+        normalized = re.sub(r"[^0-9.]", "", price_text)
+        if not normalized:
+            raise AssertionError(f"Price value was not found in: {price_text!r}")
+        return normalized
+
+    def get_selected_payment_total(self):
+        """Read Total Price from the selected Paygent payment screen."""
+        total_label = self.page.locator(
+            "td.c-price-title", has_text="Total Price"
+        ).first
+        total_label.wait_for(state="visible")
+        total_row = total_label.locator("xpath=ancestor::tr[1]")
+        total_text = total_row.locator("td.c-price").inner_text().strip()
+        self._normalize_price(total_text)
+        requires_inquiry = "inquire" in total_label.inner_text().lower()
+        print(f"Payment screen total: {total_text}")
+        return total_text, requires_inquiry
+
     def submit(self):
-        """Click Proceed to Checkout, then the popup Place Order button, and wait for order summary."""
-        # Step 1: Click "Proceed to Checkout"
+        """Place the order and wait for the order summary URL."""
         proceed = self.page.locator("#submitPlaceOrder")
         proceed.wait_for(state="visible")
         proceed.click()
-        print("✅ Clicked Proceed to Checkout")
+        print("Clicked Proceed to Checkout")
 
-        # Step 2: Handle the popup modal with "Place Order" button
         place_order_btn = self.page.locator("button:has-text('Place Order')")
         place_order_btn.wait_for(state="visible", timeout=10000)
         place_order_btn.click()
-        print("✅ Clicked Place Order in popup")
+        print("Clicked Place Order in popup")
 
-        # Step 3: Wait for the order summary page (3DS may take a few seconds)
         self.page.wait_for_url("**/order-summary/**", timeout=60000)
-        print("✅ Reached order summary page")
+        print("Reached order summary page")
         return self
 
-    def verify_order_confirmation(self):
-        """Verify the order summary page content."""
-        success_heading = self.page.locator("h1.main-title:has-text('Thank you for placing an order')")
-        success_heading.wait_for(state="visible")
-        track_btn = self.page.locator("button.track-ordr-btn:has-text('Track Your Order')")
+    def _get_summary_value(self, label_text: str):
+        label = self.page.locator(
+            "span.item--title", has_text=label_text
+        ).first
+        label.wait_for(state="visible")
+        row = label.locator(
+            "xpath=ancestor::div[contains(@class, 'item--summary')][1]"
+        )
+        return row.locator("span.item--value").inner_text().strip()
+
+    def verify_order_confirmation(
+        self,
+        expected_total: str,
+        payment_total_requires_inquiry: bool,
+    ):
+        """Verify success controls and the unchanged Total Price."""
+        success_message = self.page.locator(
+            "p.para", has_text="Thank you for placing an order with SAT"
+        ).first
+        success_message.wait_for(state="visible")
+
+        track_btn = self.page.get_by_role("button", name="Track Your Order")
         track_btn.wait_for(state="visible")
-        print("✅ Order confirmation verified")
+
+        summary_total = self._get_summary_value("Total Price")
+        if summary_total.lower() == "ask":
+            shipping_cost = self._get_summary_value("Shipping Cost")
+            assert shipping_cost.lower() == "ask", (
+                "Order summary Total Price is Ask, but Shipping Cost is "
+                f"{shipping_cost!r}."
+            )
+            assert payment_total_requires_inquiry, (
+                "Order summary Total Price is Ask, but the Paygent screen did "
+                "not indicate that the final total requires an inquiry."
+            )
+            print(
+                f"Order confirmation verified: Paygent showed known total "
+                f"{expected_total}; final total is Ask because shipping is Ask."
+            )
+        else:
+            assert self._normalize_price(summary_total) == self._normalize_price(
+                expected_total
+            ), (
+                f"Total Price changed after order placement: payment screen "
+                f"showed {expected_total}, order summary showed {summary_total}."
+            )
+            print(
+                f"Order confirmation verified with matching total: {summary_total}"
+            )
         return self

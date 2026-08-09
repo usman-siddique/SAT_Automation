@@ -5,7 +5,9 @@ from pages.buy_flow.used_cars_page import UsedCarsPage
 from pages.buy_flow.car_details_page import CarDetailsPage
 from pages.buy_flow.checkout_page import CheckoutPage
 from pages.buy_flow.payment_page import PaymentPage
+from config import BUY_FLOW_URL
 
+@pytest.mark.flaky(reruns=0)
 def test_complete_order_placement(require_state_changing_tests, page):
     print("\n" + "="*60)
     print("🚗 E2E ORDER PLACEMENT FLOW")
@@ -17,8 +19,8 @@ def test_complete_order_placement(require_state_changing_tests, page):
 
     # 2. Navigate to used cars and select a car with 'Inquire Now'
     used_cars = UsedCarsPage(page)
-    used_cars.open(unreserved=True)
-    used_cars.select_any_car_with_inquire_now()
+    used_cars.open(BUY_FLOW_URL)
+    used_cars.select_any_available_used_car()
 
     # 3. On car details page, click 'Buy Now'
     car_details = CarDetailsPage(page)
@@ -32,9 +34,10 @@ def test_complete_order_placement(require_state_changing_tests, page):
     # 5. On payment page, fill details, accept terms, submit, and verify confirmation
     payment = PaymentPage(page)
     payment.select_credit_card()
+    expected_total, total_requires_inquiry = payment.get_selected_payment_total()
     payment.fill_card_details("5555 5555 5555 4444", "12/34", "123")
     payment.accept_terms()
     payment.submit()
-    payment.verify_order_confirmation()
+    payment.verify_order_confirmation(expected_total, total_requires_inquiry)
 
     print("\n✅ ORDER PLACEMENT COMPLETE")

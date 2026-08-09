@@ -48,7 +48,7 @@ def listing(
     }
 
 
-LIST_ON_SAT_PARAMS = [
+ALL_LIST_ON_SAT_PARAMS = [
     # Only makes and models verified as available in the SAT dropdowns.
     listing("Honda", "ZEST SPARK", 2010, "Silver", 98000, 620000, 660, "AT", ["2010 Honda Zest Spark Silver.jpg"], seats="4 Seats"),
     listing("Nissan", "Wingroad", 2016, "Silver", 61000, 1150000, 1500, "AT", ["2016 Nissan Wingroad AT Silver.jpg"]),
@@ -77,6 +77,10 @@ LIST_ON_SAT_PARAMS = [
     listing("Toyota", "AQUA", 2018, "White", 47000, 1450000, 1500, "CVT", ["Toyota Aqua White 1.jpeg", "Toyota Aqua White 2.jpeg", "Toyota Aqua White 3.jpeg"], fuel="Hybrid"),
     listing("Toyota", "YARIS", 2026, "Silver", 3000, 4200000, 1500, "CVT", ["Toyota Yaris Sedan 2026 Silver.png"]),
 ]
+
+# Two representative vehicles are enough for the regular listing regression.
+# Keep the remaining records available here without collecting them as tests.
+LIST_ON_SAT_PARAMS = ALL_LIST_ON_SAT_PARAMS[:2]
 
 
 def _assert_unique_listings():

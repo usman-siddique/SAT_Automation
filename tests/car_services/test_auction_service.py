@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from pages.car_services.car_services_page import CarServicesPage
 from pages.car_services.auction_service_page import AuctionServicePage
+from config import AUCTION_CALCULATOR_STOCK_ID
 
 
 # ============================================================
@@ -52,7 +53,7 @@ def test_auction_cost_calculator_form(page, context):
     CarServicesPage(page).go_to_auction_service()
     AuctionServicePage(page, context).click_auction_cost_calculator()
     AuctionServicePage(page, context).fill_auction_cost_calculator(
-        stock_id="sat-85775462",
+        stock_id=AUCTION_CALCULATOR_STOCK_ID,
         bid_amount="1500",
         country="Australia",
         port="Melbourne"

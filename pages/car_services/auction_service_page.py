@@ -8,6 +8,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
 
 # ============================================================
 # Page Class: Auction Service Page
@@ -74,9 +76,26 @@ class AuctionServicePage:
     # ============================================================
 
     def fill_auction_cost_calculator(self, stock_id, bid_amount, country, port):
+        if not stock_id:
+            raise AssertionError(
+                "AUCTION_CALCULATOR_STOCK_ID is missing. "
+                "Update it in .env.local before running."
+            )
+
         # Fill Stock ID and wait for M3 to auto-fetch
-        self.page.locator("#stock_id").fill(stock_id)
-        self.page.wait_for_function("document.querySelector('#m3').value !== ''")
+        normalized_stock_id = stock_id.strip().lower()
+        self.page.locator("#stock_id").fill(normalized_stock_id)
+        try:
+            self.page.wait_for_function(
+                "document.querySelector('#m3').value !== ''",
+                timeout=15000,
+            )
+        except PlaywrightTimeoutError as error:
+            raise AssertionError(
+                f"Auction stock {stock_id} did not return vehicle dimensions. "
+                "It may be expired; update AUCTION_CALCULATOR_STOCK_ID "
+                "in .env.local."
+            ) from error
 
         print("✅ Stock ID entered, M3 auto-fetched: PASS")
 

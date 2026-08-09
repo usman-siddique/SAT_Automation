@@ -9,11 +9,13 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
-# Load values from .env file into environment variables
-load_dotenv()
-
 # --- Base directory (folder where config.py lives) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load credentials first, then local frequently-changing test records.
+# .env.local is ignored by Git so live stock IDs and URLs are not committed.
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+load_dotenv(os.path.join(BASE_DIR, ".env.local"), override=True)
 
 # --- Site URL ---
 BASE_URL = os.getenv("BASE_URL")
@@ -21,6 +23,11 @@ BASE_URL = os.getenv("BASE_URL")
 # --- Login Credentials ---
 LOGIN_EMAIL = os.getenv("LOGIN_EMAIL")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
+
+# --- Frequently changing Buy/Auction records ---
+BUY_FLOW_URL = os.getenv("BUY_FLOW_URL")
+AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")
+NON_STOLEN_VEHICLE_STOCK_ID = os.getenv("NON_STOLEN_VEHICLE_STOCK_ID")
 
 # --- Image Paths ---
 IMAGES_DIR = os.path.join(BASE_DIR, "assets", "images")
@@ -41,7 +48,7 @@ IMAGES = {
 # Non Stolen Vehicle Test Data
 # -------------------------------------------------------
 NON_STOLEN_VEHICLE_DATA = {
-    "valid_stock_id": "sat-30230916",
+    "valid_stock_id": NON_STOLEN_VEHICLE_STOCK_ID,
     "invalid_stock_id": "INVALID-ID-12345",
     "full_name": "QA Testing Automation",   
     "email": "qa.testmail007021@gmail.com",
