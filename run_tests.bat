@@ -5,6 +5,21 @@ echo ========================================
 echo SAT Automation Test Runner
 echo ========================================
 echo.
+echo Select test environment:
+echo 1. Sprint - https://sprint.shineauto.info/ (default)
+echo 2. Development - https://development.satjapan.info/
+echo.
+set /p environment_choice="Enter choice (1 or 2): "
+
+if "%environment_choice%"=="2" (
+    set "BASE_URL=https://development.satjapan.info"
+    echo Running against DEVELOPMENT
+) else (
+    set "BASE_URL=https://sprint.shineauto.info"
+    echo Running against SPRINT
+)
+
+echo.
 echo Select browser mode:
 echo 1. Headed (visible browser)
 echo 2. Headless (invisible browser)
@@ -142,7 +157,7 @@ goto end
 echo Running Buy Now / Order Placement tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/buy_flow/test_order_placement.py %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest tests/buy_flow/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :end

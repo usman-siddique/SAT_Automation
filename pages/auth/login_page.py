@@ -46,10 +46,18 @@ class LoginPage:
 
         self.page.get_by_role("button", name="Login").click()
 
-        # Wait for Sell My Car link to confirm login success
+        # The Sprint site completes login with a client-side redirect. Wait for
+        # that redirect before another page object starts its own navigation.
+        self.page.wait_for_function(
+            "() => !window.location.pathname.startsWith('/login')",
+            timeout=30000,
+        )
+
+        # Wait for Sell My Car link to confirm authenticated navigation.
         self.page.get_by_role("link", name="Sell My Car").wait_for(state="visible")
 
         # Wait for all redirects to fully complete before any navigation
         self.page.wait_for_load_state("networkidle")
+        self.page.wait_for_timeout(1000)
 
-        print("✅ Login: PASS")
+        print("Login: PASS")

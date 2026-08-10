@@ -85,10 +85,10 @@ def pytest_runtest_makereport(item, call):
                 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
                 screenshot_path = os.path.join(SCREENSHOTS_DIR, f"{item.name}.png")
                 page.screenshot(path=screenshot_path)
-                print(f"📸 Screenshot saved: {screenshot_path}")
+                print(f"Screenshot saved: {screenshot_path}")
 
                 report.extras = getattr(report, "extras", [])
                 from pytest_html import extras
                 report.extras.append(extras.image(f"screenshots/{item.name}.png"))
             except Exception as e:
-                print(f"⚠️ Could not take screenshot: {e}")
+                print(f"Could not take screenshot: {e}")

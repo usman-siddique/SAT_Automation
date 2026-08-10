@@ -58,7 +58,7 @@ class NonStolenVehiclePage:
         if not stock_id:
             raise AssertionError(
                 "NON_STOLEN_VEHICLE_STOCK_ID is missing. "
-                "Update it in .env.local before running."
+                "Update it in .env before running."
             )
 
         stock_input = self.page.locator("#stock_id")

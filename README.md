@@ -70,6 +70,26 @@ SAT_Automation/
 └── README.md
 ```
 
+### Buy Now organization
+
+Buy Now automation is organized by business role, vehicle type, and payment
+flow:
+
+```text
+tests/buy_flow/
+|-- user/
+|   |-- used_car/
+|   |   |-- test_paygent.py
+|   |   `-- test_bank_transfer.py
+|   `-- new_car/
+`-- dealer/
+    |-- used_car/
+    `-- new_car/
+```
+
+Only implemented coverage contains test modules. New Car and Dealer packages
+are prepared for the next flows and do not report false placeholder tests.
+
 ---
 
 ## Setup Instructions
@@ -111,26 +131,34 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-Then update `.env` with your development credentials:
+Then update `.env` with your credentials and the environment used for direct
+`pytest` commands. The Windows test runner asks for Sprint or Development and
+overrides `BASE_URL` for that run:
 
 ```
-BASE_URL=https://development.satjapan.info
+BASE_URL=https://sprint.shineauto.info
 LOGIN_EMAIL=your_email@example.com
 LOGIN_PASSWORD=your_password
 ```
 
-Create `.env.local` for inventory records that expire or change frequently.
-This file is ignored by Git:
+The Buy Flow builds its inventory URLs from `BASE_URL` and these stable paths:
 
 ```text
-BUY_FLOW_URL=your_current_unreserved_used-car URL
+USED_CAR_PAYGENT_PATH=/used-cars/mk_volkswagen?sort_by=new_arrival&per_page=25&page=1&unreserved=1
+USED_CAR_BANK_PATH=/used-cars/mk_daihatsu?sort_by=new_arrival&per_page=25&page=1&unreserved=1
+```
+
+Keep records that expire or change frequently in the same private `.env` file.
+This is the only active environment file and is ignored by Git:
+
+```text
 AUCTION_CALCULATOR_STOCK_ID=your_current_auction stock ID
 NON_STOLEN_VEHICLE_STOCK_ID=your_current stock ID for Non-Stolen verification
 ```
 
-Update these values before a state-changing regression run whenever the
-configured form records are no longer available. The buy flow automatically
-selects a visible, unreserved vehicle from `BUY_FLOW_URL`.
+Update these stock IDs before a state-changing regression run whenever the
+configured records are no longer available. The Buy Flow automatically selects
+a visible, unreserved vehicle from its payment-specific inventory URL.
 ---
 
 ## How to Run Tests

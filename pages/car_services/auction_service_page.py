@@ -79,7 +79,7 @@ class AuctionServicePage:
         if not stock_id:
             raise AssertionError(
                 "AUCTION_CALCULATOR_STOCK_ID is missing. "
-                "Update it in .env.local before running."
+                "Update it in .env before running."
             )
 
         # Fill Stock ID and wait for M3 to auto-fetch
@@ -94,7 +94,7 @@ class AuctionServicePage:
             raise AssertionError(
                 f"Auction stock {stock_id} did not return vehicle dimensions. "
                 "It may be expired; update AUCTION_CALCULATOR_STOCK_ID "
-                "in .env.local."
+                "in .env."
             ) from error
 
         print("✅ Stock ID entered, M3 auto-fetched: PASS")

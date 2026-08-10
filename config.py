@@ -12,20 +12,48 @@ from datetime import datetime, timedelta
 # --- Base directory (folder where config.py lives) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Load credentials first, then local frequently-changing test records.
-# .env.local is ignored by Git so live stock IDs and URLs are not committed.
+# Preserve an environment selected by run_tests.bat before loading .env.
+RUNTIME_BASE_URL = os.getenv("BASE_URL")
+
+# Load the project's single private environment file. It is ignored by Git.
 load_dotenv(os.path.join(BASE_DIR, ".env"))
-load_dotenv(os.path.join(BASE_DIR, ".env.local"), override=True)
 
 # --- Site URL ---
-BASE_URL = os.getenv("BASE_URL")
+# run_tests.bat sets BASE_URL for the selected environment. Direct pytest runs
+# fall back to the value in .env.
+BASE_URL = (RUNTIME_BASE_URL or os.getenv("BASE_URL") or "").rstrip("/")
+
+if not BASE_URL:
+    raise RuntimeError(
+        "BASE_URL is missing. Select an environment in run_tests.bat or set "
+        "BASE_URL in .env."
+    )
+
+
+def build_site_url(path: str) -> str:
+    """Build a URL on the currently selected test environment."""
+    return f"{BASE_URL}/{path.lstrip('/')}"
 
 # --- Login Credentials ---
 LOGIN_EMAIL = os.getenv("LOGIN_EMAIL")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
 
-# --- Frequently changing Buy/Auction records ---
-BUY_FLOW_URL = os.getenv("BUY_FLOW_URL")
+# --- Buy flow inventory paths ---
+# Keep the environment domain separate from stable inventory paths so the same
+# tests can run against Sprint or Development without duplicating URLs.
+USED_CAR_PAYGENT_PATH = os.getenv(
+    "USED_CAR_PAYGENT_PATH",
+    "/used-cars/mk_volkswagen?sort_by=new_arrival&per_page=25&page=1&unreserved=1",
+)
+USED_CAR_BANK_PATH = os.getenv(
+    "USED_CAR_BANK_PATH",
+    "/used-cars/mk_daihatsu?sort_by=new_arrival&per_page=25&page=1&unreserved=1",
+)
+
+USED_CAR_PAYGENT_URL = build_site_url(USED_CAR_PAYGENT_PATH)
+USED_CAR_BANK_URL = build_site_url(USED_CAR_BANK_PATH)
+
+# --- Frequently changing Auction/Service records ---
 AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")
 NON_STOLEN_VEHICLE_STOCK_ID = os.getenv("NON_STOLEN_VEHICLE_STOCK_ID")
 

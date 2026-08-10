@@ -9,7 +9,8 @@ class UsedCarsPage:
         """Open the configured unreserved Used inventory and verify its tab."""
         if not listing_url:
             raise AssertionError(
-                "BUY_FLOW_URL is missing. Update it in .env.local before running."
+                "The configured Used Car inventory URL is missing. Check the "
+                "selected BASE_URL and Buy Flow path settings."
             )
 
         self.page.goto(listing_url, wait_until="domcontentloaded")
@@ -20,7 +21,7 @@ class UsedCarsPage:
         used_tab.wait_for(state="visible")
 
         assert "active" in (used_tab.get_attribute("class") or ""), (
-            "Used inventory tab is not active. Update BUY_FLOW_URL in .env.local."
+            "Used inventory tab is not active. Check the configured inventory path."
         )
         assert "active" not in (auction_tab.get_attribute("class") or ""), (
             "Auction inventory became active; refusing to select an auction car."
@@ -69,5 +70,5 @@ class UsedCarsPage:
 
         raise AssertionError(
             "No visible, unreserved Used car with Inquire Now was available "
-            "on BUY_FLOW_URL."
+            f"on {self.page.url}."
         )
