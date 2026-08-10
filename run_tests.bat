@@ -41,23 +41,6 @@ if "%browser_choice%"=="2" (
 )
 
 echo.
-echo ========================================
-echo State-Changing Test Safety
-echo ========================================
-echo These tests may create orders, payments, listings, quotes,
-echo auctions, or other submissions.
-echo.
-set RUN_STATE_CHANGING_TESTS=false
-set /p state_change_choice="Type ENABLE to allow them, or press Enter to keep them blocked: "
-
-if /i "%state_change_choice%"=="ENABLE" (
-    set RUN_STATE_CHANGING_TESTS=true
-    echo WARNING: State-changing tests are enabled for this run.
-) else (
-    echo State-changing tests are blocked for this run.
-)
-
-echo.
 echo Run tests in parallel? (y/n)
 set /p parallel="Enter choice: "
 if /i "%parallel%"=="y" (

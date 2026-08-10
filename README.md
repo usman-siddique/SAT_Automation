@@ -140,26 +140,8 @@ selects a visible, unreserved vehicle from `BUY_FLOW_URL`.
 pytest -v -s
 ```
 
-Tests that can create an order, payment, listing, quote, auction, or other
-submission are skipped by default. Run them only when those changes are
-intended:
-
-When using `run_tests.bat`, the runner asks whether to enable these tests.
-Press Enter to keep them blocked. Type `ENABLE` only when the submissions are
-intentional. The setting applies only to that batch-file run.
-
-For direct pytest execution from PowerShell, use:
-
-```powershell
-$env:RUN_STATE_CHANGING_TESTS="true"
-pytest -v -s
-```
-
-Close that PowerShell session or remove the variable afterward:
-
-```powershell
-Remove-Item Env:RUN_STATE_CHANGING_TESTS
-```
+Tests that create orders, payments, listings, quotes, auctions, or other
+submissions run without an additional enable prompt.
 
 ### Run specific modules:
 #### Sell My Car module

@@ -6,32 +6,10 @@ from config import BASE_URL
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SCREENSHOTS_DIR = os.path.join(BASE_DIR, "reports", "screenshots")
-STATE_CHANGING_SKIP_REASON = (
-    "State-changing test blocked. Set RUN_STATE_CHANGING_TESTS=true "
-    "only when submissions are intended."
-)
-
-
-def state_changing_tests_enabled():
-    return os.getenv("RUN_STATE_CHANGING_TESTS", "false").lower() == "true"
-
-
-def pytest_collection_modifyitems(items):
-    """Skip state-changing tests before browser fixtures are started."""
-    if state_changing_tests_enabled():
-        return
-
-    skip_state_changing = pytest.mark.skip(reason=STATE_CHANGING_SKIP_REASON)
-    for item in items:
-        if "require_state_changing_tests" in item.fixturenames:
-            item.add_marker(skip_state_changing)
-
-
 @pytest.fixture
 def require_state_changing_tests():
-    """Skip tests that can create orders, payments, listings, or submissions."""
-    if not state_changing_tests_enabled():
-        pytest.skip(STATE_CHANGING_SKIP_REASON)
+    """Compatibility fixture for tests that can create external records."""
+    pass
 
 
 def is_logged_in(page):
