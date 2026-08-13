@@ -1,63 +1,50 @@
-# ============================================================
-# pages/auth/login_page.py
-# Contains the LoginPage class for handling login flow.
-# Called from conftest.py during browser setup.
-# ============================================================
-
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from config import BASE_URL, LOGIN_EMAIL, LOGIN_PASSWORD
+from config import LOGIN_EMAIL, LOGIN_PASSWORD
+from pages.site_navigation import open_site_home
 
 
 class LoginPage:
     def __init__(self, page):
         self.page = page
 
-    # ============================================================
-    # Action: Login to the site
-    # ============================================================
-
     def login(self):
-        # Go to site
-        self.page.goto(BASE_URL, wait_until="domcontentloaded")
+        # A Laravel error page must never be mistaken for an authenticated
+        # session merely because it has no Sign in link.
+        open_site_home(self.page)
 
-        # Check if already logged in (Sign in button NOT visible)
-        sign_in_btn = self.page.locator("header").get_by_role("link", name="Sign in")
+        # On a confirmed homepage, no Sign in link means this browser context
+        # already has an authenticated session.
+        sign_in_btn = self.page.locator("header").get_by_role(
+            "link", name="Sign in"
+        )
         if not sign_in_btn.is_visible(timeout=3000):
-            print("✅ Already logged in, skipping login")
+            print("Already logged in, skipping login")
             return
 
-        # Click Sign in button
         sign_in_btn.click()
 
-        # Wait for email field
-        self.page.locator("#login_email").wait_for(state="visible")
-        for c in LOGIN_EMAIL:
-            self.page.locator("#login_email").type(c, delay=10)
-
+        email = self.page.locator("#login_email")
+        email.wait_for(state="visible")
+        email.fill(LOGIN_EMAIL)
         self.page.get_by_role("button", name="Continue").click()
 
-        # Wait for password field
-        self.page.locator("input[type='password']").wait_for(state="visible")
-        for c in LOGIN_PASSWORD:
-            self.page.locator("input[type='password']").type(c, delay=20)
-
+        password = self.page.locator("input[type='password']")
+        password.wait_for(state="visible")
+        password.fill(LOGIN_PASSWORD)
         self.page.get_by_role("button", name="Login").click()
 
-        # The Sprint site completes login with a client-side redirect. Wait for
-        # that redirect before another page object starts its own navigation.
         self.page.wait_for_function(
             "() => !window.location.pathname.startsWith('/login')",
             timeout=30000,
         )
 
-        # Wait for Sell My Car link to confirm authenticated navigation.
-        self.page.get_by_role("link", name="Sell My Car").wait_for(state="visible")
-
-        # Wait for all redirects to fully complete before any navigation
-        self.page.wait_for_load_state("networkidle")
-        self.page.wait_for_timeout(1000)
+        # Login may redirect to a profile/dashboard. Return to a verified
+        # public homepage so every test starts from the same navigation state.
+        open_site_home(self.page)
+        sign_in_btn = self.page.locator("header").get_by_role(
+            "link", name="Sign in"
+        )
+        assert not sign_in_btn.is_visible(timeout=3000), (
+            "Login did not create an authenticated session."
+        )
 
         print("Login: PASS")

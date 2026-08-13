@@ -1,1 +1,1 @@
-"""Future retail user New Car payment tests."""
+"""Retail user New Car payment tests."""

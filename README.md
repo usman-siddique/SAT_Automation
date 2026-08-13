@@ -82,15 +82,27 @@ tests/buy_flow/
 |   |   |-- test_paygent.py
 |   |   `-- test_bank_transfer.py
 |   `-- new_car/
-|       `-- test_paygent.py
+|       |-- test_paygent.py
+|       `-- test_bank_transfer.py
 `-- dealer/
     |-- used_car/
     `-- new_car/
 ```
 
-Only implemented coverage contains test modules. The User New Car Paygent flow
-is implemented; Dealer packages remain prepared for later coverage and do not
-report false placeholder tests.
+Only implemented coverage contains test modules. User Paygent and Bank Transfer
+flows are implemented for both Used Cars and New Cars. Dealer packages remain
+prepared for later coverage and do not report false placeholder tests.
+
+User New Car coverage currently includes:
+
+- **Paygent:** Nissan Dayz X with variant and price checks across details,
+  checkout, payment, and the final `Partial Payment` order summary.
+- **Bank Transfer:** Honda N-WGN G with variant and price checks plus final
+  `Pending` status, `Ask` shipping/total, Track Your Order, Add Payment Proof,
+  and bank-information verification.
+
+Each payment method is a separate pytest item. If one payment flow fails, its
+automatic rerun does not rerun the other payment method.
 
 ---
 
@@ -193,6 +205,16 @@ The Buy Now menu provides separate User-flow choices:
 - **10:** New Car Buy Now only
 - **11:** Combined Used Car and New Car Buy Now
 
+To run only the User New Car Bank Transfer test:
+
+```powershell
+$env:BASE_URL="https://development.satjapan.info"
+venv\Scripts\pytest.exe tests\buy_flow\user\new_car\test_bank_transfer.py -v -s
+```
+
+`run_tests.bat` lets you select Sprint or Development at runtime. The same test
+paths and page objects are used for either domain.
+
 ---
 
 ## Test Cases Summary
@@ -202,15 +224,15 @@ The Buy Now menu provides separate User-flow choices:
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 34 | Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
-| **Buy Flow (End‑to‑End)** | 1 | Complete order placement from car selection to payment confirmation |
-| **Total** | **52** | |
+| **Buy Flow (End‑to‑End)** | 4 | Independent Used/New Car Paygent and Bank Transfer order flows |
+| **Total** | **55** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 34 tests
 - **About Us:** 10 tests
-- **Buy Flow (End‑to‑End):** 1 test
+- **Buy Flow (End‑to‑End):** 4 tests
 
 ---
 
@@ -218,11 +240,15 @@ The Buy Now menu provides separate User-flow choices:
 
 - Page Object Model (POM) – Clean separation of page logic
 - Secure credentials – Login details stored in `.env` file, never hardcoded
-- Session‑based login – Logs in once and reuses session across all tests
+- Session‑based login – Reuses the authenticated browser-context session
 - Auto screenshots – Captures screenshots on any test failure
 - Parameterized tests – Runs multiple data sets efficiently
 - Independent test items – Retries only the failed flow or verification
-- Proper waits – No hardcoded sleeps; uses Playwright’s built‑in wait methods
+- Readiness checks – Uses Playwright waits and bounded stabilization where the
+  application recalculates payment totals
+- Environment recovery – Detects transient homepage HTTP 500 responses,
+  retries a bounded number of times, and returns profile redirects to the
+  selected environment homepage before header navigation
 
 
 ---

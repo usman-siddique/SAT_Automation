@@ -23,15 +23,31 @@ class NewCarDetailsPage:
         )
         return value
 
+    def _selected_variant_value(self):
+        """Read the make-specific variant control without hardcoding its label."""
+        control = self.page.locator("button.satSelectBtn").filter(
+            has=self.page.locator(
+                "span.type",
+                has_text=re.compile(r"Variants$", re.IGNORECASE),
+            )
+        ).first
+        control.wait_for(state="visible")
+        value = control.locator("span.button-text").inner_text().strip()
+        assert value and value.lower() != "select", (
+            "New Car variant does not have a selected value."
+        )
+        return value
+
     def verify_and_capture_variant(self, expected: dict):
         """Assert the configured admin variant and capture its current price."""
         expected_model = expected["model"]
-        self.page.get_by_text(expected_model, exact=True).first.wait_for(
-            state="visible"
-        )
+        model = self.page.get_by_text(
+            re.compile(rf"^{re.escape(expected_model)}$", re.IGNORECASE)
+        ).first
+        model.wait_for(state="visible")
 
         selected = {
-            "variant": self._selected_value("Nissan DAYZ Variants"),
+            "variant": self._selected_variant_value(),
             "color": self._selected_value("Color"),
             "transmission": self._selected_value("Transmission"),
             "drivetrain": self._selected_value("Drivetrain"),

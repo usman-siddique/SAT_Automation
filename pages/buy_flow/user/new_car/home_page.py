@@ -3,6 +3,7 @@ import re
 from playwright.sync_api import Page
 
 from config import NEW_CAR_HOME_URL
+from pages.site_navigation import open_site_home
 
 
 class NewCarHomePage:
@@ -11,7 +12,13 @@ class NewCarHomePage:
 
     def open_from_header(self):
         """Open New Cars from the authenticated site's main navigation."""
-        new_cars = self.page.locator("a[href*='/new-cars-home']").first
+        # Login can finish on a profile/dashboard with a different header.
+        # Always begin this journey from the selected environment's homepage.
+        open_site_home(self.page)
+
+        new_cars = self.page.locator(
+            "a[href*='/new-cars-home']:visible"
+        ).first
         new_cars.wait_for(state="visible")
         assert "/new-cars-home" in (new_cars.get_attribute("href") or ""), (
             "Header New Cars link does not target the New Car home page."

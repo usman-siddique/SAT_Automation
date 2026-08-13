@@ -66,6 +66,17 @@ NEW_CAR_PAYGENT_EXPECTED_VARIANT = {
     "fuel": "Hybrid(Petrol)",
     "seats": "4",
 }
+NEW_CAR_BANK_MAKE = "Honda"
+NEW_CAR_BANK_MODEL_SLUG = "honda-n-wgn-g"
+NEW_CAR_BANK_EXPECTED_VARIANT = {
+    "model": "2024 Honda N-WGN G",
+    "variant": "Honda N-WGN G",
+    "color": "Crystal Black Pearl",
+    "transmission": "CVT",
+    "drivetrain": "2WD",
+    "fuel": "Petrol",
+    "seats": "4",
+}
 
 # --- Frequently changing Auction/Service records ---
 AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")

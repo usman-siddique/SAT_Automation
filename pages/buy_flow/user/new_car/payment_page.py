@@ -52,7 +52,21 @@ class NewCarPaymentPage(PaymentPage):
         )
         return payment_total
 
-    def submit_new_car_paygent(self):
+    def verify_selected_bank_total(self, expected_checkout_total: str):
+        payment_total, total_requires_inquiry = self.get_selected_payment_total()
+        assert self._normalize_price(payment_total) == self._normalize_price(
+            expected_checkout_total
+        ), (
+            "New Car Bank Transfer total changed after payment selection: "
+            f"{expected_checkout_total} -> {payment_total}."
+        )
+        assert total_requires_inquiry, (
+            "New Car Bank Transfer total should indicate an inquiry while "
+            "shipping is Ask."
+        )
+        return payment_total
+
+    def _submit_new_car_order(self, payment_name: str):
         proceed = self.page.locator("#submitPlaceOrder")
         proceed.wait_for(state="visible")
         assert proceed.is_enabled(), "Proceed to Checkout button is disabled"
@@ -62,10 +76,20 @@ class NewCarPaymentPage(PaymentPage):
         place_order.wait_for(state="visible", timeout=10000)
         place_order.click()
         self.page.wait_for_url("**/new-car-order-summary/**", timeout=60000)
-        print("Reached New Car order summary")
+        print(f"Reached New Car {payment_name} order summary")
         return self
 
-    def verify_new_car_confirmation(self, variant: NewCarVariant):
+    def submit_new_car_paygent(self):
+        return self._submit_new_car_order("Paygent")
+
+    def submit_new_car_bank_transfer(self):
+        return self._submit_new_car_order("Bank Transfer")
+
+    def _verify_common_new_car_confirmation(
+        self,
+        variant: NewCarVariant,
+        expected_status: str,
+    ):
         success = self.page.get_by_text(
             re.compile(r"Thank you for placing an order with SAT", re.IGNORECASE)
         ).first
@@ -78,8 +102,8 @@ class NewCarPaymentPage(PaymentPage):
         assert track_order.is_enabled(), "Track Your Order action is disabled"
 
         status = self._get_summary_value("Status")
-        assert status.lower() == "partial payment", (
-            f"New Car Paygent status should be Partial Payment, found {status!r}."
+        assert status.lower() == expected_status.lower(), (
+            f"New Car status should be {expected_status}, found {status!r}."
         )
 
         final_car_price = self._get_summary_value("Car Price")
@@ -93,17 +117,65 @@ class NewCarPaymentPage(PaymentPage):
         shipping_cost = self._get_summary_value("Shipping Cost")
         total_price = self._get_summary_value("Total Price")
         assert shipping_cost.lower() == "ask", (
-            f"New Car confirmation Shipping Cost should be Ask, found {shipping_cost!r}."
+            "New Car confirmation Shipping Cost should be Ask, "
+            f"found {shipping_cost!r}."
         )
         assert total_price.lower() == "ask", (
-            f"New Car confirmation Total Price should be Ask, found {total_price!r}."
+            "New Car confirmation Total Price should be Ask, "
+            f"found {total_price!r}."
         )
 
         assert re.search(r"/new-car-order-summary/\d+/?$", self.page.url), (
             f"Unexpected New Car confirmation URL: {self.page.url}"
         )
+        return final_car_price
+
+    def verify_new_car_confirmation(self, variant: NewCarVariant):
+        final_car_price = self._verify_common_new_car_confirmation(
+            variant,
+            "Partial Payment",
+        )
         print(
             "New Car Paygent confirmation verified: Partial Payment, matching "
             f"car price {final_car_price}, Shipping Ask, Total Ask"
+        )
+        return self
+
+    def verify_new_car_bank_confirmation(self, variant: NewCarVariant):
+        payment_instruction = self.page.get_by_text(
+            re.compile(
+                r"Please upload your bank payment proof to complete your order",
+                re.IGNORECASE,
+            )
+        ).first
+        payment_instruction.wait_for(state="visible")
+
+        final_car_price = self._verify_common_new_car_confirmation(
+            variant,
+            "Pending",
+        )
+
+        payment_proof = self.page.locator("a:visible, button:visible").filter(
+            has_text=re.compile(r"Add Payment Proof", re.IGNORECASE)
+        ).first
+        payment_proof.wait_for(state="visible")
+        assert payment_proof.is_enabled(), "Add Payment Proof action is disabled"
+
+        for bank_label in (
+            "Bank Information",
+            "Bank Name:",
+            "Account Number:",
+            "Branch Name:",
+            "Swift Code:",
+            "Bank address:",
+        ):
+            self.page.get_by_text(bank_label, exact=True).filter(
+                visible=True
+            ).first.wait_for(state="visible")
+
+        print(
+            "New Car Bank confirmation verified: Pending, matching car price "
+            f"{final_car_price}, Shipping Ask, Total Ask, payment proof, and "
+            "bank information"
         )
         return self
