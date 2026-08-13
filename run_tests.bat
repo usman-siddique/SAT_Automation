@@ -78,10 +78,12 @@ echo 5. Run Shipping Schedule tests
 echo 6. Run Warranty Service tests
 echo 7. Run Finance Service tests
 echo 8. Run Non Stolen Vehicle tests
-echo 9. Run Buy Now / Order Placement tests
-echo 10. Exit
+echo 9. Run User Used Car Buy Now tests
+echo 10. Run User New Car Buy Now tests
+echo 11. Run all User Buy Now tests (Used Car + New Car)
+echo 12. Exit
 echo.
-set /p choice="Enter your choice (1-10): "
+set /p choice="Enter your choice (1-12): "
 
 if "%choice%"=="1" goto all
 if "%choice%"=="2" goto sell
@@ -91,8 +93,10 @@ if "%choice%"=="5" goto shipping
 if "%choice%"=="6" goto warranty
 if "%choice%"=="7" goto finance
 if "%choice%"=="8" goto non_stolen
-if "%choice%"=="9" goto buy_flow
-if "%choice%"=="10" goto end
+if "%choice%"=="9" goto used_car_buy_flow
+if "%choice%"=="10" goto new_car_buy_flow
+if "%choice%"=="11" goto all_user_buy_flow
+if "%choice%"=="12" goto end
 
 echo Invalid test selection. No tests were started.
 goto end
@@ -153,11 +157,25 @@ set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/test_non_stolen_vehicle.py %PYTEST_ARGS% %PARALLEL%
 goto end
 
-:buy_flow
-echo Running Buy Now / Order Placement tests...
+:used_car_buy_flow
+echo Running User Used Car Buy Now tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/buy_flow/ %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest tests/buy_flow/user/used_car/ %PYTEST_ARGS% %PARALLEL%
+goto end
+
+:new_car_buy_flow
+echo Running User New Car Buy Now tests...
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/buy_flow/user/new_car/ %PYTEST_ARGS% %PARALLEL%
+goto end
+
+:all_user_buy_flow
+echo Running all User Buy Now tests (Used Car + New Car)...
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/buy_flow/user/ %PYTEST_ARGS% %PARALLEL%
 goto end
 
 :end

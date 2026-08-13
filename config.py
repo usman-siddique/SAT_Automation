@@ -53,6 +53,20 @@ USED_CAR_BANK_PATH = os.getenv(
 USED_CAR_PAYGENT_URL = build_site_url(USED_CAR_PAYGENT_PATH)
 USED_CAR_BANK_URL = build_site_url(USED_CAR_BANK_PATH)
 
+# --- User New Car Buy flow ---
+NEW_CAR_HOME_URL = build_site_url("/new-cars-home")
+NEW_CAR_PAYGENT_MAKE = "Nissan"
+NEW_CAR_PAYGENT_MODEL_SLUG = "nissan-dayz-x"
+NEW_CAR_PAYGENT_EXPECTED_VARIANT = {
+    "model": "2024 Nissan Dayz X",
+    "variant": "Nissan Dayz X",
+    "color": "Sorbet Blue (PM)White Pearl (3P) 2-tone",
+    "transmission": "CVT",
+    "drivetrain": "2WD",
+    "fuel": "Hybrid(Petrol)",
+    "seats": "4",
+}
+
 # --- Frequently changing Auction/Service records ---
 AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")
 NON_STOLEN_VEHICLE_STOCK_ID = os.getenv("NON_STOLEN_VEHICLE_STOCK_ID")

@@ -82,13 +82,15 @@ tests/buy_flow/
 |   |   |-- test_paygent.py
 |   |   `-- test_bank_transfer.py
 |   `-- new_car/
+|       `-- test_paygent.py
 `-- dealer/
     |-- used_car/
     `-- new_car/
 ```
 
-Only implemented coverage contains test modules. New Car and Dealer packages
-are prepared for the next flows and do not report false placeholder tests.
+Only implemented coverage contains test modules. The User New Car Paygent flow
+is implemented; Dealer packages remain prepared for later coverage and do not
+report false placeholder tests.
 
 ---
 
@@ -184,6 +186,13 @@ pytest tests/car_services/ -v -s
 ```
 .\run_tests.bat
 ```
+
+The Buy Now menu provides separate User-flow choices:
+
+- **9:** Used Car Buy Now only
+- **10:** New Car Buy Now only
+- **11:** Combined Used Car and New Car Buy Now
+
 ---
 
 ## Test Cases Summary
