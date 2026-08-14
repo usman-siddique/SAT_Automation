@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Application or network availability",
+    "matchedStatuses": ["failed", "broken"],
+    "traceRegex": "(?is).*(HTTP 5\\d\\d|net::ERR_|connection (reset|refused)|Target page.*closed).*"
+  },
+  {
+    "name": "Timeout failures",
+    "matchedStatuses": ["failed", "broken"],
+    "traceRegex": "(?is).*(TimeoutError|Timeout \\d+ms exceeded|timed out).*"
+  },
+  {
+    "name": "Assertion failures",
+    "matchedStatuses": ["failed", "broken"],
+    "traceRegex": "(?is).*AssertionError.*"
+  }
+]

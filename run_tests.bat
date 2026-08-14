@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set PYTHONIOENCODING=utf-8
 
 echo ========================================
 echo SAT Automation Test Runner
@@ -106,79 +107,86 @@ echo Running all tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :sell
 echo Running Sell My Car tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/sell_my_car/ %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :car_services
 echo Running Car Services tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/ %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :about_us
 echo Running About Us tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/about_us/ %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :shipping
 echo Running Shipping Schedule tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/test_shipping_schedule.py %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :warranty
 echo Running Warranty Service tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/test_warranty_service.py %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :finance
 echo Running Finance Service tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/test_finance_service.py %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :non_stolen
 echo Running Non Stolen Vehicle tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/car_services/test_non_stolen_vehicle.py %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :used_car_buy_flow
 echo Running User Used Car Buy Now tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/buy_flow/user/used_car/ %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :new_car_buy_flow
 echo Running User New Car Buy Now tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/buy_flow/user/new_car/ %PYTEST_ARGS% %PARALLEL%
-goto end
+goto report
 
 :all_user_buy_flow
 echo Running all User Buy Now tests (Used Car + New Car)...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/buy_flow/user/ %PYTEST_ARGS% %PARALLEL%
+goto report
+
+:report
+set "TEST_EXIT_CODE=%ERRORLEVEL%"
+echo.
+call generate_allure_report.bat
 goto end
 
 :end
 echo.
 echo Done!
 pause
+if defined TEST_EXIT_CODE exit /b %TEST_EXIT_CODE%
