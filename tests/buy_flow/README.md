@@ -37,3 +37,11 @@ test navigation never hardcodes Sprint or Development.
 The shared site navigation detects transient homepage HTTP 500 responses and
 retries up to three times. It also returns profile/dashboard redirects to the
 public homepage before selecting New Cars from the navigation menu.
+
+## Role sessions
+
+User tests keep the existing `page` fixture and share only the User browser
+context. Future Dealer tests must request `dealer_page`, which uses a completely
+separate cookie and local-storage context. Public tests use `page_no_login`, a
+fresh anonymous context for every test. This makes full-suite execution order
+independent and prevents one role's login from replacing another role's session.

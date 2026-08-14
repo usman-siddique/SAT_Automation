@@ -143,7 +143,7 @@ def test_loyalty_program_logged_in(page):
 
 # ============================================================
 # Test 9: Join SAT Pro - Logged Out Flow
-# Handles both states: if session already active, skips login
+# Uses a fresh anonymous context, then validates the post-login membership state
 # ============================================================
 
 def test_join_sat_pro_logged_out(page_no_login):

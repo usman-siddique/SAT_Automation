@@ -10,7 +10,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
-
 # ============================================================
 # Page Class: Auction Service Page
 # ============================================================
@@ -82,20 +81,58 @@ class AuctionServicePage:
                 "Update it in .env before running."
             )
 
-        # Fill Stock ID and wait for M3 to auto-fetch
+        # Fill Stock ID and wait for either of the two supported API outcomes:
+        # vehicle data is returned, or the stock is no longer available.
         normalized_stock_id = stock_id.strip().lower()
         self.page.locator("#stock_id").fill(normalized_stock_id)
         try:
-            self.page.wait_for_function(
-                "document.querySelector('#m3').value !== ''",
+            result = self.page.wait_for_function(
+                """
+                () => {
+                    const m3 = document.querySelector('#m3');
+                    if (m3 && m3.value.trim() !== '') {
+                        return 'available';
+                    }
+
+                    const notFoundMessage = Array.from(
+                        document.querySelectorAll('body *')
+                    ).find((element) => {
+                        const text = (element.textContent || '').trim();
+                        if (text !== 'Auction car not found') {
+                            return false;
+                        }
+
+                        const style = window.getComputedStyle(element);
+                        return style.display !== 'none'
+                            && style.visibility !== 'hidden'
+                            && style.opacity !== '0';
+                    });
+
+                    return notFoundMessage ? 'not_found' : false;
+                }
+                """,
                 timeout=15000,
             )
+            outcome = result.json_value()
         except PlaywrightTimeoutError as error:
             raise AssertionError(
-                f"Auction stock {stock_id} did not return vehicle dimensions. "
-                "It may be expired; update AUCTION_CALCULATOR_STOCK_ID "
-                "in .env."
+                f"Auction stock {stock_id} returned neither vehicle data nor "
+                "the expected 'Auction car not found' validation within 15 seconds."
             ) from error
+
+        if outcome == "not_found":
+            not_found_message = self.page.get_by_text(
+                "Auction car not found",
+                exact=True,
+            ).first
+            assert not_found_message.is_visible(), (
+                "Expected 'Auction car not found' validation is not visible"
+            )
+            print(
+                "✅ Unavailable auction stock returned the expected "
+                "'Auction car not found' validation: PASS"
+            )
+            return "not_found"
 
         print("✅ Stock ID entered, M3 auto-fetched: PASS")
 
@@ -140,3 +177,4 @@ class AuctionServicePage:
 
         # Close new tab
         new_tab.close()
+        return "available"

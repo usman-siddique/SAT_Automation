@@ -37,6 +37,8 @@ def build_site_url(path: str) -> str:
 # --- Login Credentials ---
 LOGIN_EMAIL = os.getenv("LOGIN_EMAIL")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
+DEALER_LOGIN_EMAIL = os.getenv("DEALER_LOGIN_EMAIL")
+DEALER_LOGIN_PASSWORD = os.getenv("DEALER_LOGIN_PASSWORD")
 
 # --- Buy flow inventory paths ---
 # Keep the environment domain separate from stable inventory paths so the same

@@ -1,12 +1,15 @@
 # ============================================================
 # pages/about_us/join_sat_pro_page.py
 # Handles Join SAT Pro page flow.
-# Two states: logged out (redirects to login first)
-#             logged in (goes directly to payment page)
+# Supports both membership states:
+# - Non-member: Join button leads to login/payment.
+# - Existing member: active SAT Pro benefits page is verified.
 # ============================================================
 
 import sys
 import os
+import re
+import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import BASE_URL
 from pages.auth.login_page import LoginPage
@@ -16,6 +19,45 @@ class JoinSatProPage:
     def __init__(self, page):
         self.page = page
 
+    def _active_heading(self):
+        return self.page.get_by_role(
+            "heading",
+            name=re.compile(r"You.?re a SAT Pro!?", re.IGNORECASE),
+        ).first
+
+    def _join_button(self):
+        # The site has rendered this action as both an anchor and a button.
+        # Its exact user-visible label is the stable contract.
+        return self.page.get_by_text(
+            "Join SAT Pro",
+            exact=True,
+        ).filter(visible=True).first
+
+    def _payment_heading(self):
+        return self.page.locator(
+            "h2.payment-card-title:has-text('Payment Details')"
+        ).first
+
+    def _wait_for_sat_pro_state(self, timeout=30000):
+        """Return the first real SAT Pro state rendered by the application."""
+        deadline = time.monotonic() + (timeout / 1000)
+
+        while time.monotonic() < deadline:
+            if self._active_heading().is_visible():
+                return "active"
+            if self._payment_heading().is_visible() or "sat-pro-payment" in self.page.url:
+                return "payment"
+            if self._join_button().is_visible():
+                return "join"
+            if self.page.locator("#login_email").is_visible() or "/login" in self.page.url:
+                return "login"
+            self.page.wait_for_timeout(250)
+
+        raise AssertionError(
+            "SAT Pro page did not render an active membership, Join button, "
+            "payment page, or login page within 30 seconds"
+        )
+
 
     # ============================================================
     # Navigation: Go to SAT Pro page directly via URL
@@ -23,8 +65,12 @@ class JoinSatProPage:
 
     def go_to_sat_pro(self):
         self.page.goto(f"{BASE_URL}/sat-pro", wait_until="domcontentloaded")
-        self.page.locator(".satpro-paid-bannar h2.title").wait_for(state="visible")
-        print("✅ Navigation to Join SAT Pro: PASS")
+        state = self._wait_for_sat_pro_state()
+        assert state in ("active", "join"), (
+            f"Unexpected SAT Pro landing state: {state}"
+        )
+        print(f"✅ Navigation to SAT Pro ({state} membership state): PASS")
+        return state
 
 
     # ============================================================
@@ -32,21 +78,9 @@ class JoinSatProPage:
     # ============================================================
 
     def click_join_button(self):
-        btn = self.page.locator("a.btn-sat-pro:has-text('Join SAT Pro')")
+        btn = self._join_button()
         btn.wait_for(state="visible")
         btn.click()
-
-
-    # ============================================================
-    # Helper: Check if currently logged in
-    # ============================================================
-
-    def _is_logged_in(self):
-        try:
-            sign_in = self.page.locator("header").get_by_role("link", name="Sign in")
-            return not sign_in.is_visible(timeout=3000)
-        except:
-            return False
 
 
     # ============================================================
@@ -76,43 +110,73 @@ class JoinSatProPage:
 
 
     # ============================================================
+    # Verify: Existing SAT Pro membership page
+    # ============================================================
+
+    def verify_active_pro_page(self):
+        heading = self._active_heading()
+        heading.wait_for(state="visible")
+        assert heading.is_visible(), "❌ Active SAT Pro heading not visible"
+
+        place_order = self.page.get_by_text("Place an Order", exact=True).first
+        assert place_order.is_visible(), "❌ Place an Order action not visible"
+
+        benefits = self.page.get_by_text("SAT Pro Benefits", exact=True).first
+        assert benefits.is_visible(), "❌ SAT Pro Benefits section not visible"
+
+        print("✅ Existing SAT Pro membership page verified")
+
+
+    def _verify_post_join_state(self):
+        state = self._wait_for_sat_pro_state()
+        if state == "active":
+            self.verify_active_pro_page()
+            return
+        if state == "payment":
+            self.verify_payment_page()
+            return
+        raise AssertionError(f"Unexpected state after joining SAT Pro: {state}")
+
+
+    # ============================================================
     # Flow: Logged out
-    # If session is already active (from previous test), skips login
-    # and goes directly to payment page verification.
-    # If truly logged out, clicks Join → redirects to /login →
-    # logs in → navigates back to /sat-pro → clicks Join again
+    # Anonymous context clicks Join → redirects to /login → logs in.
+    # After login, verifies either an existing active membership or
+    # the payment page offered to a non-member.
     # ============================================================
 
     def flow_logged_out(self):
-        self.go_to_sat_pro()
+        state = self.go_to_sat_pro()
 
-        if self._is_logged_in():
-            print("⚠️ Session already active - skipping login redirect step")
-            # Wait for page to be stable before clicking Join again
-            self.page.wait_for_load_state("networkidle")
-            self.click_join_button()
-        else:
-            self.click_join_button()
-            self.page.locator("#login_email").wait_for(state="visible")
-            assert "login" in self.page.url, "❌ Join SAT Pro did not redirect to /login"
-            print("✅ Redirected to login page")
-            LoginPage(self.page).login()
-            self.go_to_sat_pro()
-            self.click_join_button()
+        if state == "active":
+            self.verify_active_pro_page()
+            return
 
-        self.page.wait_for_url("**/sat-pro-payment", wait_until="domcontentloaded")
-        self.verify_payment_page()
+        self.click_join_button()
+        state = self._wait_for_sat_pro_state()
+        assert state == "login", "❌ Join SAT Pro did not redirect to /login"
+        print("✅ Redirected to login page")
+
+        LoginPage(self.page).login()
+        state = self.go_to_sat_pro()
+        if state == "active":
+            self.verify_active_pro_page()
+            return
+
+        self.click_join_button()
+        self._verify_post_join_state()
 
 
     # ============================================================
     # Flow: Logged in
-    # Navigate to /sat-pro → click Join → verify payment page
+    # Navigate to /sat-pro and verify the account's real membership state.
     # ============================================================
 
     def flow_logged_in(self):
-        # Wait for any pending redirects to finish after login
-        self.page.wait_for_load_state("networkidle")
-        self.go_to_sat_pro()
+        state = self.go_to_sat_pro()
+        if state == "active":
+            self.verify_active_pro_page()
+            return
+
         self.click_join_button()
-        self.page.wait_for_url("**/sat-pro-payment", wait_until="domcontentloaded")
-        self.verify_payment_page()
+        self._verify_post_join_state()

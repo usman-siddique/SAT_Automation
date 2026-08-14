@@ -153,7 +153,13 @@ overrides `BASE_URL` for that run:
 BASE_URL=https://sprint.shineauto.info
 LOGIN_EMAIL=your_email@example.com
 LOGIN_PASSWORD=your_password
+DEALER_LOGIN_EMAIL=dealer@example.com
+DEALER_LOGIN_PASSWORD=your_dealer_password
 ```
+
+The private `.env` keeps User and Dealer credentials separate. Existing tests
+continue to use `LOGIN_EMAIL` and `LOGIN_PASSWORD`; Dealer credentials are only
+required when a test requests the `dealer_page` fixture.
 
 The Buy Flow builds its inventory URLs from `BASE_URL` and these stable paths:
 
@@ -249,6 +255,24 @@ paths and page objects are used for either domain.
 - Environment recovery – Detects transient homepage HTTP 500 responses,
   retries a bounded number of times, and returns profile redirects to the
   selected environment homepage before header navigation
+- Role isolation – Anonymous, User, and Dealer tests use separate browser
+  contexts, so cookies and local storage cannot leak between account types
+
+### Authentication fixtures
+
+The suite launches one browser per pytest worker and isolates authentication by
+browser context:
+
+| Fixture | Session | Intended tests |
+|---|---|---|
+| `page_no_login` | Fresh anonymous context per test | Public and logged-out coverage |
+| `page` | Shared User context with a new page per test | All existing authenticated User tests |
+| `context` | Backward-compatible alias to User context | Existing page objects that open new tabs |
+| `dealer_page` | Shared Dealer context with a new page per test | Future Dealer Buy Now coverage |
+
+Running option **1** remains safe after Dealer tests are added: pytest selects
+the correct context from the fixture requested by each test. No logout or
+account switching is performed.
 
 
 ---

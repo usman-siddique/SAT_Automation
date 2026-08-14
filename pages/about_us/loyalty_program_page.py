@@ -56,9 +56,9 @@ class LoyaltyProgramPage:
     # ============================================================
 
     def verify_logged_in_state(self):
-        # Wait for login to fully complete
+        # The authenticated navigation is the readiness signal. Sprint keeps
+        # background requests active, so networkidle is not reliable here.
         self.page.get_by_role("link", name="Sell My Car").wait_for(state="visible")
-        self.page.wait_for_load_state("networkidle")
 
         # Use hover menu navigation — carries session correctly unlike goto
         menu = self.page.locator("p.cnm-cls:has-text('About Us')").locator("..")
