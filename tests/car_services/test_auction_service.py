@@ -15,16 +15,7 @@ from config import AUCTION_CALCULATOR_STOCK_ID
 
 
 # ============================================================
-# Test 1: Verify navigation to Auction Service page
-# ============================================================
-
-def test_navigate_to_auction_service(page):
-    print("\n📝 Starting Auction Service Navigation...")
-    CarServicesPage(page).go_to_auction_service()
-
-
-# ============================================================
-# Test 2: Verify Start Bidding redirects to auction listing
+# Test 1: Verify Start Bidding redirects to auction listing
 # ============================================================
 
 def test_start_bidding_redirect(page):
@@ -34,17 +25,7 @@ def test_start_bidding_redirect(page):
 
 
 # ============================================================
-# Test 3: Verify Auction Cost Calculator redirect
-# ============================================================
-
-def test_auction_cost_calculator_redirect(page):
-    print("\n📝 Starting Auction Cost Calculator Redirect...")
-    CarServicesPage(page).go_to_auction_service()
-    AuctionServicePage(page).click_auction_cost_calculator()
-
-
-# ============================================================
-# Test 4: Fill Auction Cost Calculator form and validate
+# Test 2: Fill Auction Cost Calculator form and validate
 # cost breakdown and Download Estimate new tab
 # ============================================================
 

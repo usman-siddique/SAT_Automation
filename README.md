@@ -245,17 +245,27 @@ paths and page objects are used for either domain.
 | Module | Tests | Description |
 |--------|-------|-------------|
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
-| **Car Services** | 34 | Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle |
+| **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Buy Flow (End‑to‑End)** | 4 | Independent Used/New Car Paygent and Bank Transfer order flows |
-| **Total** | **55** | |
+| **Total** | **37** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
-- **Car Services:** 34 tests
+- **Car Services:** 16 tests
 - **About Us:** 10 tests
 - **Buy Flow (End‑to‑End):** 4 tests
+
+### Test boundary strategy
+
+The suite uses one pytest item per independently rerunnable business behavior,
+not one item per assertion. Related headings, images, and sections on the same
+static service page are validated in one page-content test and remain visible
+as individual Allure steps. Separate tests are retained when they have a unique
+outcome or side effect, including payment methods, downloads, calculations,
+positive/negative validation, authentication states, and parametrized vehicle
+records.
 
 ---
 
@@ -264,7 +274,8 @@ paths and page objects are used for either domain.
 - Page Object Model (POM) – Clean separation of page logic
 - Secure credentials – Login details stored in `.env` file, never hardcoded
 - Session‑based login – Reuses the authenticated browser-context session
-- Auto screenshots – Captures screenshots on any test failure
+- Auto screenshots – Captures evidence for every failed attempt, including the
+  final attempt after a pytest rerun
 - Allure evidence – Attaches the failure screenshot, URL, and browser
   warnings/errors to the failed setup or test result
 - Allure organization – Groups tests by SAT module, role, vehicle type, and
@@ -302,6 +313,22 @@ account switching is performed.
 
 ## Reports
 
+### One-time setup on every laptop
+
+Allure has a Python adapter and a command-line report generator. After cloning
+the repository, or after pulling the Allure integration on an existing clone,
+run this once:
+
+```powershell
+.\setup_allure.bat
+```
+
+This installs the pinned `allure-pytest` dependency in the project virtual
+environment and Allure Commandline on that Windows account. The private `.env`
+file is not changed.
+
+### Generate and open the report
+
 `run_tests.bat` automatically generates the interactive report after pytest
 finishes and asks whether to open it. The generated report is stored at:
 
@@ -322,6 +349,37 @@ duration trends across local runs.
 
 The report must be opened through `allure open`, which the batch file handles;
 opening `index.html` directly does not start Allure's local report server.
+
+### Failure screenshots and diagnostics
+
+For a failed browser test:
+
+1. Open **Suites** and select the failed or broken test.
+2. On **Overview**, expand **Test body**.
+3. Open **Failure screenshot (call)** to view the browser at failure time.
+4. Open **Failure URL** to see the exact page where the failure occurred.
+5. Review **Browser warnings and errors** when that attachment is present.
+
+If login or another fixture fails before the test body starts, the attachment
+is named **Failure screenshot (setup)** and appears under **Set up**.
+
+Allure keeps each pytest rerun as a separate attempt. Use the **Retries** tab to
+inspect earlier attempts. Every failed attempt receives its own screenshot and
+URL, including the final attempt displayed on **Overview**.
+
+Allure normally reports assertion failures as **Failed** and unexpected
+automation/runtime exceptions, such as Playwright timeouts, as **Broken**. The
+custom **Categories** view further groups assertion, timeout, and
+application/network availability failures.
+
+### Troubleshooting
+
+- `unrecognized arguments: --alluredir`: run `.\setup_allure.bat` because the
+  Python Allure adapter is missing from that virtual environment.
+- `allure is not recognized`: run `.\setup_allure.bat` because Allure
+  Commandline is not installed for that Windows account.
+- No new results in the report: rerun pytest, then execute
+  `.\generate_allure_report.bat` again.
 
 ---
 

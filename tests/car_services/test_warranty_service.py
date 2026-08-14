@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from pages.car_services.car_services_page import CarServicesPage
@@ -10,17 +11,17 @@ def warranty(page_no_login):
     return WarrantyServicePage(page_no_login)
 
 
-class TestWarrantyService:
-    def test_main_heading(self, warranty):
+def test_warranty_service_page_content(warranty):
+    with allure.step("Verify Warranty Service main heading"):
         assert warranty.get_main_heading() == "SAT Japan Warranty"
 
-    def test_coverage_heading(self, warranty):
+    with allure.step("Verify warranty-coverage heading"):
         assert (
             warranty.get_coverage_heading()
             == "What Does the SAT Japan Warranty Cover?"
         )
 
-    def test_claim_process(self, warranty):
+    with allure.step("Verify all warranty claim-process headings"):
         assert warranty.get_claim_process_headings() == [
             "How to Report an Issue",
             "Step 1: Contact Us Within 48 Hours",
@@ -29,5 +30,5 @@ class TestWarrantyService:
             "Step 4: You Get Reimbursed",
         ]
 
-    def test_faq_heading(self, warranty):
+    with allure.step("Verify warranty FAQ heading"):
         assert warranty.get_faq_heading() == "Frequently Asked Questions"

@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from pages.car_services.car_services_page import CarServicesPage
@@ -10,24 +11,24 @@ def storage(page_no_login):
     return StorageServicePage(page_no_login)
 
 
-class TestStorageService:
-    def test_main_heading(self, storage):
+def test_storage_service_page_content(storage):
+    with allure.step("Verify Storage Service main heading"):
         assert (
             storage.get_main_heading()
             == "Secure Storage Service For Your Vehicle's Safety"
         )
 
-    def test_countries_heading(self, storage):
+    with allure.step("Verify supported-countries heading"):
         assert (
             storage.get_countries_heading()
             == "Countries Where We Offer Storage Service"
         )
 
-    def test_benefits_heading(self, storage):
+    with allure.step("Verify Storage Service benefits heading"):
         assert (
             storage.get_benefits_heading()
             == "Benefits of SAT Vehicle Storage Service"
         )
 
-    def test_why_store_heading(self, storage):
+    with allure.step("Verify Why Store section heading"):
         assert storage.get_why_store_heading() == "Why Store a New Vehicle?"

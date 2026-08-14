@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from pages.car_services.car_services_page import CarServicesPage
@@ -10,12 +11,12 @@ def finance(page_no_login):
     return FinanceServicePage(page_no_login)
 
 
-class TestFinanceService:
-    def test_banner_image(self, finance):
+def test_finance_service_page_content(finance):
+    with allure.step("Verify Finance Service banner"):
         finance.verify_banner_image()
 
-    def test_main_heading(self, finance):
+    with allure.step("Verify Finance Service main heading"):
         finance.verify_main_heading()
 
-    def test_video_playback(self, finance):
-        finance.verify_and_play_video()
+    with allure.step("Verify Finance Service YouTube video embed"):
+        finance.verify_video_embed()

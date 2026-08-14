@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from pages.car_services.car_services_page import CarServicesPage
@@ -10,12 +11,12 @@ def customs_clearance(page_no_login):
     return CustomsClearancePage(page_no_login)
 
 
-class TestCustomsClearance:
-    def test_main_heading(self, customs_clearance):
+def test_customs_clearance_page_content(customs_clearance):
+    with allure.step("Verify Customs Clearance main heading"):
         customs_clearance.verify_main_heading()
 
-    def test_image(self, customs_clearance):
+    with allure.step("Verify Customs Clearance image"):
         customs_clearance.verify_image()
 
-    def test_steps_heading(self, customs_clearance):
+    with allure.step("Verify Customs Clearance steps heading"):
         customs_clearance.verify_steps_heading()

@@ -37,10 +37,20 @@ class FinanceServicePage:
 
 
     # ============================================================
-    # Verify: Video exists, click play button, wait 5 seconds
+    # Verify: Stable YouTube embed contract
     # ============================================================
 
-    def verify_and_play_video(self):
-        # Skip video verification - YouTube player changes too often
-        print("✅ Video element exists (verification skipped)")
-        return
+    def verify_video_embed(self):
+        video = self.page.locator("iframe[title='YouTube video player']")
+        video.wait_for(state="visible")
+
+        source = video.get_attribute("src") or ""
+        valid_embed_hosts = (
+            "youtube.com/embed/",
+            "youtube-nocookie.com/embed/",
+        )
+        assert any(host in source for host in valid_embed_hosts), (
+            f"Finance video has an unexpected embed URL: {source}"
+        )
+
+        print(f"✅ Finance video embed verified: {source}")

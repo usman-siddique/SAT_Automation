@@ -114,6 +114,9 @@ def _prepare_page(pg, request):
     pg.set_default_timeout(30000)
     request.node._sat_active_page = pg
     request.node._sat_browser_messages = []
+    # pytest-rerunfailures reuses the same test Item for every attempt.
+    # Reset attachment tracking so the final retry also receives evidence.
+    request.node._sat_evidence_attached_phases = set()
 
     def capture_console(message):
         if message.type in ("warning", "error"):

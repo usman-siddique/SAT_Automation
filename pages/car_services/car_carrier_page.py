@@ -41,15 +41,16 @@ class CarCarrierPage:
     # ============================================================
 
     def verify_images(self):
-        img1 = self.page.locator("img.carrier-card-img[alt='']")
-        if img1.count() > 0:
-            if img1.first.is_visible():
-                print("✅ First carrier image verified")
-        else:
-            raise AssertionError("First carrier image not found")
-        
-        img2 = self.page.locator("img.carrier-card-img").nth(1)
-        if img2.is_visible():
-            print("✅ Second carrier image verified")
-        else:
-            raise AssertionError("Second carrier image not visible")
+        images = self.page.locator("img.carrier-card-img")
+        assert images.count() >= 2, "Expected at least two carrier images"
+
+        for index in range(2):
+            image = images.nth(index)
+            image.scroll_into_view_if_needed()
+            image.wait_for(state="visible")
+            self.page.wait_for_function(
+                "(img) => img.complete && img.naturalWidth > 0",
+                arg=image.element_handle(),
+                timeout=10000,
+            )
+            print(f"✅ Carrier image {index + 1} verified")

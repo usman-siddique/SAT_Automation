@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from pages.car_services.car_carrier_page import CarCarrierPage
@@ -10,12 +11,12 @@ def car_carrier(page_no_login):
     return CarCarrierPage(page_no_login)
 
 
-class TestCarCarrierService:
-    def test_delivery_options_heading(self, car_carrier):
+def test_car_carrier_page_content(car_carrier):
+    with allure.step("Verify Delivery Options heading"):
         car_carrier.verify_delivery_options_heading()
 
-    def test_benefits_heading(self, car_carrier):
+    with allure.step("Verify carrier-service benefits heading"):
         car_carrier.verify_benefits_heading()
 
-    def test_images(self, car_carrier):
+    with allure.step("Verify both carrier images are visible and loaded"):
         car_carrier.verify_images()

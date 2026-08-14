@@ -1,3 +1,4 @@
+import allure
 import pytest
 
 from pages.car_services.car_services_page import CarServicesPage
@@ -10,12 +11,12 @@ def marine_insurance(page_no_login):
     return MarineInsurancePage(page_no_login)
 
 
-class TestMarineInsurance:
-    def test_banner_image(self, marine_insurance):
+def test_marine_insurance_page_content(marine_insurance):
+    with allure.step("Verify Marine Insurance banner"):
         marine_insurance.verify_banner_image()
 
-    def test_coverage_heading(self, marine_insurance):
+    with allure.step("Verify Marine Insurance coverage heading"):
         marine_insurance.verify_coverage_heading()
 
-    def test_steps_heading(self, marine_insurance):
+    with allure.step("Verify Marine Insurance steps heading"):
         marine_insurance.verify_steps_heading()
