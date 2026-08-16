@@ -24,7 +24,7 @@ def test_new_car_order_with_paypal(require_state_changing_tests, page):
     print("=" * 60)
 
     with allure.step(
-        "Select Nissan Roox S and manually set United Kingdom / Bristol"
+        "Select Toyota Aqua X and manually set United Kingdom / Bristol"
     ):
         payment, variant, checkout_total_usd = open_new_car_paypal_payment(page)
 

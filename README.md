@@ -86,7 +86,8 @@ tests/buy_flow/
 |-- user/
 |   |-- used_car/
 |   |   |-- test_paygent.py
-|   |   `-- test_bank_transfer.py
+|   |   |-- test_bank_transfer.py
+|   |   `-- test_paypal.py
 |   `-- new_car/
 |       |-- test_paygent.py
 |       |-- test_bank_transfer.py
@@ -96,10 +97,18 @@ tests/buy_flow/
     `-- new_car/
 ```
 
-Only implemented coverage contains test modules. User Paygent and Bank Transfer
-flows are implemented for both Used Cars and New Cars, with PayPal additionally
-covered for New Cars. Dealer packages remain prepared for later coverage and do
-not report false placeholder tests.
+Only implemented coverage contains test modules. User Paygent, Bank Transfer,
+and PayPal flows are implemented independently for both Used Cars and New Cars.
+Dealer packages remain prepared for later coverage and do not report false
+placeholder tests.
+
+User Used Car PayPal coverage selects an available Suzuki, explicitly chooses
+United Kingdom / Bristol RORO shipping, and supports both valid application
+outcomes: a calculated shipping price or `Ask`. It retains the selected shipping
+method and full USD breakdown on the payment page, proves that PayPal performs a
+real numeric USD-to-JPY conversion (not only a currency-symbol change), verifies
+the PayPal sandbox total, and validates the resulting confirmation and tracking
+summary in JPY.
 
 User New Car coverage currently includes:
 
@@ -108,13 +117,20 @@ User New Car coverage currently includes:
 - **Bank Transfer:** Honda N-WGN G with variant and price checks plus final
   `Pending` status, `Ask` shipping/total, Track Your Order, Add Payment Proof,
   and bank-information verification.
-- **PayPal:** Nissan Roox S shipped to United Kingdom / Bristol. The test keeps
+- **PayPal:** Toyota Aqua X 2WD shipped to United Kingdom / Bristol. The test keeps
   the USD checkout values, captures the PayPal-converted JPY car/total prices,
   verifies the PayPal sandbox amount, checks the final `Partial Payment` order,
   and validates the JPY partial amount and variant on Track Your Order.
 
 Each payment method is a separate pytest item. If one payment flow fails, its
 automatic rerun does not rerun the other payment methods.
+
+Every end-to-end payment test must also expose its business phases as named
+`allure.step` entries. The standard phases are vehicle/checkout validation,
+payment selection and price validation, payment submission, and final
+confirmation/tracking validation. Apply this reporting pattern consistently to
+future User, Guest, and Dealer flows; detailed console output remains
+supplementary evidence rather than the primary test structure.
 
 ---
 
@@ -189,6 +205,7 @@ The Buy Flow builds its inventory URLs from `BASE_URL` and these stable paths:
 ```text
 USED_CAR_PAYGENT_PATH=/used-cars/mk_volkswagen?sort_by=new_arrival&per_page=25&page=1&unreserved=1
 USED_CAR_BANK_PATH=/used-cars/mk_daihatsu?sort_by=new_arrival&per_page=25&page=1&unreserved=1
+USED_CAR_PAYPAL_PATH=/used-cars/mk_suzuki?sort_by=new_arrival&per_page=25&page=1&unreserved=1
 ```
 
 Keep records that expire or change frequently in the same private `.env` file.
@@ -230,7 +247,7 @@ pytest tests/car_services/ -v -s
 
 The Buy Now menu provides separate User-flow choices:
 
-- **9:** Used Car Buy Now only
+- **9:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **10:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **11:** Combined Used Car and New Car Buy Now (all implemented payments)
 
@@ -248,6 +265,13 @@ $env:BASE_URL="https://sprint.shineauto.info"
 venv\Scripts\pytest.exe tests\buy_flow\user\new_car\test_paypal.py -v -s
 ```
 
+To run only the User Used Car PayPal test:
+
+```powershell
+$env:BASE_URL="https://sprint.shineauto.info"
+venv\Scripts\pytest.exe tests\buy_flow\user\used_car\test_paypal.py -v -s
+```
+
 `run_tests.bat` lets you select Sprint or Development at runtime. The same test
 paths and page objects are used for either domain.
 
@@ -260,15 +284,15 @@ paths and page objects are used for either domain.
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
-| **Buy Flow (End‑to‑End)** | 5 | Independent Used/New Car Paygent and Bank Transfer flows plus New Car PayPal |
-| **Total** | **38** | |
+| **Buy Flow (End‑to‑End)** | 6 | Independent Used/New Car Paygent, Bank Transfer, and PayPal flows |
+| **Total** | **39** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
-- **Buy Flow (End‑to‑End):** 5 tests
+- **Buy Flow (End‑to‑End):** 6 tests
 
 ### Test boundary strategy
 

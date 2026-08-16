@@ -70,7 +70,7 @@ def open_new_car_bank_payment(page):
 
 
 def open_new_car_paypal_payment(page):
-    """Open the Nissan Roox User New Car PayPal journey for UK/Bristol."""
+    """Open the Toyota Aqua User New Car PayPal journey for UK/Bristol."""
     return open_new_car_payment(
         page,
         NEW_CAR_PAYPAL_MAKE,

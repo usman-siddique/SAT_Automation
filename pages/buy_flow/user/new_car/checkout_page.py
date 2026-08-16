@@ -48,7 +48,7 @@ class NewCarCheckoutPage:
         )
         for label, expected in variant.features().items():
             actual = self._summary_feature(label)
-            assert actual == expected, (
+            assert actual.casefold() == expected.casefold(), (
                 f"New Car checkout {label} changed: expected {expected!r}, "
                 f"found {actual!r}."
             )

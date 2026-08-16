@@ -53,9 +53,17 @@ USED_CAR_BANK_PATH = os.getenv(
     "USED_CAR_BANK_PATH",
     "/used-cars/mk_daihatsu?sort_by=new_arrival&per_page=25&page=1&unreserved=1",
 )
+USED_CAR_PAYPAL_PATH = os.getenv(
+    "USED_CAR_PAYPAL_PATH",
+    "/used-cars/mk_suzuki?sort_by=new_arrival&per_page=25&page=1&unreserved=1",
+)
 
 USED_CAR_PAYGENT_URL = build_site_url(USED_CAR_PAYGENT_PATH)
 USED_CAR_BANK_URL = build_site_url(USED_CAR_BANK_PATH)
+USED_CAR_PAYPAL_URL = build_site_url(USED_CAR_PAYPAL_PATH)
+USED_CAR_PAYPAL_COUNTRY = "United Kingdom"
+USED_CAR_PAYPAL_PORT = "Bristol"
+USED_CAR_PAYPAL_SHIPPING_TYPE = "roro"
 
 # --- User New Car Buy flow ---
 NEW_CAR_HOME_URL = build_site_url("/new-cars-home")
@@ -81,16 +89,16 @@ NEW_CAR_BANK_EXPECTED_VARIANT = {
     "fuel": "Petrol",
     "seats": "4",
 }
-NEW_CAR_PAYPAL_MAKE = "Nissan"
-NEW_CAR_PAYPAL_MODEL_SLUG = "nissan-roox-s"
+NEW_CAR_PAYPAL_MAKE = "Toyota"
+NEW_CAR_PAYPAL_MODEL_SLUG = "toyota-aqua-x-2wd"
 NEW_CAR_PAYPAL_EXPECTED_VARIANT = {
-    "model": "2024 Nissan Roox S",
-    "variant": "Nissan Roox s",
-    "color": "Silky Lilac",
+    "model": "2024 Toyota Aqua X 2WD",
+    "variant": "Toyota Aqua X 2WD",
+    "color": "Super White",
     "transmission": "CVT",
     "drivetrain": "2WD",
-    "fuel": "Hybrid(Petrol)",
-    "seats": "4",
+    "fuel": "Hybrid (Petrol)",
+    "seats": "5",
 }
 NEW_CAR_PAYPAL_COUNTRY = "United Kingdom"
 NEW_CAR_PAYPAL_PORT = "Bristol"

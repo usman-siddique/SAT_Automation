@@ -79,7 +79,7 @@ echo 5. Run Shipping Schedule tests
 echo 6. Run Warranty Service tests
 echo 7. Run Finance Service tests
 echo 8. Run Non Stolen Vehicle tests
-echo 9. Run User Used Car Buy Now tests
+echo 9. Run User Used Car Buy Now tests (Paygent + Bank + PayPal)
 echo 10. Run User New Car Buy Now tests (Paygent + Bank + PayPal)
 echo 11. Run all User Buy Now tests (Used Car + New Car, all payments)
 echo 12. Exit
