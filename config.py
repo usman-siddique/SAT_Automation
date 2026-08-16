@@ -39,6 +39,8 @@ LOGIN_EMAIL = os.getenv("LOGIN_EMAIL")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
 DEALER_LOGIN_EMAIL = os.getenv("DEALER_LOGIN_EMAIL")
 DEALER_LOGIN_PASSWORD = os.getenv("DEALER_LOGIN_PASSWORD")
+PAYPAL_SANDBOX_EMAIL = os.getenv("PAYPAL_SANDBOX_EMAIL")
+PAYPAL_SANDBOX_PASSWORD = os.getenv("PAYPAL_SANDBOX_PASSWORD")
 
 # --- Buy flow inventory paths ---
 # Keep the environment domain separate from stable inventory paths so the same
@@ -79,6 +81,19 @@ NEW_CAR_BANK_EXPECTED_VARIANT = {
     "fuel": "Petrol",
     "seats": "4",
 }
+NEW_CAR_PAYPAL_MAKE = "Nissan"
+NEW_CAR_PAYPAL_MODEL_SLUG = "nissan-roox-s"
+NEW_CAR_PAYPAL_EXPECTED_VARIANT = {
+    "model": "2024 Nissan Roox S",
+    "variant": "Nissan Roox s",
+    "color": "Silky Lilac",
+    "transmission": "CVT",
+    "drivetrain": "2WD",
+    "fuel": "Hybrid(Petrol)",
+    "seats": "4",
+}
+NEW_CAR_PAYPAL_COUNTRY = "United Kingdom"
+NEW_CAR_PAYPAL_PORT = "Bristol"
 
 # --- Frequently changing Auction/Service records ---
 AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")

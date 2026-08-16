@@ -1,6 +1,9 @@
 import re
 
-from pages.buy_flow.user.new_car.variant import NewCarVariant
+from pages.buy_flow.user.new_car.variant import (
+    NewCarPayPalPrices,
+    NewCarVariant,
+)
 from pages.buy_flow.user.payment_page import PaymentPage
 
 
@@ -66,7 +69,83 @@ class NewCarPaymentPage(PaymentPage):
         )
         return payment_total
 
-    def _submit_new_car_order(self, payment_name: str):
+    def verify_payment_destination(self, country_name: str, port_name: str):
+        """Verify the checkout destination survived onto the payment page."""
+        country_expression = re.escape(country_name).replace(
+            r"\ ", r"[-\s]"
+        )
+        country_pattern = re.compile(
+            rf"^{country_expression}$",
+            re.IGNORECASE,
+        )
+        country = self.page.get_by_text(country_pattern).filter(visible=True).first
+        port = self.page.get_by_text(port_name, exact=True).filter(
+            visible=True
+        ).first
+        country.wait_for(state="visible")
+        port.wait_for(state="visible")
+        print(f"New Car payment destination verified: {country_name} / {port_name}")
+        return self
+
+    def select_paypal_and_capture_jpy_prices(
+        self,
+        variant: NewCarVariant,
+        expected_checkout_total: str,
+    ):
+        """Select PayPal, wait for JPY conversion, and retain both currencies."""
+        self._wait_for_payment_page()
+        paypal = self.page.locator("input[name='payment'][value='paypal']")
+        paypal.wait_for(state="visible")
+        paypal.check()
+        assert paypal.is_checked(), "PayPal was not selected"
+
+        self.page.locator("#paypal").wait_for(state="visible", timeout=10000)
+        self.page.wait_for_function(
+            """() => document.body.innerText.includes('JPY') ||
+                Array.from(document.querySelectorAll('input, select'))
+                    .some((element) => element.value === 'JPY')""",
+            timeout=30000,
+        )
+
+        car_price_jpy = ""
+        total_price_jpy = ""
+        for _ in range(30):
+            car_price_jpy = self._payment_summary_price("Car Price")
+            total_price_jpy = self._payment_summary_price("Total Price")
+            converted = (
+                self._normalize_price(car_price_jpy)
+                != self._normalize_price(variant.car_price)
+                and self._normalize_price(total_price_jpy)
+                != self._normalize_price(expected_checkout_total)
+            )
+            if converted:
+                break
+            self.page.wait_for_timeout(1000)
+        else:
+            raise AssertionError(
+                "PayPal was selected, but the New Car prices did not convert "
+                "from USD to JPY."
+            )
+
+        notice = self.page.get_by_text(
+            re.compile(r"only accept payments in JPY", re.IGNORECASE)
+        ).filter(visible=True).first
+        notice.wait_for(state="visible")
+
+        prices = NewCarPayPalPrices(
+            car_price_usd=variant.car_price,
+            total_price_usd=expected_checkout_total,
+            car_price_jpy=car_price_jpy,
+            total_price_jpy=total_price_jpy,
+        )
+        print(
+            "New Car PayPal conversion captured: "
+            f"car {prices.car_price_usd} -> {prices.car_price_jpy}, "
+            f"total {prices.total_price_usd} -> {prices.total_price_jpy}"
+        )
+        return prices
+
+    def _confirm_new_car_order_modal(self, payment_name: str):
         proceed = self.page.locator("#submitPlaceOrder")
         proceed.wait_for(state="visible")
         assert proceed.is_enabled(), "Proceed to Checkout button is disabled"
@@ -75,6 +154,11 @@ class NewCarPaymentPage(PaymentPage):
         place_order = self.page.locator("button", has_text="Place Order").last
         place_order.wait_for(state="visible", timeout=10000)
         place_order.click()
+        print(f"Confirmed New Car {payment_name} order modal")
+        return self
+
+    def _submit_new_car_order(self, payment_name: str):
+        self._confirm_new_car_order_modal(payment_name)
         self.page.wait_for_url("**/new-car-order-summary/**", timeout=60000)
         print(f"Reached New Car {payment_name} order summary")
         return self
@@ -85,10 +169,17 @@ class NewCarPaymentPage(PaymentPage):
     def submit_new_car_bank_transfer(self):
         return self._submit_new_car_order("Bank Transfer")
 
+    def submit_new_car_paypal(self):
+        self._confirm_new_car_order_modal("PayPal")
+        self.page.wait_for_url("**paypal.com/**", timeout=60000)
+        print("Reached PayPal sandbox")
+        return self
+
     def _verify_common_new_car_confirmation(
         self,
         variant: NewCarVariant,
         expected_status: str,
+        expected_car_price: str | None = None,
     ):
         success = self.page.get_by_text(
             re.compile(r"Thank you for placing an order with SAT", re.IGNORECASE)
@@ -107,11 +198,12 @@ class NewCarPaymentPage(PaymentPage):
         )
 
         final_car_price = self._get_summary_value("Car Price")
+        expected_price = expected_car_price or variant.car_price
         assert self._normalize_price(final_car_price) == self._normalize_price(
-            variant.car_price
+            expected_price
         ), (
-            "New Car price changed on confirmation: details showed "
-            f"{variant.car_price}, confirmation shows {final_car_price}."
+            "New Car price changed on confirmation: expected "
+            f"{expected_price}, confirmation shows {final_car_price}."
         )
 
         shipping_cost = self._get_summary_value("Shipping Cost")
@@ -129,6 +221,16 @@ class NewCarPaymentPage(PaymentPage):
             f"Unexpected New Car confirmation URL: {self.page.url}"
         )
         return final_car_price
+
+    def _confirmation_delivery(self):
+        label = self.page.locator("span.item--title").filter(
+            has_text=re.compile(r"^Deliver(?:y)?\s+To:?$", re.IGNORECASE)
+        ).first
+        label.wait_for(state="visible")
+        row = label.locator(
+            "xpath=ancestor::div[contains(@class, 'item--summary')][1]"
+        )
+        return row.locator("span").last.inner_text().strip()
 
     def verify_new_car_confirmation(self, variant: NewCarVariant):
         final_car_price = self._verify_common_new_car_confirmation(
@@ -178,4 +280,43 @@ class NewCarPaymentPage(PaymentPage):
             f"{final_car_price}, Shipping Ask, Total Ask, payment proof, and "
             "bank information"
         )
+        return self
+
+    def verify_new_car_paypal_confirmation(
+        self,
+        variant: NewCarVariant,
+        prices: NewCarPayPalPrices,
+        country_name: str,
+        port_name: str,
+    ):
+        final_car_price = self._verify_common_new_car_confirmation(
+            variant,
+            "Partial Payment",
+            expected_car_price=prices.car_price_jpy,
+        )
+
+        delivery = self._confirmation_delivery()
+        expected_delivery = f"{country_name} / {port_name}"
+        normalize_location = lambda value: re.sub(
+            r"[^a-z0-9]", "", value.lower()
+        )
+        assert normalize_location(delivery) == normalize_location(expected_delivery), (
+            "New Car PayPal delivery changed: expected "
+            f"{expected_delivery!r}, found {delivery!r}."
+        )
+
+        print(
+            "New Car PayPal confirmation verified: Partial Payment, "
+            f"{delivery}, matching JPY car price {final_car_price}"
+        )
+        return self
+
+    def open_tracking(self):
+        track_order = self.page.locator("a:visible, button:visible").filter(
+            has_text=re.compile(r"Track Your Order", re.IGNORECASE)
+        ).first
+        track_order.wait_for(state="visible")
+        track_order.click()
+        self.page.wait_for_url("**/tracking-order-summary/**", timeout=60000)
+        print("Opened Track Your Order")
         return self

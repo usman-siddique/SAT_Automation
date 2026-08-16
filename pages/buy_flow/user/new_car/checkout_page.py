@@ -1,7 +1,7 @@
 import re
 from urllib.parse import parse_qs, urlparse
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from pages.buy_flow.user.new_car.variant import NewCarVariant
 
@@ -68,6 +68,61 @@ class NewCarCheckoutPage:
             f"total {checkout_total}"
         )
         return checkout_total
+
+    def select_destination(self, country_name: str, port_name: str):
+        """Select a country and explicitly select its asynchronously loaded port."""
+        country = self.page.locator(
+            "select#buynow_countries_list:visible"
+        ).first
+        port = self.page.locator(
+            "select#buynow_shipping_ports:visible"
+        ).first
+        country.wait_for(state="visible")
+        port.wait_for(state="visible")
+
+        port_option = port.locator("option").filter(
+            has_text=re.compile(rf"^{re.escape(port_name)}$", re.IGNORECASE)
+        )
+        for attempt in range(2):
+            country.select_option(label=country_name)
+            try:
+                port_option.wait_for(state="attached", timeout=30000)
+                break
+            except PlaywrightTimeoutError:
+                if attempt == 1:
+                    raise AssertionError(
+                        f"{port_name} did not load for {country_name}."
+                    )
+                # Trigger the application's country-change request again when
+                # the first asynchronous port fetch does not complete.
+                country.select_option(index=0)
+                self.page.wait_for_timeout(500)
+
+        port.select_option(label=port_name)
+        assert country.locator("option:checked").inner_text().strip() == country_name
+        assert port.locator("option:checked").inner_text().strip() == port_name
+
+        # The summary recalculates after both location controls settle.
+        previous_prices = None
+        stable_reads = 0
+        for _ in range(10):
+            current_prices = (
+                self._summary_price("Car Price"),
+                self._summary_price("Total Price"),
+            )
+            stable_reads = stable_reads + 1 if current_prices == previous_prices else 0
+            if stable_reads >= 2:
+                break
+            previous_prices = current_prices
+            self.page.wait_for_timeout(1000)
+        else:
+            raise AssertionError(
+                "New Car checkout prices did not stabilize after selecting "
+                f"{country_name} / {port_name}."
+            )
+
+        print(f"Selected New Car destination: {country_name} / {port_name}")
+        return self
 
     def continue_to_payment(self):
         continue_button = self.page.locator("button.checkout--btn.placeOrder").first

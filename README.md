@@ -89,15 +89,17 @@ tests/buy_flow/
 |   |   `-- test_bank_transfer.py
 |   `-- new_car/
 |       |-- test_paygent.py
-|       `-- test_bank_transfer.py
+|       |-- test_bank_transfer.py
+|       `-- test_paypal.py
 `-- dealer/
     |-- used_car/
     `-- new_car/
 ```
 
 Only implemented coverage contains test modules. User Paygent and Bank Transfer
-flows are implemented for both Used Cars and New Cars. Dealer packages remain
-prepared for later coverage and do not report false placeholder tests.
+flows are implemented for both Used Cars and New Cars, with PayPal additionally
+covered for New Cars. Dealer packages remain prepared for later coverage and do
+not report false placeholder tests.
 
 User New Car coverage currently includes:
 
@@ -106,9 +108,13 @@ User New Car coverage currently includes:
 - **Bank Transfer:** Honda N-WGN G with variant and price checks plus final
   `Pending` status, `Ask` shipping/total, Track Your Order, Add Payment Proof,
   and bank-information verification.
+- **PayPal:** Nissan Roox S shipped to United Kingdom / Bristol. The test keeps
+  the USD checkout values, captures the PayPal-converted JPY car/total prices,
+  verifies the PayPal sandbox amount, checks the final `Partial Payment` order,
+  and validates the JPY partial amount and variant on Track Your Order.
 
 Each payment method is a separate pytest item. If one payment flow fails, its
-automatic rerun does not rerun the other payment method.
+automatic rerun does not rerun the other payment methods.
 
 ---
 
@@ -225,14 +231,21 @@ pytest tests/car_services/ -v -s
 The Buy Now menu provides separate User-flow choices:
 
 - **9:** Used Car Buy Now only
-- **10:** New Car Buy Now only
-- **11:** Combined Used Car and New Car Buy Now
+- **10:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
+- **11:** Combined Used Car and New Car Buy Now (all implemented payments)
 
 To run only the User New Car Bank Transfer test:
 
 ```powershell
 $env:BASE_URL="https://development.satjapan.info"
 venv\Scripts\pytest.exe tests\buy_flow\user\new_car\test_bank_transfer.py -v -s
+```
+
+To run only the User New Car PayPal test:
+
+```powershell
+$env:BASE_URL="https://sprint.shineauto.info"
+venv\Scripts\pytest.exe tests\buy_flow\user\new_car\test_paypal.py -v -s
 ```
 
 `run_tests.bat` lets you select Sprint or Development at runtime. The same test
@@ -247,15 +260,15 @@ paths and page objects are used for either domain.
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
-| **Buy Flow (End‑to‑End)** | 4 | Independent Used/New Car Paygent and Bank Transfer order flows |
-| **Total** | **37** | |
+| **Buy Flow (End‑to‑End)** | 5 | Independent Used/New Car Paygent and Bank Transfer flows plus New Car PayPal |
+| **Total** | **38** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
-- **Buy Flow (End‑to‑End):** 4 tests
+- **Buy Flow (End‑to‑End):** 5 tests
 
 ### Test boundary strategy
 
