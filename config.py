@@ -57,10 +57,15 @@ USED_CAR_PAYPAL_PATH = os.getenv(
     "USED_CAR_PAYPAL_PATH",
     "/used-cars/mk_suzuki?sort_by=new_arrival&per_page=25&page=1&unreserved=1",
 )
+USED_CAR_RESERVATION_PATH = os.getenv(
+    "USED_CAR_RESERVATION_PATH",
+    "/used-cars?unreserved=1",
+)
 
 USED_CAR_PAYGENT_URL = build_site_url(USED_CAR_PAYGENT_PATH)
 USED_CAR_BANK_URL = build_site_url(USED_CAR_BANK_PATH)
 USED_CAR_PAYPAL_URL = build_site_url(USED_CAR_PAYPAL_PATH)
+USED_CAR_RESERVATION_URL = build_site_url(USED_CAR_RESERVATION_PATH)
 USED_CAR_PAYPAL_COUNTRY = "United Kingdom"
 USED_CAR_PAYPAL_PORT = "Bristol"
 USED_CAR_PAYPAL_SHIPPING_TYPE = "roro"

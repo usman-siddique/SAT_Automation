@@ -4,3 +4,4 @@ allure-pytest==2.16.0
 pytest-rerunfailures==16.1
 pytest-xdist==3.8.0
 python-dotenv==1.2.2
+pypdf==6.16.1

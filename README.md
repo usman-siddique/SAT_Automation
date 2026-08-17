@@ -17,6 +17,7 @@ This framework automates core workflows on the SAT Japan platform, including:
 - **Car Services Module:** Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
 - **About Us Module:** Company info, loyalty program, SAT Pro membership
 - **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation
+- **Reservation:** Authenticated User Used Car reservation with priced checkout, invoice, and My Booking validation
 
 It covers positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean, maintainable test code.
 
@@ -50,6 +51,7 @@ SAT_Automation/
 │   ├── about_us/               # About Us module page objects
 │   ├── buy_flow/               # End‑to‑end order placement page objects
 │   ├── car_services/           # Car Services module page objects
+│   ├── reservation/            # Authenticated User reservation page objects
 │   └── sell_my_car/            # Sell My Car module page objects
 │
 ├── reports/
@@ -63,6 +65,7 @@ SAT_Automation/
 │   ├── about_us/               # About Us tests
 │   ├── buy_flow/               # End‑to‑end order placement tests
 │   ├── car_services/           # Car Services tests
+│   ├── reservation/            # Authenticated User reservation tests
 │   └── sell_my_car/            # Sell My Car tests (positive and negative)
 │
 ├── .env
@@ -206,6 +209,7 @@ The Buy Flow builds its inventory URLs from `BASE_URL` and these stable paths:
 USED_CAR_PAYGENT_PATH=/used-cars/mk_volkswagen?sort_by=new_arrival&per_page=25&page=1&unreserved=1
 USED_CAR_BANK_PATH=/used-cars/mk_daihatsu?sort_by=new_arrival&per_page=25&page=1&unreserved=1
 USED_CAR_PAYPAL_PATH=/used-cars/mk_suzuki?sort_by=new_arrival&per_page=25&page=1&unreserved=1
+USED_CAR_RESERVATION_PATH=/used-cars?unreserved=1
 ```
 
 Keep records that expire or change frequently in the same private `.env` file.
@@ -250,6 +254,7 @@ The Buy Now menu provides separate User-flow choices:
 - **9:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **10:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **11:** Combined Used Car and New Car Buy Now (all implemented payments)
+- **12:** User Used Car Reservation with a complete numeric price breakdown
 
 To run only the User New Car Bank Transfer test:
 
@@ -285,7 +290,8 @@ paths and page objects are used for either domain.
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Buy Flow (End‑to‑End)** | 6 | Independent Used/New Car Paygent, Bank Transfer, and PayPal flows |
-| **Total** | **39** | |
+| **Reservation** | 1 | User Used Car priced/no-Ask reservation, PDF invoice, and My Booking validation |
+| **Total** | **40** | |
 
 ### Module Breakdown
 
@@ -293,6 +299,7 @@ paths and page objects are used for either domain.
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
 - **Buy Flow (End‑to‑End):** 6 tests
+- **Reservation:** 1 test
 
 ### Test boundary strategy
 
