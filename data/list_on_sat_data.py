@@ -83,8 +83,23 @@ ALL_LIST_ON_SAT_PARAMS = [
 LIST_ON_SAT_PARAMS = ALL_LIST_ON_SAT_PARAMS[:2]
 
 
+# Only these listings are currently executed by pytest.
+# Add or remove (make, model) pairs here to control the active test cases.
+ACTIVE_LISTINGS = {
+    ("Honda", "VEZEL"),
+    ("Toyota", "AQUA"),
+}
+
+
+LIST_ON_SAT_PARAMS = [
+    item
+    for item in ALL_LIST_ON_SAT_PARAMS
+    if (item["make"], item["model"]) in ACTIVE_LISTINGS
+]
+
+
 def _assert_unique_listings():
-    identities = [(item["make"], item["model"], item["color"]) for item in LIST_ON_SAT_PARAMS]
+    identities = [(item["make"], item["model"], item["color"]) for item in ALL_LIST_ON_SAT_PARAMS]
     if len(identities) != len(set(identities)):
         raise ValueError("Duplicate List on SAT vehicle found (make, model, color)")
 
