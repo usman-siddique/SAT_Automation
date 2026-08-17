@@ -31,8 +31,12 @@ class UsedCarsPage:
         )
         return self
 
-    def select_any_available_used_car(self):
-        """Select the first visible, unreserved Used car with Inquire Now."""
+    def select_any_available_used_car(self, excluded_stock_ids=None):
+        """Select the next visible, unreserved Used car with Inquire Now."""
+        excluded_stock_ids = {
+            stock_id.lower() for stock_id in (excluded_stock_ids or set())
+        }
+
         for title in self.page.locator("a.search-car--title").all():
             if not title.is_visible():
                 continue
@@ -46,17 +50,18 @@ class UsedCarsPage:
                 "button.btnCarPriceQuote", has_text="Inquire Now"
             )
 
+            stock_id = href.rstrip("/").rsplit("/", 1)[-1]
             is_available_used_car = (
                 "/auction_cars" not in href
                 and "sold" not in card_text
                 and "reserved" not in card_text
+                and stock_id.lower() not in excluded_stock_ids
                 and inquire_button.count() > 0
                 and inquire_button.is_visible()
             )
             if not is_available_used_car:
                 continue
 
-            stock_id = href.rstrip("/").rsplit("/", 1)[-1]
             title.click()
             self.page.wait_for_url(
                 f"**/used-cars/**/{stock_id}",
@@ -70,5 +75,6 @@ class UsedCarsPage:
 
         raise AssertionError(
             "No visible, unreserved Used car with Inquire Now was available "
-            f"on {self.page.url}."
+            f"on {self.page.url}. Detail-page exclusions: "
+            f"{sorted(excluded_stock_ids) or 'none'}."
         )
