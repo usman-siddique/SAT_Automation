@@ -10,7 +10,15 @@ import pytest
 from allure_commons.types import AttachmentType
 from playwright.sync_api import sync_playwright
 
-from config import BASE_URL, DEALER_LOGIN_EMAIL, DEALER_LOGIN_PASSWORD
+from config import (
+    BASE_URL,
+    DEALER_LOGIN_EMAIL,
+    DEALER_LOGIN_PASSWORD,
+    ELIGIBLE_DEALER_USER_EMAIL,
+    ELIGIBLE_DEALER_USER_PASSWORD,
+    REJECTED_DEALER_USER_EMAIL,
+    REJECTED_DEALER_USER_PASSWORD,
+)
 from pages.auth.login_page import LoginPage
 from pages.site_navigation import open_site_home
 
@@ -210,6 +218,22 @@ def context(user_context):
 
 
 @pytest.fixture(scope="session")
+def eligible_dealer_user_context(browser):
+    """Isolated session for a User who can apply to become a Dealer."""
+    ctx = browser.new_context(**_context_options())
+    yield ctx
+    ctx.close()
+
+
+@pytest.fixture(scope="session")
+def rejected_dealer_user_context(browser):
+    """Isolated session for a User whose Dealer application was rejected."""
+    ctx = browser.new_context(**_context_options())
+    yield ctx
+    ctx.close()
+
+
+@pytest.fixture(scope="session")
 def dealer_context(browser):
     """Independent cookie/local-storage boundary for future Dealer tests."""
     ctx = browser.new_context(**_context_options())
@@ -223,6 +247,58 @@ def page(context, request):
     pg = _prepare_page(context.new_page(), request)
     try:
         LoginPage(pg).login(account_label="User")
+        yield pg
+    except Exception:
+        _attach_browser_evidence(request.node, pg, "setup")
+        raise
+    finally:
+        if not pg.is_closed():
+            pg.close()
+
+
+@pytest.fixture(scope="function")
+def eligible_dealer_user_page(eligible_dealer_user_context, request):
+    """Authenticated User who has not submitted a Dealer application."""
+    if not ELIGIBLE_DEALER_USER_EMAIL or not ELIGIBLE_DEALER_USER_PASSWORD:
+        raise RuntimeError(
+            "Eligible Dealer User credentials are missing. Set "
+            "ELIGIBLE_DEALER_USER_EMAIL and ELIGIBLE_DEALER_USER_PASSWORD "
+            "in the private .env file."
+        )
+
+    pg = _prepare_page(eligible_dealer_user_context.new_page(), request)
+    try:
+        LoginPage(pg).login(
+            email=ELIGIBLE_DEALER_USER_EMAIL,
+            password=ELIGIBLE_DEALER_USER_PASSWORD,
+            account_label="Eligible Dealer User",
+        )
+        yield pg
+    except Exception:
+        _attach_browser_evidence(request.node, pg, "setup")
+        raise
+    finally:
+        if not pg.is_closed():
+            pg.close()
+
+
+@pytest.fixture(scope="function")
+def rejected_dealer_user_page(rejected_dealer_user_context, request):
+    """Authenticated User whose Dealer application was rejected."""
+    if not REJECTED_DEALER_USER_EMAIL or not REJECTED_DEALER_USER_PASSWORD:
+        raise RuntimeError(
+            "Rejected Dealer User credentials are missing. Set "
+            "REJECTED_DEALER_USER_EMAIL and REJECTED_DEALER_USER_PASSWORD "
+            "in the private .env file."
+        )
+
+    pg = _prepare_page(rejected_dealer_user_context.new_page(), request)
+    try:
+        LoginPage(pg).login(
+            email=REJECTED_DEALER_USER_EMAIL,
+            password=REJECTED_DEALER_USER_PASSWORD,
+            account_label="Rejected Dealer User",
+        )
         yield pg
     except Exception:
         _attach_browser_evidence(request.node, pg, "setup")
@@ -283,6 +359,8 @@ def pytest_runtest_makereport(item, call):
     if report.failed:
         active_page = (
             item.funcargs.get("page")
+            or item.funcargs.get("eligible_dealer_user_page")
+            or item.funcargs.get("rejected_dealer_user_page")
             or item.funcargs.get("dealer_page")
             or item.funcargs.get("page_no_login")
             or getattr(item, "_sat_active_page", None)

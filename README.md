@@ -16,6 +16,7 @@ This framework automates core workflows on the SAT Japan platform, including:
 - **Sell My Car Module:** Price quote, listing, auction
 - **Car Services Module:** Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
 - **About Us Module:** Company info, loyalty program, SAT Pro membership
+- **Help Module:** Header navigation, buying/payment guides, forms, bank information, FAQ, anonymous order tracking, and safety guidance
 - **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation
 - **Reservation:** Authenticated User Used Car priced and ASK reservation flows with invoice and My Booking validation
 
@@ -195,13 +196,17 @@ overrides `BASE_URL` for that run:
 BASE_URL=https://sprint.shineauto.info
 LOGIN_EMAIL=your_email@example.com
 LOGIN_PASSWORD=your_password
+REJECTED_DEALER_USER_EMAIL=rejected_user@example.com
+REJECTED_DEALER_USER_PASSWORD=your_rejected_user_password
+ELIGIBLE_DEALER_USER_EMAIL=eligible_user@example.com
+ELIGIBLE_DEALER_USER_PASSWORD=your_eligible_user_password
 DEALER_LOGIN_EMAIL=dealer@example.com
 DEALER_LOGIN_PASSWORD=your_dealer_password
 ```
 
-The private `.env` keeps User and Dealer credentials separate. Existing tests
-continue to use `LOGIN_EMAIL` and `LOGIN_PASSWORD`; Dealer credentials are only
-required when a test requests the `dealer_page` fixture.
+The private `.env` keeps the normal User, rejected Dealer applicant, eligible
+Dealer applicant, and existing Dealer sessions separate. This prevents one
+account's authenticated state from leaking into another Dealer CTA scenario.
 
 The Buy Flow builds its inventory URLs from `BASE_URL` and these stable paths:
 
@@ -244,22 +249,35 @@ pytest tests/sell_my_car/ -v -s
 ```
 pytest tests/car_services/ -v -s
 ```
+#### Help module
+```
+pytest tests/help/ -v -s
+```
 #### Using batch files (Windows):
 ```
 .\run_tests.bat
 ```
 
-The Buy Now menu provides separate User-flow choices:
+The Windows menu provides Help, Buy Now, and Reservation group choices:
 
-- **9:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
-- **10:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
-- **11:** Combined Used Car and New Car Buy Now (all implemented payments)
-- **12:** User Used Car Reservation with a complete numeric price breakdown
-- **13:** User Used Car Reservation with ASK pricing and Invoice Pending
-- **14:** Both User Used Car Reservation tests, run sequentially
+- **5:** Help header and all ten Help destinations
+- **6:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
+- **7:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
+- **8:** Combined Used Car and New Car Buy Now (all implemented payments)
+- **9:** User Used Car Reservation with a complete numeric price breakdown
+- **10:** User Used Car Reservation with ASK pricing and Invoice Pending
+- **11:** Both User Used Car Reservation tests, run sequentially
+- **12:** Choose multiple test groups with comma-separated menu numbers
+
+For example, choose option **12** and enter `2,5,8` to run Sell My Car,
+Help, and all User Buy Now tests in one pytest session and
+one Allure report. Parent groups automatically replace overlapping child
+choices. Any selection containing Buy Now or Reservation tests runs
+sequentially with automatic reruns disabled, even when parallel mode was
+selected.
 
 The reservation options always run sequentially because they share one User
-account. Clear or allow any unpaid reservation to expire before option 14 when
+account. Clear or allow any unpaid reservation to expire before option 11 when
 the environment enforces its one-pending-reservation rule.
 
 To run only the User New Car Bank Transfer test:
@@ -295,15 +313,17 @@ paths and page objects are used for either domain.
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
+| **Help** | 27 | Help dropdown and destinations, full How To Buy video/CTA/FAQ coverage, four Dealer account states, Inquiry Form submission/validation, and positive/negative order tracking |
 | **Buy Flow (End‑to‑End)** | 6 | Independent Used/New Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **41** | |
+| **Total** | **68** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
+- **Help:** 27 tests
 - **Buy Flow (End‑to‑End):** 6 tests
 - **Reservation:** 2 tests
 

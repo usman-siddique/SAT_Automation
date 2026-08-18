@@ -37,10 +37,32 @@ def build_site_url(path: str) -> str:
 # --- Login Credentials ---
 LOGIN_EMAIL = os.getenv("LOGIN_EMAIL")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
+REJECTED_DEALER_USER_EMAIL = os.getenv(
+    "REJECTED_DEALER_USER_EMAIL", LOGIN_EMAIL
+)
+REJECTED_DEALER_USER_PASSWORD = os.getenv(
+    "REJECTED_DEALER_USER_PASSWORD", LOGIN_PASSWORD
+)
 DEALER_LOGIN_EMAIL = os.getenv("DEALER_LOGIN_EMAIL")
 DEALER_LOGIN_PASSWORD = os.getenv("DEALER_LOGIN_PASSWORD")
+ELIGIBLE_DEALER_USER_EMAIL = os.getenv("ELIGIBLE_DEALER_USER_EMAIL")
+ELIGIBLE_DEALER_USER_PASSWORD = os.getenv("ELIGIBLE_DEALER_USER_PASSWORD")
 PAYPAL_SANDBOX_EMAIL = os.getenv("PAYPAL_SANDBOX_EMAIL")
 PAYPAL_SANDBOX_PASSWORD = os.getenv("PAYPAL_SANDBOX_PASSWORD")
+TRACK_ORDER_ID = os.getenv("TRACK_ORDER_ID", "874401098")
+
+# --- Inquiry Form test data ---
+INQUIRY_FORM_DATA = {
+    "name": os.getenv("INQUIRY_NAME", "SAT QA Automation"),
+    "email": os.getenv("INQUIRY_EMAIL", LOGIN_EMAIL),
+    "phone": os.getenv("INQUIRY_PHONE", "+923008090100"),
+    "country": os.getenv("INQUIRY_COUNTRY", "Pakistan"),
+    "city": os.getenv("INQUIRY_CITY", "Karachi"),
+    "question": os.getenv(
+        "INQUIRY_QUESTION",
+        "Automated QA test inquiry from SAT Automation. Please ignore.",
+    ),
+}
 
 # --- Buy flow inventory paths ---
 # Keep the environment domain separate from stable inventory paths so the same
