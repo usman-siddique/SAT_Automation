@@ -17,7 +17,7 @@ This framework automates core workflows on the SAT Japan platform, including:
 - **Car Services Module:** Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
 - **About Us Module:** Company info, loyalty program, SAT Pro membership
 - **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation
-- **Reservation:** Authenticated User Used Car reservation with priced checkout, invoice, and My Booking validation
+- **Reservation:** Authenticated User Used Car priced and ASK reservation flows with invoice and My Booking validation
 
 It covers positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean, maintainable test code.
 
@@ -255,6 +255,12 @@ The Buy Now menu provides separate User-flow choices:
 - **10:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **11:** Combined Used Car and New Car Buy Now (all implemented payments)
 - **12:** User Used Car Reservation with a complete numeric price breakdown
+- **13:** User Used Car Reservation with ASK pricing and Invoice Pending
+- **14:** Both User Used Car Reservation tests, run sequentially
+
+The reservation options always run sequentially because they share one User
+account. Clear or allow any unpaid reservation to expire before option 14 when
+the environment enforces its one-pending-reservation rule.
 
 To run only the User New Car Bank Transfer test:
 
@@ -290,8 +296,8 @@ paths and page objects are used for either domain.
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Buy Flow (End‑to‑End)** | 6 | Independent Used/New Car Paygent, Bank Transfer, and PayPal flows |
-| **Reservation** | 1 | User Used Car priced/no-Ask reservation, PDF invoice, and My Booking validation |
-| **Total** | **40** | |
+| **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
+| **Total** | **41** | |
 
 ### Module Breakdown
 
@@ -299,7 +305,7 @@ paths and page objects are used for either domain.
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
 - **Buy Flow (End‑to‑End):** 6 tests
-- **Reservation:** 1 test
+- **Reservation:** 2 tests
 
 ### Test boundary strategy
 

@@ -83,9 +83,11 @@ echo 9. Run User Used Car Buy Now tests (Paygent + Bank + PayPal)
 echo 10. Run User New Car Buy Now tests (Paygent + Bank + PayPal)
 echo 11. Run all User Buy Now tests (Used Car + New Car, all payments)
 echo 12. Run User Used Car Reservation (priced / no Ask)
-echo 13. Exit
+echo 13. Run User Used Car Reservation (Ask / invoice pending)
+echo 14. Run all User Used Car Reservation tests (priced + Ask)
+echo 15. Exit
 echo.
-set /p choice="Enter your choice (1-13): "
+set /p choice="Enter your choice (1-15): "
 
 if "%choice%"=="1" goto all
 if "%choice%"=="2" goto sell
@@ -99,7 +101,9 @@ if "%choice%"=="9" goto used_car_buy_flow
 if "%choice%"=="10" goto new_car_buy_flow
 if "%choice%"=="11" goto all_user_buy_flow
 if "%choice%"=="12" goto used_car_reservation
-if "%choice%"=="13" goto end
+if "%choice%"=="13" goto used_car_ask_reservation
+if "%choice%"=="14" goto all_used_car_reservations
+if "%choice%"=="15" goto end
 
 echo Invalid test selection. No tests were started.
 goto end
@@ -185,7 +189,23 @@ goto report
 echo Running User Used Car Reservation test (priced / no Ask)...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/reservation/user/used_car/test_priced_reservation.py %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest tests/reservation/user/used_car/test_priced_reservation.py %PYTEST_ARGS%
+goto report
+
+:used_car_ask_reservation
+echo Running User Used Car Reservation test (Ask / invoice pending)...
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/reservation/user/used_car/test_ask_reservation.py %PYTEST_ARGS%
+goto report
+
+:all_used_car_reservations
+echo Running all User Used Car Reservation tests (priced + Ask)...
+echo These state-changing tests run sequentially for the shared User account.
+echo Ensure the account has no unpaid reservation before running both flows.
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/reservation/user/used_car/ %PYTEST_ARGS%
 goto report
 
 :report

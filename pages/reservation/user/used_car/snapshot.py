@@ -49,3 +49,38 @@ class ReservationSnapshot:
             f"Reservation price {label!r} was not captured: "
             f"{self.price_breakdown}."
         )
+
+
+@dataclass(frozen=True)
+class AskReservationSnapshot:
+    """ASK reservation values retained from checkout through My Booking."""
+
+    stock_id: str
+    country: str
+    port: str
+    shipping_method: str
+    selected_services: tuple[str, ...]
+    unavailable_services: tuple[str, ...]
+    selected_add_ons: tuple[str, ...]
+    checkout_breakdown: tuple[tuple[str, str], ...]
+    review_breakdown: tuple[tuple[str, str], ...] = ()
+
+    @staticmethod
+    def _value(
+        breakdown: tuple[tuple[str, str], ...],
+        label: str,
+    ):
+        expected_label = normalize_text(label)
+        for actual_label, value in breakdown:
+            if normalize_text(actual_label) == expected_label:
+                return value
+        raise AssertionError(
+            f"ASK reservation value {label!r} was not captured: "
+            f"{breakdown}."
+        )
+
+    def checkout_price(self, label: str):
+        return self._value(self.checkout_breakdown, label)
+
+    def review_price(self, label: str):
+        return self._value(self.review_breakdown, label)

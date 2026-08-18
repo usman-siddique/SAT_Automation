@@ -54,12 +54,12 @@ class ReservationDetailsPage:
                 selected.append(label)
         return tuple(selected)
 
-    def open_next_priced_reservation(
+    def _open_next_reservable_detail(
         self,
         inventory_url: str,
         excluded_stock_ids: set[str],
     ):
-        """Skip stale/Ask candidates and open the next priced Reserve form."""
+        """Open the next detail page that has a usable Reserve action."""
         used_cars = UsedCarsPage(self.page)
 
         while True:
@@ -114,6 +114,23 @@ class ReservationDetailsPage:
                 excluded_stock_ids.add(stock_key)
                 continue
 
+            return stock_id, reserve, selected_rate
+
+    def open_next_priced_reservation(
+        self,
+        inventory_url: str,
+        excluded_stock_ids: set[str],
+    ):
+        """Skip stale/Ask candidates and open the next priced Reserve form."""
+        while True:
+            stock_id, reserve, selected_rate = (
+                self._open_next_reservable_detail(
+                    inventory_url,
+                    excluded_stock_ids,
+                )
+            )
+            stock_key = stock_id.lower()
+
             rate_row = selected_rate.locator("xpath=ancestor::tr[1]")
             shipping_method = rate_row.locator("td").nth(1).inner_text().strip()
             shipping_cost = rate_row.locator("td").last.inner_text().strip()
@@ -166,3 +183,22 @@ class ReservationDetailsPage:
                 f"total {total_price}"
             )
             return candidate
+
+    def open_next_reservation_checkout(
+        self,
+        inventory_url: str,
+        excluded_stock_ids: set[str],
+    ):
+        """Open the next usable reservation form without filtering its price."""
+        stock_id, reserve, _ = self._open_next_reservable_detail(
+            inventory_url,
+            excluded_stock_ids,
+        )
+        reserve.click()
+        self.page.wait_for_url(
+            f"**/reserve-car-payment/**/{stock_id}**",
+            timeout=60000,
+            wait_until="domcontentloaded",
+        )
+        print(f"Opened reservation checkout for {stock_id.upper()}.")
+        return stock_id
