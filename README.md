@@ -17,7 +17,7 @@ This framework automates core workflows on the SAT Japan platform, including:
 - **Car Services Module:** Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
 - **About Us Module:** Company info, loyalty program, SAT Pro membership
 - **Help Module:** Header navigation, buying/payment guides, forms, bank information, FAQ, anonymous order tracking, and safety guidance
-- **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation
+- **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation on 3 Roles (Guest/User/Dealer).
 - **Reservation:** Authenticated User Used Car priced and ASK reservation flows with invoice and My Booking validation
 
 It covers positive and negative test scenarios, following the Page Object Model (POM) design pattern for clean, maintainable test code.
