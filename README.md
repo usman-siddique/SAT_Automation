@@ -464,7 +464,7 @@ addopts = -v -rR --alluredir=reports/allure-results --clean-alluredir --reruns 1
 ---
 ## Future Plans
 
-- Add negative test cases for Buy now and Reservation Flow
+- Add negative test cases for Buy now, Auction and Reservation Flow
 - Expand to other site modules (Buy, Search, User Profile, Auction)
 - Add pytest markers for smoke and regression test groups
 - Integrate with GitHub Actions for CI/CD
