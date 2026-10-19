@@ -437,11 +437,6 @@ Allure keeps each pytest rerun as a separate attempt. Use the **Retries** tab to
 inspect earlier attempts. Every failed attempt receives its own screenshot and
 URL, including the final attempt displayed on **Overview**.
 
-Allure normally reports assertion failures as **Failed** and unexpected
-automation/runtime exceptions, such as Playwright timeouts, as **Broken**. The
-custom **Categories** view further groups assertion, timeout, and
-application/network availability failures.
-
 ### Troubleshooting
 
 - `unrecognized arguments: --alluredir`: run `.\setup_allure.bat` because the
