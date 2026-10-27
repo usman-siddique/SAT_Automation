@@ -5,7 +5,7 @@
 ![Pytest](https://img.shields.io/badge/Pytest-Test%20Runner-orange)
 ![Allure](https://img.shields.io/badge/Allure-Test%20Reports-yellow)
 
-An end-to-end test automation framework for the [SAT Japan] vehicle selling platform, built with Python, Playwright, and pytest.
+An end-to-end test automation framework for the SAT Japan vehicle selling platform, built with Python, Playwright, and pytest.
 
 ---
 
