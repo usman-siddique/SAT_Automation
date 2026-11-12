@@ -126,7 +126,7 @@ SELLER_REGISTRATION_DATA = {
     "seller_type": "individual",
     "monthly_availability": "6-10",
     "vehicle_locations": ["Pakistan", "Japan"],
-    "vehicle_types": ["Cars", "SUVs / 4x4"],
+    "vehicle_types": ["cars", "suvs"],
 }
 
 # --- Test Data ---

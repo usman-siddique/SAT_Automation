@@ -280,7 +280,7 @@ paths and page objects are used for either domain.
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
-| **Help** | 42 | Help dropdown and destinations, How To Buy CTA coverage by account state, Dealer flows, three-step Seller registration in English/Korean/Japanese, Inquiry Form submission/validation, and positive/negative order tracking |
+| **Help** | 42 | Help dropdown and destinations, How To Buy CTA coverage by account state, Dealer flows, full three-step Seller validation in English/Korean/Japanese, Inquiry Form submission/validation, and positive/negative order tracking |
 | **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
 | **Total** | **80** | |

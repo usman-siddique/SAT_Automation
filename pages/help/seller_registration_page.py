@@ -147,8 +147,8 @@ class SellerRegistrationPage:
             data["vehicle_locations"]
         )
         for vehicle_type in data["vehicle_types"]:
-            self._active_section().get_by_role(
-                "button", name=vehicle_type, exact=True
+            self._active_section().locator(
+                f"button.seller-tag[data-value='{vehicle_type}']"
             ).click()
         return self
 
@@ -206,8 +206,7 @@ class SellerRegistrationPage:
         self.page.locator("#companyDocPreview").wait_for(state="visible")
         return self
 
-    def upload_invalid_type(self):
-        message = "Please upload a PDF, JPG or PNG file."
+    def upload_invalid_type(self, expected_message):
         self._form().locator("#companyDocInput").set_input_files(
             {
                 "name": "seller-registration.txt",
@@ -215,13 +214,12 @@ class SellerRegistrationPage:
                 "buffer": b"invalid seller document",
             }
         )
-        self.page.get_by_text(message, exact=True).last.wait_for(
+        self.page.get_by_text(expected_message, exact=True).last.wait_for(
             state="visible"
         )
-        return message
+        return expected_message
 
-    def upload_oversized_document(self):
-        message = "File size must be under 10 MB."
+    def upload_oversized_document(self, expected_message):
         self._form().locator("#companyDocInput").set_input_files(
             {
                 "name": "oversized-seller-document.png",
@@ -229,10 +227,10 @@ class SellerRegistrationPage:
                 "buffer": b"0" * (10 * 1024 * 1024 + 1),
             }
         )
-        self.page.get_by_text(message, exact=True).last.wait_for(
+        self.page.get_by_text(expected_message, exact=True).last.wait_for(
             state="visible"
         )
-        return message
+        return expected_message
 
     def get_document_preview(self):
         preview = self.page.locator("#companyDocPreview")
