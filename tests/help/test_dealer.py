@@ -125,6 +125,19 @@ def test_become_dealer_link_hidden_for_existing_dealer(dealer_page):
         assert not dealer.is_main_dealer_link_visible()
 
 
+def test_eligible_user_how_to_buy_opens_join_form(
+    eligible_dealer_user_page,
+):
+    with allure.step("Open Become a Dealer as an eligible regular User"):
+        dealer = _open_join_form_from_how_to_buy(
+            eligible_dealer_user_page
+        )
+
+    with allure.step("Verify the eligible User reaches the Join Dealer form"):
+        assert dealer.current_path() == "/dealers/join-as-dealer"
+        assert dealer.get_account_state_heading() == "Become a Dealer Today"
+
+
 def test_existing_dealer_how_to_buy_shows_existing_account(dealer_page):
     HelpPage(dealer_page).open_menu_item(
         "How to Buy",

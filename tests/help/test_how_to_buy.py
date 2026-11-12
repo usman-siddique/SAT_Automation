@@ -71,7 +71,7 @@ def test_buy_new_cars_quick_action(page_no_login):
         assert urlparse(page_no_login.url).path == "/new-cars"
 
 
-def test_become_dealer_quick_action_redirect(page_no_login):
+def test_become_dealer_quick_action_for_guest(page_no_login):
     how_to_buy = _open_how_to_buy(page_no_login)
 
     with allure.step("Open Become a Dealer without logging in"):

@@ -110,6 +110,25 @@ IMAGES = {
     ],
 }
 
+SELLER_REGISTRATION_DOCUMENT = os.path.join(
+    IMAGES_DIR,
+    "Honda Vezel White.jpg",
+)
+
+SELLER_REGISTRATION_DATA = {
+    "company_name": "SAT QA Motors",
+    "country": "Pakistan",
+    "registration_number": "SAT-QA-REG-001",
+    "website": "https://example.com",
+    "contact_name": "SAT QA Seller",
+    "email": "seller.automation@gmail.com",
+    "phone_number": "3001234567",
+    "seller_type": "individual",
+    "monthly_availability": "6-10",
+    "vehicle_locations": ["Pakistan", "Japan"],
+    "vehicle_types": ["Cars", "SUVs / 4x4"],
+}
+
 # --- Test Data ---
 
 # -------------------------------------------------------

@@ -83,9 +83,10 @@ echo 9. Run all User Used Car Reservation tests (priced + Ask)
 echo 10. Choose multiple test groups to run
 echo 11. Run Dealer checks (no submission)
 echo 12. Run full Dealer flow (creates records)
-echo 13. Exit
+echo 13. Run Seller Registration flow (creates one record)
+echo 14. Exit
 echo.
-set /p choice="Enter your choice (1-13): "
+set /p choice="Enter your choice (1-14): "
 
 if "%choice%"=="1" goto all
 if "%choice%"=="2" goto sell
@@ -99,7 +100,8 @@ if "%choice%"=="9" goto all_used_car_reservations
 if "%choice%"=="10" goto multiple_tests
 if "%choice%"=="11" goto dealer_checks
 if "%choice%"=="12" goto dealer_full
-if "%choice%"=="13" goto end
+if "%choice%"=="13" goto seller_registration
+if "%choice%"=="14" goto end
 
 echo Invalid test selection. No tests were started.
 goto end
@@ -135,7 +137,7 @@ goto report
 
 :help
 echo Running Help tests...
-echo Dealer account/application tests create Development records.
+echo Dealer and Seller application tests create Development records.
 echo Parallel execution and reruns are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
@@ -147,7 +149,7 @@ echo Running Dealer checks without account/application submission...
 echo Known Development defects are reported as expected failures.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/help/test_dealer.py tests/help/test_how_to_buy.py::test_become_dealer_quick_action_redirect -k "not submission" %PYTEST_ARGS% --force-reruns 0
+venv\Scripts\pytest tests/help/test_dealer.py tests/help/test_how_to_buy.py::test_become_dealer_quick_action_for_guest -k "not submission" %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :dealer_full
@@ -156,7 +158,16 @@ echo WARNING: This creates unique Development User/Dealer records.
 echo Parallel execution and reruns are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/help/test_dealer.py tests/help/test_how_to_buy.py::test_become_dealer_quick_action_redirect %PYTEST_ARGS% --force-reruns 0
+venv\Scripts\pytest tests/help/test_dealer.py tests/help/test_how_to_buy.py::test_become_dealer_quick_action_for_guest %PYTEST_ARGS% --force-reruns 0
+goto report
+
+:seller_registration
+echo Running Seller Registration tests...
+echo WARNING: This creates one Development Seller application record.
+echo Parallel execution and reruns are disabled.
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/help/test_seller_registration.py %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :used_car_buy_flow

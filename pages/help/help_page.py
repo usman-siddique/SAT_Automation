@@ -7,12 +7,13 @@ class HelpPage:
     MENU_ITEMS = (
         ("How to Buy", "/how-to-buy"),
         ("Become a SAT Japan Dealer", "/dealers/sign-up"),
+        ("Become a Seller with SAT", "/seller-registration"),
         ("Inquiry Form", "/inquiry-form"),
         ("Vehicle Information Request", "/request-vehicle-information"),
         ("How to Pay", "/how-to-pay"),
         ("Bank Information", "/bank-information"),
         ("Track Your Order", "/track-your-order"),
-        ("FAQ’s", "/faq"),
+        ("FAQs", "/faq"),
         ("How to Pick the Right Used Car", "/how-to-choose"),
         ("Buying Vehicles Safely Guide", "/safety-with-sat"),
     )

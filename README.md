@@ -243,7 +243,7 @@ pytest tests/help/ -v -s
 
 The Windows menu provides Help, Buy Now, and Reservation group choices:
 
-- **5:** Help header and all ten Help destinations
+- **5:** Help header and all eleven Help destinations
 - **6:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **7:** User Used Car Reservation with a complete numeric price breakdown
 - **8:** User Used Car Reservation with ASK pricing and Invoice Pending
@@ -280,17 +280,17 @@ paths and page objects are used for either domain.
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
-| **Help** | 27 | Help dropdown and destinations, focused How To Buy video/CTA/FAQ coverage, four Dealer states through the main header flow, Inquiry Form submission/validation, and positive/negative order tracking |
+| **Help** | 42 | Help dropdown and destinations, How To Buy CTA coverage by account state, Dealer flows, three-step Seller registration in English/Korean/Japanese, Inquiry Form submission/validation, and positive/negative order tracking |
 | **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **65** | |
+| **Total** | **80** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
-- **Help:** 27 tests
+- **Help:** 42 tests
 - **Buy Flow (End‑to‑End):** 3 tests
 - **Reservation:** 2 tests
 
