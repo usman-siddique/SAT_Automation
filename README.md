@@ -88,23 +88,18 @@ flow:
 ```text
 tests/buy_flow/
 |-- user/
-|   |-- used_car/
-|   |   |-- test_paygent.py
-|   |   |-- test_bank_transfer.py
-|   |   `-- test_paypal.py
-|   `-- new_car/
+|   `-- used_car/
 |       |-- test_paygent.py
 |       |-- test_bank_transfer.py
 |       `-- test_paypal.py
 `-- dealer/
-    |-- used_car/
-    `-- new_car/
+    `-- used_car/
 ```
 
 Only implemented coverage contains test modules. User Paygent, Bank Transfer,
-and PayPal flows are implemented independently for both Used Cars and New Cars.
-Dealer packages remain prepared for later coverage and do not report false
-placeholder tests.
+and PayPal flows are implemented independently for Used Cars. New Cars are
+inquiry-only and intentionally have no Buy Now coverage. The Dealer Used Car
+package remains prepared for later coverage and does not report false tests.
 
 User Used Car PayPal coverage selects an available Suzuki, explicitly chooses
 United Kingdom / Bristol RORO shipping, and supports both valid application
@@ -113,18 +108,6 @@ method and full USD breakdown on the payment page, proves that PayPal performs a
 real numeric USD-to-JPY conversion (not only a currency-symbol change), verifies
 the PayPal sandbox total, and validates the resulting confirmation and tracking
 summary in JPY.
-
-User New Car coverage currently includes:
-
-- **Paygent:** Nissan Dayz X with variant and price checks across details,
-  checkout, payment, and the final `Partial Payment` order summary.
-- **Bank Transfer:** Honda N-WGN G with variant and price checks plus final
-  `Pending` status, `Ask` shipping/total, Track Your Order, Add Payment Proof,
-  and bank-information verification.
-- **PayPal:** Toyota Aqua X 2WD shipped to United Kingdom / Bristol. The test keeps
-  the USD checkout values, captures the PayPal-converted JPY car/total prices,
-  verifies the PayPal sandbox amount, checks the final `Partial Payment` order,
-  and validates the JPY partial amount and variant on Track Your Order.
 
 Each payment method is a separate pytest item. If one payment flow fails, its
 automatic rerun does not rerun the other payment methods.
@@ -262,42 +245,26 @@ The Windows menu provides Help, Buy Now, and Reservation group choices:
 
 - **5:** Help header and all ten Help destinations
 - **6:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
-- **7:** New Car Buy Now only (Paygent, Bank Transfer, and PayPal)
-- **8:** Combined Used Car and New Car Buy Now (all implemented payments)
-- **9:** User Used Car Reservation with a complete numeric price breakdown
-- **10:** User Used Car Reservation with ASK pricing and Invoice Pending
-- **11:** Both User Used Car Reservation tests, run sequentially
-- **12:** Choose multiple test groups with comma-separated menu numbers
+- **7:** User Used Car Reservation with a complete numeric price breakdown
+- **8:** User Used Car Reservation with ASK pricing and Invoice Pending
+- **9:** Both User Used Car Reservation tests, run sequentially
+- **10:** Choose multiple test groups with comma-separated menu numbers
 
-For example, choose option **12** and enter `2,5,8` to run Sell My Car,
-Help, and all User Buy Now tests in one pytest session and
+For example, choose option **10** and enter `2,5,6` to run Sell My Car,
+Help, and User Used Car Buy Now tests in one pytest session and
 one Allure report. Parent groups automatically replace overlapping child
 choices. Any selection containing Buy Now or Reservation tests runs
 sequentially with automatic reruns disabled, even when parallel mode was
 selected.
 
 The reservation options always run sequentially because they share one User
-account. Clear or allow any unpaid reservation to expire before option 11 when
+account. Clear or allow any unpaid reservation to expire before option 9 when
 the environment enforces its one-pending-reservation rule.
-
-To run only the User New Car Bank Transfer test:
-
-```powershell
-$env:BASE_URL="https://development.satjapan.info"
-venv\Scripts\pytest.exe tests\buy_flow\user\new_car\test_bank_transfer.py -v -s
-```
-
-To run only the User New Car PayPal test:
-
-```powershell
-$env:BASE_URL="https://sprint.shineauto.info"
-venv\Scripts\pytest.exe tests\buy_flow\user\new_car\test_paypal.py -v -s
-```
 
 To run only the User Used Car PayPal test:
 
 ```powershell
-$env:BASE_URL="https://sprint.shineauto.info"
+$env:BASE_URL="https://development.satjapan.info"
 venv\Scripts\pytest.exe tests\buy_flow\user\used_car\test_paypal.py -v -s
 ```
 
@@ -313,10 +280,10 @@ paths and page objects are used for either domain.
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
-| **Help** | 27 | Help dropdown and destinations, full How To Buy video/CTA/FAQ coverage, four Dealer account states, Inquiry Form submission/validation, and positive/negative order tracking |
-| **Buy Flow (End‑to‑End)** | 6 | Independent Used/New Car Paygent, Bank Transfer, and PayPal flows |
+| **Help** | 27 | Help dropdown and destinations, focused How To Buy video/CTA/FAQ coverage, four Dealer states through the main header flow, Inquiry Form submission/validation, and positive/negative order tracking |
+| **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **68** | |
+| **Total** | **65** | |
 
 ### Module Breakdown
 
@@ -324,7 +291,7 @@ paths and page objects are used for either domain.
 - **Car Services:** 16 tests
 - **About Us:** 10 tests
 - **Help:** 27 tests
-- **Buy Flow (End‑to‑End):** 6 tests
+- **Buy Flow (End‑to‑End):** 3 tests
 - **Reservation:** 2 tests
 
 ### Test boundary strategy
@@ -372,7 +339,7 @@ browser context:
 | `page_no_login` | Fresh anonymous context per test | Public and logged-out coverage |
 | `page` | Shared User context with a new page per test | All existing authenticated User tests |
 | `context` | Backward-compatible alias to User context | Existing page objects that open new tabs |
-| `dealer_page` | Shared Dealer context with a new page per test | Future Dealer Buy Now coverage |
+| `dealer_page` | Shared Dealer context with a new page per test | Future Dealer Used Car Buy Now coverage |
 
 Running option **1** remains safe after Dealer tests are added: pytest selects
 the correct context from the fixture requested by each test. No logout or

@@ -77,12 +77,12 @@ echo 3. Run Car Services tests
 echo 4. Run About Us tests
 echo 5. Run Help tests
 echo 6. Run User Used Car Buy Now tests (Paygent + Bank + PayPal)
-echo 7. Run User New Car Buy Now tests (Paygent + Bank + PayPal)
-echo 8. Run all User Buy Now tests (Used Car + New Car, all payments)
-echo 9. Run User Used Car Reservation (priced / no Ask)
-echo 10. Run User Used Car Reservation (Ask / invoice pending)
-echo 11. Run all User Used Car Reservation tests (priced + Ask)
-echo 12. Choose multiple test groups to run
+echo 7. Run User Used Car Reservation (priced / no Ask)
+echo 8. Run User Used Car Reservation (Ask / invoice pending)
+echo 9. Run all User Used Car Reservation tests (priced + Ask)
+echo 10. Choose multiple test groups to run
+echo 11. Run Dealer checks (no submission)
+echo 12. Run full Dealer flow (creates records)
 echo 13. Exit
 echo.
 set /p choice="Enter your choice (1-13): "
@@ -93,12 +93,12 @@ if "%choice%"=="3" goto car_services
 if "%choice%"=="4" goto about_us
 if "%choice%"=="5" goto help
 if "%choice%"=="6" goto used_car_buy_flow
-if "%choice%"=="7" goto new_car_buy_flow
-if "%choice%"=="8" goto all_user_buy_flow
-if "%choice%"=="9" goto used_car_reservation
-if "%choice%"=="10" goto used_car_ask_reservation
-if "%choice%"=="11" goto all_used_car_reservations
-if "%choice%"=="12" goto multiple_tests
+if "%choice%"=="7" goto used_car_reservation
+if "%choice%"=="8" goto used_car_ask_reservation
+if "%choice%"=="9" goto all_used_car_reservations
+if "%choice%"=="10" goto multiple_tests
+if "%choice%"=="11" goto dealer_checks
+if "%choice%"=="12" goto dealer_full
 if "%choice%"=="13" goto end
 
 echo Invalid test selection. No tests were started.
@@ -106,9 +106,10 @@ goto end
 
 :all
 echo Running all tests...
+echo State-changing tests are included. Parallel execution and reruns are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :sell
@@ -134,9 +135,28 @@ goto report
 
 :help
 echo Running Help tests...
+echo Dealer account/application tests create Development records.
+echo Parallel execution and reruns are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/help/ %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest tests/help/ %PYTEST_ARGS% --force-reruns 0
+goto report
+
+:dealer_checks
+echo Running Dealer checks without account/application submission...
+echo Known Development defects are reported as expected failures.
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/help/test_dealer.py tests/help/test_how_to_buy.py::test_become_dealer_quick_action_redirect -k "not submission" %PYTEST_ARGS% --force-reruns 0
+goto report
+
+:dealer_full
+echo Running full Dealer flow...
+echo WARNING: This creates unique Development User/Dealer records.
+echo Parallel execution and reruns are disabled.
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/help/test_dealer.py tests/help/test_how_to_buy.py::test_become_dealer_quick_action_redirect %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :used_car_buy_flow
@@ -144,20 +164,6 @@ echo Running User Used Car Buy Now tests...
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/buy_flow/user/used_car/ %PYTEST_ARGS% --force-reruns 0
-goto report
-
-:new_car_buy_flow
-echo Running User New Car Buy Now tests...
-set HEADLESS=%HEADLESS%
-set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/buy_flow/user/new_car/ %PYTEST_ARGS% --force-reruns 0
-goto report
-
-:all_user_buy_flow
-echo Running all User Buy Now tests (Used Car + New Car)...
-set HEADLESS=%HEADLESS%
-set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/buy_flow/user/ %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :used_car_reservation
@@ -200,12 +206,10 @@ set "MULTI_CAR_SERVICES="
 set "MULTI_ABOUT="
 set "MULTI_HELP="
 set "MULTI_USED_BUY="
-set "MULTI_NEW_BUY="
-set "MULTI_ALL_BUY="
 set "MULTI_PRICED_RESERVATION="
 set "MULTI_ASK_RESERVATION="
 set "MULTI_ALL_RESERVATIONS="
-set /p MULTI_CHOICES="Enter choices 1-11 (example 2,5,8): "
+set /p MULTI_CHOICES="Enter choices 1-9 (example 2,5,6): "
 
 if not defined MULTI_CHOICES (
     echo No test choices were entered.
@@ -216,7 +220,7 @@ call :parse_multi_choices "!MULTI_CHOICES!"
 
 if defined MULTI_INVALID (
     echo Invalid multi-test choice(s^): !MULTI_INVALID!
-    echo Enter only test-group choices 1 through 11.
+    echo Enter only test-group choices 1 through 9.
     goto end
 )
 
@@ -233,12 +237,7 @@ if defined MULTI_ALL (
     if defined MULTI_CAR_SERVICES set "MULTI_TARGETS=!MULTI_TARGETS! tests/car_services/"
     if defined MULTI_HELP set "MULTI_TARGETS=!MULTI_TARGETS! tests/help/"
 
-    if defined MULTI_ALL_BUY (
-        set "MULTI_TARGETS=!MULTI_TARGETS! tests/buy_flow/user/"
-    ) else (
-        if defined MULTI_USED_BUY set "MULTI_TARGETS=!MULTI_TARGETS! tests/buy_flow/user/used_car/"
-        if defined MULTI_NEW_BUY set "MULTI_TARGETS=!MULTI_TARGETS! tests/buy_flow/user/new_car/"
-    )
+    if defined MULTI_USED_BUY set "MULTI_TARGETS=!MULTI_TARGETS! tests/buy_flow/user/used_car/"
 
     if defined MULTI_ALL_RESERVATIONS (
         set "MULTI_TARGETS=!MULTI_TARGETS! tests/reservation/user/used_car/"
@@ -313,6 +312,7 @@ if "!MULTI_ITEM!"=="4" (
 if "!MULTI_ITEM!"=="5" (
     set "MULTI_HELP=1"
     set "MULTI_ANY=1"
+    set "MULTI_STATE_CHANGING=1"
     goto :eof
 )
 if "!MULTI_ITEM!"=="6" (
@@ -322,30 +322,18 @@ if "!MULTI_ITEM!"=="6" (
     goto :eof
 )
 if "!MULTI_ITEM!"=="7" (
-    set "MULTI_NEW_BUY=1"
-    set "MULTI_ANY=1"
-    set "MULTI_STATE_CHANGING=1"
-    goto :eof
-)
-if "!MULTI_ITEM!"=="8" (
-    set "MULTI_ALL_BUY=1"
-    set "MULTI_ANY=1"
-    set "MULTI_STATE_CHANGING=1"
-    goto :eof
-)
-if "!MULTI_ITEM!"=="9" (
     set "MULTI_PRICED_RESERVATION=1"
     set "MULTI_ANY=1"
     set "MULTI_STATE_CHANGING=1"
     goto :eof
 )
-if "!MULTI_ITEM!"=="10" (
+if "!MULTI_ITEM!"=="8" (
     set "MULTI_ASK_RESERVATION=1"
     set "MULTI_ANY=1"
     set "MULTI_STATE_CHANGING=1"
     goto :eof
 )
-if "!MULTI_ITEM!"=="11" (
+if "!MULTI_ITEM!"=="9" (
     set "MULTI_ALL_RESERVATIONS=1"
     set "MULTI_ANY=1"
     set "MULTI_STATE_CHANGING=1"

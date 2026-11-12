@@ -49,7 +49,7 @@ class PayPalSandboxPage:
         email: str | None,
         password: str | None,
         expected_total_jpy: str,
-        return_url_pattern: str = "**/new-car-order-summary/**",
+        return_url_pattern: str = "**/order-summary/**",
     ):
         """Authenticate the sandbox buyer, verify JPY, and approve payment."""
         if not email or not password:

@@ -37,13 +37,6 @@ class HowToBuyPage:
             "assist you.",
         ),
     )
-    DEALER_STATE_HEADINGS = (
-        "Create an Account",
-        "Become a Dealer Today",
-        "Your Dealer Account Was Rejected",
-        "You Already Have a Dealer Account",
-    )
-
     def __init__(self, page):
         self.page = page
 
@@ -188,9 +181,9 @@ class HowToBuyPage:
                     self.page.reload(wait_until="domcontentloaded")
         return self
 
-    def get_dealer_state_heading(self):
-        for name in self.DEALER_STATE_HEADINGS:
-            heading = self.page.get_by_role("heading", name=name, exact=True)
-            if heading.is_visible():
-                return heading.inner_text().strip()
-        return None
+    def get_guest_dealer_heading(self):
+        heading = self.page.get_by_role(
+            "heading", name="Create an Account", exact=True
+        )
+        heading.wait_for(state="visible")
+        return heading.inner_text().strip()

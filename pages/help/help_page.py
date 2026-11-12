@@ -6,7 +6,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 class HelpPage:
     MENU_ITEMS = (
         ("How to Buy", "/how-to-buy"),
-        ("Become a SAT Japan Dealer", "/dealers/join-as-dealer"),
+        ("Become a SAT Japan Dealer", "/dealers/sign-up"),
         ("Inquiry Form", "/inquiry-form"),
         ("Vehicle Information Request", "/request-vehicle-information"),
         ("How to Pay", "/how-to-pay"),
@@ -41,6 +41,14 @@ class HelpPage:
             paths.append(urlparse(href).path)
         return paths
 
+    def get_menu_item_path(self, link_name):
+        link = self._dropdown_links().get_by_role(
+            "link", name=link_name, exact=True
+        )
+        if not link.is_visible():
+            return None
+        return urlparse(link.get_attribute("href") or "").path
+
     def open_menu_item(
         self,
         link_name,
@@ -62,12 +70,10 @@ class HelpPage:
                 f"{expected_path!r}, found {actual_path!r}."
             )
 
-        try:
-            link.click(timeout=10000)
-        except PlaywrightTimeoutError:
-            menu.hover()
-            link.wait_for(state="visible")
-            link.click(force=True)
+        # The animated dropdown can move the pointer onto an adjacent item
+        # during a coordinate click. Activate the exact link already verified
+        # above so navigation cannot drift to a neighboring Help destination.
+        link.evaluate("element => element.click()")
         final_path = expected_final_path or expected_path
         self.page.wait_for_url(f"**{final_path}*")
 

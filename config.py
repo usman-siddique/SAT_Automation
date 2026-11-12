@@ -47,6 +47,7 @@ DEALER_LOGIN_EMAIL = os.getenv("DEALER_LOGIN_EMAIL")
 DEALER_LOGIN_PASSWORD = os.getenv("DEALER_LOGIN_PASSWORD")
 ELIGIBLE_DEALER_USER_EMAIL = os.getenv("ELIGIBLE_DEALER_USER_EMAIL")
 ELIGIBLE_DEALER_USER_PASSWORD = os.getenv("ELIGIBLE_DEALER_USER_PASSWORD")
+DEALER_TEST_PASSWORD = os.getenv("DEALER_TEST_PASSWORD")
 PAYPAL_SANDBOX_EMAIL = os.getenv("PAYPAL_SANDBOX_EMAIL")
 PAYPAL_SANDBOX_PASSWORD = os.getenv("PAYPAL_SANDBOX_PASSWORD")
 TRACK_ORDER_ID = os.getenv("TRACK_ORDER_ID", "874401098")
@@ -91,44 +92,6 @@ USED_CAR_RESERVATION_URL = build_site_url(USED_CAR_RESERVATION_PATH)
 USED_CAR_PAYPAL_COUNTRY = "United Kingdom"
 USED_CAR_PAYPAL_PORT = "Bristol"
 USED_CAR_PAYPAL_SHIPPING_TYPE = "roro"
-
-# --- User New Car Buy flow ---
-NEW_CAR_HOME_URL = build_site_url("/new-cars-home")
-NEW_CAR_PAYGENT_MAKE = "Nissan"
-NEW_CAR_PAYGENT_MODEL_SLUG = "nissan-dayz-x"
-NEW_CAR_PAYGENT_EXPECTED_VARIANT = {
-    "model": "2024 Nissan Dayz X",
-    "variant": "Nissan Dayz X",
-    "color": "Sorbet Blue (PM)White Pearl (3P) 2-tone",
-    "transmission": "CVT",
-    "drivetrain": "2WD",
-    "fuel": "Hybrid(Petrol)",
-    "seats": "4",
-}
-NEW_CAR_BANK_MAKE = "Honda"
-NEW_CAR_BANK_MODEL_SLUG = "honda-n-wgn-g"
-NEW_CAR_BANK_EXPECTED_VARIANT = {
-    "model": "2024 Honda N-WGN G",
-    "variant": "Honda N-WGN G",
-    "color": "Crystal Black Pearl",
-    "transmission": "CVT",
-    "drivetrain": "2WD",
-    "fuel": "Petrol",
-    "seats": "4",
-}
-NEW_CAR_PAYPAL_MAKE = "Toyota"
-NEW_CAR_PAYPAL_MODEL_SLUG = "toyota-aqua-x-2wd"
-NEW_CAR_PAYPAL_EXPECTED_VARIANT = {
-    "model": "2024 Toyota Aqua X 2WD",
-    "variant": "Toyota Aqua X 2WD",
-    "color": "Super White",
-    "transmission": "CVT",
-    "drivetrain": "2WD",
-    "fuel": "Hybrid (Petrol)",
-    "seats": "5",
-}
-NEW_CAR_PAYPAL_COUNTRY = "United Kingdom"
-NEW_CAR_PAYPAL_PORT = "Bristol"
 
 # --- Frequently changing Auction/Service records ---
 AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")

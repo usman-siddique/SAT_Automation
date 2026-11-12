@@ -91,3 +91,33 @@ class LoginPage:
             f"{account_label} login failed after {LOGIN_ATTEMPTS} attempts: "
             f"{last_error}"
         ) from last_error
+
+    def register_new_user(self, email: str, password: str, name: str):
+        """Create and authenticate a regular User with a unique email."""
+        open_site_home(self.page)
+        sign_in = self.page.locator("header").get_by_role(
+            "link", name="Sign in"
+        )
+        sign_in.click()
+
+        email_input = self.page.locator("#login_email")
+        email_input.wait_for(state="visible")
+        email_input.fill(email)
+        self.page.get_by_role("button", name="Continue", exact=True).click()
+
+        self.page.wait_for_url("**/sign-up*")
+        self.page.locator("#register_name").fill(name)
+        self.page.locator("#register_password").fill(password)
+        self.page.locator("#register_confirm_password").fill(password)
+        self.page.locator("#terms").check()
+        self.page.locator("#registerFormBtn").click()
+
+        self.page.wait_for_function(
+            "() => !window.location.pathname.startsWith('/sign-up')",
+            timeout=30000,
+        )
+        open_site_home(self.page)
+        assert not sign_in.is_visible(timeout=3000), (
+            "New User registration did not create an authenticated session."
+        )
+        return self
