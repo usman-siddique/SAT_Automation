@@ -91,14 +91,6 @@ def test_guest_help_dealer_link_opens_create_account(page_no_login):
     not ELIGIBLE_DEALER_USER_EMAIL or not ELIGIBLE_DEALER_USER_PASSWORD,
     reason="Eligible Dealer User credentials are missing from .env.",
 )
-@pytest.mark.xfail(
-    "development.satjapan.info" in BASE_URL,
-    reason=(
-        "Known Development defect: the eligible User Help link still targets "
-        "/dealers/sign-up instead of /dealers/join-as-dealer."
-    ),
-    strict=True,
-)
 def test_eligible_user_help_dealer_link_targets_join_form(
     eligible_dealer_user_page,
 ):

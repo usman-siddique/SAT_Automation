@@ -42,9 +42,10 @@ class HelpPage:
         return paths
 
     def get_menu_item_path(self, link_name):
-        link = self._dropdown_links().get_by_role(
-            "link", name=link_name, exact=True
-        )
+        self._dropdown_links()
+        link = self._menu().locator(
+            ".dropdown_content_header"
+        ).get_by_role("link", name=link_name, exact=True)
         if not link.is_visible():
             return None
         return urlparse(link.get_attribute("href") or "").path
