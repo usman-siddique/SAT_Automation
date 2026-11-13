@@ -1,216 +1,211 @@
-# ============================================================
-# pages/car_services/shipping_schedule_page.py
-# Contains the ShippingSchedulePage class.
-# ============================================================
+"""Page object for the Shipping Schedule service."""
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from urllib.parse import parse_qs, urlparse
+
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 
 class ShippingSchedulePage:
+    REQUIRED_CARD_FIELDS = (
+        "Ship Name",
+        "Company Name",
+        "Voyage No",
+        "Departure Port",
+        "Departure Date",
+        "Due Date",
+    )
+
     def __init__(self, page):
         self.page = page
 
+    def verify_page_contract(self):
+        self.page.wait_for_url("**/shipping-schedule*")
+        heading = self.page.locator("h1.title-page").first
+        heading.wait_for(state="visible")
+        intro = self.page.locator("p.see-first-para")
+        intro.wait_for(state="visible")
 
-    # ============================================================
-    # Verify: Page loaded with heading and confirmation text
-    # ============================================================
+        controls = (
+            "#select2-departure_port-container",
+            "#select2-region-container",
+            "#select2-arrival_port-container",
+            "#select2-ship_name-container",
+            ".departure_date_from",
+            ".departure_date_to",
+            ".arrival_date_from",
+            ".arrival_date_to",
+            ".btn-search-filter",
+            ".btn-reset-filter",
+        )
+        for selector in controls:
+            self.page.locator(selector).wait_for(state="visible")
 
-    def verify_page_load(self):
-        self.page.locator("h1.title-page").first.wait_for(state="visible")
-        self.page.locator("p.see-first-para").wait_for(state="visible")
-        print("✅ Shipping Schedule page loaded")
+        return {
+            "path": urlparse(self.page.url).path,
+            "heading": heading.inner_text().strip(),
+            "intro_present": bool(intro.inner_text().strip()),
+            "controls_visible": True,
+        }
 
+    def get_filter_options(self, select_id):
+        return [
+            text.strip()
+            for text in self.page.locator(
+                f"#{select_id} option"
+            ).all_inner_texts()
+            if text.strip() and text.strip().lower() != "select"
+        ]
 
-    # ============================================================
-    # Verify: All filter controls are visible
-    # ============================================================
+    def get_schedules(self):
+        cards = self.page.locator(".filter-data-card")
+        schedules = []
+        for index in range(cards.count()):
+            card = cards.nth(index)
+            fields = card.locator("td").evaluate_all(
+                """cells => Object.fromEntries(cells.map(cell => {
+                    const label = cell.querySelector('.title-filterdata');
+                    const value = cell.querySelector('.data-filter');
+                    return label && value
+                        ? [label.textContent.trim(), value.textContent.trim()]
+                        : null;
+                }).filter(Boolean))"""
+            )
+            arrivals = card.locator(
+                ".list-data-table tbody tr"
+            ).evaluate_all(
+                """rows => rows.map(row => {
+                    const values = [...row.querySelectorAll('td')]
+                        .map(cell => cell.textContent.trim());
+                    return {port: values[0], eta: values[1]};
+                })"""
+            )
+            schedules.append({"fields": fields, "arrivals": arrivals})
+        return schedules
 
-    def verify_filters_visible(self):
-        self.page.locator("#select2-departure_port-container").wait_for(state="visible")
-        self.page.locator("#select2-region-container").wait_for(state="visible")
-        self.page.locator("#select2-arrival_port-container").wait_for(state="visible")
-        self.page.locator("#select2-ship_name-container").wait_for(state="visible")
-        self.page.locator(".departure_date_from").wait_for(state="visible")
-        self.page.locator(".departure_date_to").wait_for(state="visible")
-        self.page.locator(".arrival_date_from").wait_for(state="visible")
-        self.page.locator(".arrival_date_to").wait_for(state="visible")
-        self.page.locator(".btn-search-filter").wait_for(state="visible")
-        self.page.locator(".btn-reset-filter").wait_for(state="visible")
-        print("✅ All filter controls visible")
+    def verify_initial_schedule_data(self):
+        schedules = self.get_schedules()
+        assert schedules, "No shipping schedules are displayed."
+        for field in self.REQUIRED_CARD_FIELDS:
+            assert schedules[0]["fields"].get(field), (
+                f"The first schedule is missing {field}."
+            )
+        assert schedules[0]["arrivals"], (
+            "The first schedule has no Arrival Port / ETA details."
+        )
+        assert all(
+            arrival["port"] and arrival["eta"]
+            for arrival in schedules[0]["arrivals"]
+        )
+        return schedules
 
+    def expand_first_schedule(self):
+        card = self.page.locator(".filter-data-card").first
+        expand = card.locator(".expand")
+        target_id = expand.get_attribute("aria-label-id")
+        assert target_id, "First schedule has no expandable-details target."
+        expand.click()
+        details = self.page.locator(f"#{target_id}")
+        details.wait_for(state="visible")
+        headers = [
+            text.strip()
+            for text in details.locator("thead td").all_inner_texts()
+        ]
+        assert headers == ["Arrival Port", "ETA"]
+        return details.locator("tbody tr").count()
 
-    # ============================================================
-    # Verify: Shipping notes link is visible
-    # ============================================================
+    def find_region_for_arrival(self, arrival_port):
+        for region in self.get_filter_options("region"):
+            self.page.locator("#region").select_option(label=region)
+            try:
+                self.page.wait_for_function(
+                    """port => [...document.querySelectorAll(
+                        '#arrival_port option'
+                    )].some(option => option.textContent.trim() === port)""",
+                    arg=arrival_port,
+                    timeout=3000,
+                )
+                return region
+            except PlaywrightTimeoutError:
+                continue
+        raise AssertionError(
+            f"No Region loaded the live arrival port {arrival_port!r}."
+        )
 
-    def verify_shipping_notes_link(self):
-        self.page.locator("a[href='#shipping_note']").wait_for(state="visible")
-        print("✅ Shipping notes link visible")
+    def select_filters(self, departure, region, arrival, ship):
+        self.page.locator("#region").select_option(label=region)
+        self.page.wait_for_function(
+            """port => [...document.querySelectorAll(
+                '#arrival_port option'
+            )].some(option => option.textContent.trim() === port)""",
+            arg=arrival,
+            timeout=10000,
+        )
+        self.page.locator("#departure_port").select_option(label=departure)
+        self.page.locator("#arrival_port").select_option(label=arrival)
+        self.page.locator("#ship_name").select_option(label=ship)
 
+    def search(self):
+        with self.page.expect_navigation(wait_until="domcontentloaded"):
+            self.page.locator(".btn-search-filter").click()
+        self.page.wait_for_function(
+            """() => document.querySelector('.filter-data-card')
+                || document.querySelector('h2.not-found-text')"""
+        )
+        query = parse_qs(urlparse(self.page.url).query)
+        return {key: values[0] for key, values in query.items()}
 
-    # ============================================================
-    # Verify: Table loads with at least one row
-    # ============================================================
+    def reset(self):
+        with self.page.expect_navigation(wait_until="domcontentloaded"):
+            self.page.locator(".btn-reset-filter").click()
+        self.page.wait_for_url("**/shipping-schedule")
+        assert not urlparse(self.page.url).query
+        assert self.page.locator(".filter-data-card").count() > 0
 
-    def verify_table_loads(self):
-        self.page.locator("table tbody tr:has-text('Ship Name')").first.wait_for(state="visible")
-        print("✅ Shipping Schedule table loaded with data")
-
-
-    # ============================================================
-    # Verify: No results message shown when filters return nothing
-    # ============================================================
+    def verify_results_match(self, departure, arrival, ship):
+        schedules = self.get_schedules()
+        assert schedules, "Valid shipping filters returned no schedules."
+        assert all(
+            schedule["fields"]["Departure Port"] == departure
+            and schedule["fields"]["Ship Name"] == ship
+            and any(
+                item["port"] == arrival
+                for item in schedule["arrivals"]
+            )
+            for schedule in schedules
+        ), "Filtered shipping results do not match all selected values."
+        return len(schedules)
 
     def verify_no_results(self):
-        self.page.locator("h2.not-found-text").wait_for(state="visible")
-        print("✅ No results message shown")
+        message = self.page.locator("h2.not-found-text")
+        message.wait_for(state="visible")
+        assert message.inner_text().strip()
+        assert self.page.locator(".filter-data-card").count() == 0
+        return message.inner_text().strip()
 
-
-    # ============================================================
-    # Verify: Title span contains expected filter text
-    # ============================================================
-
-    def verify_title_contains(self, text):
-        self.page.locator("#title-page", has_text=text).wait_for(state="visible")
-        print(f"✅ Title contains '{text}'")
-
-
-    # ============================================================
-    # Helper: Select value from Select2 dropdown (for Departure Port, Region, Ship Name)
-    # ============================================================
-
-    def select_select2_dropdown(self, container_id, value):
-        self.page.locator(f"#{container_id}").click()
-
-        search_input = self.page.locator(".select2-search__field")
-        search_input.wait_for(state="visible")
-        search_input.click()
-        search_input.fill(value)
-
-        option = self.page.locator(".select2-results__option", has_text=value)
-        option.wait_for(state="visible")
-        option.click()
-
-        # Wait for dropdown to fully close before proceeding
-        self.page.locator(".select2-results__options").wait_for(state="hidden")
-        print(f"✅ {container_id} selected - {value}")
-
-
-    # ============================================================
-    # Action: Select Arrival Port (separate method with fix for search issue)
-    # ============================================================
-
-    def select_arrival_port(self, value):
-        dropdown = self.page.locator("#select2-arrival_port-container")
-        dropdown.click()
-
-        search_input = self.page.locator(".select2-search__field")
-        search_input.wait_for(state="visible")
-        search_input.click()
-        
-        # Clear existing text 
-        search_input.press("Control+a")
-        search_input.press("Backspace")
-        
-        # Type slowly to trigger keyboard events
-        search_input.press_sequentially(value, delay=100)
-        
-        # Move mouse to trigger any focus/blur events
-        self.page.mouse.move(0, 0)
-        self.page.mouse.move(10, 10)
-        
-        option = self.page.locator(".select2-results__option", has_text=value)
-        option.wait_for(state="visible", timeout=10000)
-        option.click()
-
-        self.page.locator(".select2-results__options").wait_for(state="hidden")
-        print(f"✅ select2-arrival_port-container selected - {value}")
-
-
-    # ============================================================
-    # Helper: Select date from custom datepicker (stable: uses days 5 and 25)
-    # ============================================================
-
-    def select_date(self, input_locator, day):
-        self.page.locator(input_locator).click()
-        # Target only the visible calendar (the one that opened)
+    def choose_date(self, selector, day):
+        field = self.page.locator(selector)
+        field.click()
         calendar = self.page.locator(".container__main:visible")
         calendar.wait_for(state="visible")
-        # Wait for the specific day to be visible within that calendar
-        day_element = calendar.locator(f".day-item:text-is('{day}')")
-        day_element.wait_for(state="visible")
-        day_element.click()
-        print(f"✅ Date selected - day {day}")
- 
-    # ============================================================
-    # Action: Select Departure Port
-    # ============================================================
+        calendar.locator(f".day-item:text-is('{day}')").first.click()
+        value = field.input_value().strip()
+        assert value, f"Date picker {selector} did not populate its field."
+        return value
 
-    def select_departure_port(self, value):
-        self.select_select2_dropdown("select2-departure_port-container", value)
-
-
-    # ============================================================
-    # Action: Select Region
-    # ============================================================
-
-    def select_region(self, value):
-        self.select_select2_dropdown("select2-region-container", value)
-
-
-    # ============================================================
-    # Action: Select Ship Name
-    # ============================================================
-
-    def select_ship_name(self, value):
-        self.select_select2_dropdown("select2-ship_name-container", value)
-
-
-    # ============================================================
-    # Action: Click Search
-    # Waits for results or no-results message to confirm search completed
-    # ============================================================
-
-    def click_search(self):
-        self.page.locator(".btn-search-filter").click()
-        # Wait for title to have non-empty text
-        self.page.wait_for_function(
-            "document.querySelector('span#title-page')?.innerText?.trim() !== ''",
-            timeout=30000
+    def verify_shipping_notes(self):
+        link = self.page.locator("a[href='#shipping_note']")
+        link.wait_for(state="visible")
+        link.click()
+        notes = self.page.locator("#shipping_note")
+        notes.wait_for(state="visible")
+        text = notes.inner_text()
+        required_notes = (
+            "cut-off date",
+            "shipping schedules can change",
+            "Port of Departure",
+            "delaying your departure",
+            "Space availability",
+            "does not guarantee a shipment",
         )
-        # Small delay to let the DOM settle (50ms is enough)
-        self.page.wait_for_timeout(50)
-        print("✅ Search filter applied")
-
-
-    # ============================================================
-    # Action: Click Reset
-    # ============================================================
-
-    def click_reset(self):
-        self.page.locator(".btn-reset-filter").click()
-        # Wait for table to reload after reset
-        self.page.locator("table tbody tr:has-text('Ship Name')").first.wait_for(state="visible")
-        print("✅ Reset filter applied")
-
-
-    # ============================================================
-    # Helper: Verify filter results
-    # ============================================================
-
-    def verify_filter_results(self, expected_title_text=None):
-        if self.page.locator("h2.not-found-text").is_visible():
-            self.verify_no_results()
-            return False
-
-        if expected_title_text:
-            try:
-                self.verify_title_contains(expected_title_text)
-                return True
-            except:
-                pass
-
-        self.verify_table_loads()
-        return True
+        assert all(note.lower() in text.lower() for note in required_notes)
+        return len(required_notes)

@@ -73,7 +73,7 @@ echo ========================================
 echo.
 echo 1. Run all tests
 echo 2. Run Sell My Car tests
-echo 3. Run Car Services tests
+echo 3. Run Car Services tests (includes one Development test payment)
 echo 4. Run About Us tests
 echo 5. Run Help tests
 echo 6. Run User Used Car Buy Now tests (Paygent + Bank + PayPal)
@@ -123,9 +123,11 @@ goto report
 
 :car_services
 echo Running Car Services tests...
+echo WARNING: Non-Stolen Vehicle creates one Development test payment record.
+echo Parallel execution and reruns are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
-venv\Scripts\pytest tests/car_services/ %PYTEST_ARGS% %PARALLEL%
+venv\Scripts\pytest tests/car_services/ %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :about_us
@@ -256,6 +258,11 @@ if defined MULTI_ALL (
         if defined MULTI_PRICED_RESERVATION set "MULTI_TARGETS=!MULTI_TARGETS! tests/reservation/user/used_car/test_priced_reservation.py"
         if defined MULTI_ASK_RESERVATION set "MULTI_TARGETS=!MULTI_TARGETS! tests/reservation/user/used_car/test_ask_reservation.py"
     )
+)
+
+if defined MULTI_CAR_SERVICES (
+    set "MULTI_RERUN_ARGS=--force-reruns 0"
+    set "MULTI_STATE_CHANGING=1"
 )
 
 set "MULTI_PARALLEL=!PARALLEL!"

@@ -1,215 +1,317 @@
-# ============================================================
-# pages/car_services/non_stolen_vehicle_page.py
-# Contains the NonStolenVehiclePage class.
-# Handles Non Stolen Vehicle Check page and form submission.
-# ============================================================
+"""Page object for the SAT Non-Stolen Vehicle Check service."""
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from urllib.parse import urlparse
 
 
 class NonStolenVehiclePage:
+    PROCESS_STEPS = [
+        "Start by clicking on the 'Begin Verification' button below.",
+        (
+            "Fill in the details in the pop-up that comes and make a payment "
+            "of 30,000 YEN. Alternatively, you can send an email to "
+            "info@satjapan.com and our support team will reach out to you and "
+            "guide you about the next steps."
+        ),
+        (
+            "After your details have been submitted, the verification through "
+            "relevant agencies will take 5-8 working days."
+        ),
+        (
+            "Soon after, your verification will be dispatched to your local "
+            "address through Japan's postal code."
+        ),
+    ]
+
+    PAYMENT_ENDPOINTS = (
+        "/non_stolen/stripe-payment-intent",
+        "/non_stolen/non-stolen-credit-card",
+    )
+
     def __init__(self, page):
         self.page = page
 
+    @staticmethod
+    def _clean(text):
+        return " ".join(text.split())
 
-    # ============================================================
-    # Verify: Page heading
-    # ============================================================
+    @staticmethod
+    def _assert_image_loaded(image, description):
+        assert image.evaluate(
+            "element => element.complete && element.naturalWidth > 0"
+        ), f"{description} failed to load."
 
-    def verify_page_heading(self):
-        heading = self.page.get_by_role(
+    @property
+    def modal(self):
+        return self.page.locator("#nonStolenVehicle")
+
+    def verify_overview_and_process(self):
+        hero_heading = self.page.get_by_role(
+            "heading",
+            name=(
+                "Get a verified non-stolen vehicle certificate with our "
+                "Non-Stolen Vehicle Check Service"
+            ),
+            exact=True,
+        )
+        hero_heading.wait_for(state="visible")
+
+        banner = self.page.locator("img.nsb__bg")
+        banner.wait_for(state="visible")
+        self._assert_image_loaded(banner, "Non-Stolen Vehicle banner")
+
+        body_text = self._clean(self.page.locator("body").inner_text())
+        required_details = (
+            "advanced stolen car checking procedure",
+            "inspection certificate to confirm the status of your vehicle",
+            "30,000 YEN",
+            "5-8 working days",
+        )
+        assert all(
+            detail.lower() in body_text.lower()
+            for detail in required_details
+        )
+
+        process_heading = self.page.get_by_role(
             "heading",
             name="Steps to get a Non-Stolen Verification Certificate",
             exact=True,
         )
-        heading.wait_for(state="visible")
-        print(f"✅ Page heading verified: {heading.inner_text()}")
+        process_heading.scroll_into_view_if_needed()
+        process_list = process_heading.locator("xpath=following-sibling::ol[1]")
+        steps = [
+            self._clean(process_list.locator("li").nth(index).inner_text())
+            for index in range(process_list.locator("li").count())
+        ]
+        assert steps == self.PROCESS_STEPS
 
-
-    # ============================================================
-    # Click Begin Verification button to open modal
-    # ============================================================
+        help_email = self.page.locator(
+            ".need-help-card a[href='mailto:info@satjapan.com']"
+        )
+        assert help_email.is_visible()
+        return {
+            "path": urlparse(self.page.url).path,
+            "heading": self._clean(hero_heading.inner_text()),
+            "steps": steps,
+        }
 
     def open_modal(self):
-        self.page.locator("button[data-bs-target='#nonStolenVehicle']").click()
-        self.page.locator("#nonStolenVehicle").wait_for(state="visible")
-        print("✅ Modal opened")
+        self.page.get_by_role(
+            "button", name="Begin Verification", exact=True
+        ).click()
+        self.modal.wait_for(state="visible")
 
-
-    # ============================================================
-    # Close modal
-    # ============================================================
-
-    def close_modal(self):
-        close_btn = self.page.locator("#nonStolenVehicle .btn-close")
-        if close_btn.is_visible():
-            close_btn.click()
-            self.page.wait_for_timeout(500)
-        print("✅ Modal closed")
-
-
-    # ============================================================
-    # Enter Stock ID
-    # ============================================================
-
-    def enter_stock_id(self, stock_id):
-        if not stock_id:
-            raise AssertionError(
-                "NON_STOLEN_VEHICLE_STOCK_ID is missing. "
-                "Update it in .env before running."
-            )
-
-        stock_input = self.page.locator("#stock_id")
-        stock_input.fill(stock_id)
-        stock_input.press("Enter")
-        
-        # Wait a moment for the server to respond
-        self.page.wait_for_timeout(3000)
-        
-        return self
-
-
-    # ============================================================
-    # Get stock ID error message (if present)
-    # ============================================================
-
-    def get_stock_id_error(self):
-        error = self.page.locator("#stockInfo .text-danger")
-        if error.is_visible():
-            return error.inner_text().strip()
-        return None
-
-
-    # ============================================================
-    # Verify car details are loaded (fails if error message is present)
-    # ============================================================
-
-    def verify_car_details_loaded(self):
-        # First check if error message is visible
-        error = self.get_stock_id_error()
-        if error:
-            raise AssertionError(f"Stock ID error: {error}")
-        
-        # If no error, wait for car name to be populated
-        self.page.wait_for_function(
-            "document.querySelector('#car_name')?.innerText?.trim() !== ''",
-            timeout=30000
+        heading = self.modal.get_by_role(
+            "heading", name="SAT Non Stolen Form", exact=True
         )
-        car_name = self.page.locator("#car_name").inner_text()
-        assert car_name.strip() != "", "Car details not loaded"
-        print(f"✅ Car details loaded: {car_name}")
-
-
-    # ============================================================
-    # Fill personal information
-    # ============================================================
-
-    def fill_personal_info(self, full_name="", email="", phone="", select_country=True, message=""):
-        # Full Name
-        if full_name:
-            self.page.locator("#name").fill(full_name)
-        
-        # Email
-        if email:
-            self.page.locator("#email").fill(email)
-        
-        # Phone - click country code dropdown
-        if select_country:
-            country_dropdown = self.page.locator(".iti__selected-country")
-            country_dropdown.click()
-            self.page.wait_for_timeout(500)
-            
-            # Search for United Kingdom
-            search_input = self.page.locator(".iti__search-input")
-            if search_input.is_visible():
-                search_input.fill("United Kingdom")
-                self.page.wait_for_timeout(500)
-            
-            # Select United Kingdom from results
-            self.page.locator(".iti__country-list .iti__country:has-text('United Kingdom')").click()
-        
-        # Enter phone number
-        if phone:
-            self.page.locator("#call_phone").fill(phone)
-        
-        # Message (optional)
-        if message:
-            self.page.locator("#message").fill(message)
-        
-        print(f"✅ Personal info filled")
+        assert heading.is_visible()
+        assert (
+            "Enter the Stock ID of the car"
+            in self._clean(self.modal.inner_text())
+        )
         return self
 
+    def verify_form_contract(self):
+        required_controls = (
+            "#stock_id",
+            "#email",
+            "#call_phone",
+            "#message",
+            "#submitNonStolen",
+        )
+        assert all(
+            self.modal.locator(selector).is_visible()
+            for selector in required_controls
+        )
 
-    # ============================================================
-    # Get phone error message (country code missing)
-    # ============================================================
+        payment_heading = self.modal.get_by_role(
+            "heading", name="Make Payment of 30,000 YEN", exact=True
+        )
+        payment_heading.scroll_into_view_if_needed()
+        stripe_logo = self.modal.locator("img[alt='stripe_logo']")
+        self._assert_image_loaded(stripe_logo, "Stripe logo")
 
-    def get_phone_error(self):
-        error = self.page.locator(".call_phone-error-text")
-        if error.is_visible():
-            return error.inner_text().strip()
-        return None
+        card_frame = self.modal.frame_locator(
+            "iframe[title='Secure card payment input frame']"
+        )
+        card_frame.locator("input[name='cardnumber']").wait_for(
+            state="visible", timeout=30000
+        )
 
+    def lookup_stock(self, stock_id):
+        stock_input = self.modal.locator("#stock_id")
+        stock_input.fill(stock_id)
+        self.page.wait_for_function(
+            """
+            () => {
+                const name = document.querySelector('#car_name')
+                    ?.textContent?.trim();
+                const error = document.querySelector('#stockInfo')
+                    ?.textContent?.trim();
+                return Boolean(name || error);
+            }
+            """,
+            timeout=30000,
+        )
 
-    # ============================================================
-    # Fill payment details using Stripe Elements
-    # ============================================================
+        error = self._clean(
+            self.modal.locator("#stockInfo").inner_text()
+        )
+        if error:
+            return {"error": error}
 
-    def fill_payment_details(self, card_number="", expiry="", cvc="", zip_code=""):
-        # Switch to Stripe iframe
-        stripe_iframe = self.page.frame_locator("iframe[title='Secure card payment input frame']")
-        
-        # Card number
-        if card_number:
-            card_input = stripe_iframe.locator("input[name='cardnumber']")
-            card_input.wait_for(state="visible", timeout=30000)
-            card_input.fill(card_number)
-        
-        # Expiry date
-        if expiry:
-            expiry_input = stripe_iframe.locator("input[name='exp-date']")
-            expiry_input.fill(expiry)
-        
-        # CVC
-        if cvc:
-            cvc_input = stripe_iframe.locator("input[name='cvc']")
-            cvc_input.fill(cvc)
-        
-        # ZIP code
-        if zip_code:
-            zip_input = stripe_iframe.locator("input[name='postal']")
-            zip_input.fill(zip_code)
-        
-        print(f"✅ Payment details filled")
-        return self
+        fields = {
+            "name": "#car_name",
+            "year": "#car_year",
+            "engine": "#car_engine",
+            "mileage": "#car_mileage",
+            "transmission": "#car_transmission",
+        }
+        details = {
+            key: self._clean(self.modal.locator(selector).inner_text())
+            for key, selector in fields.items()
+        }
+        assert all(details.values()), "One or more vehicle details are empty."
+        assert self.modal.locator("#car_id").input_value().strip()
+        service_fee = self._clean(
+            self.modal.locator(".service-fee").inner_text()
+        )
+        assert "Service Fee:" in service_fee
+        assert "30,000 YEN" in service_fee
+        assert stock_input.input_value().lower() == stock_id.lower()
+        return details
 
+    def fill_valid_submission(self, submission_data):
+        self.modal.locator("#name").fill(submission_data["full_name"])
+        self.modal.locator("#email").fill(submission_data["email"])
 
-    # ============================================================
-    # Get payment error message from toast
-    # ============================================================
+        phone_input = self.modal.locator("#call_phone")
+        phone_input.evaluate(
+            """
+            (element, country) => {
+                const instance = window.intlTelInputGlobals.getInstance(element);
+                instance.setCountry(country);
+            }
+            """,
+            submission_data["phone_country"],
+        )
+        phone_input.fill(submission_data["phone"])
+        self.modal.locator("#message").fill(
+            "Automated Non-Stolen Vehicle verification payment test."
+        )
 
-    def get_payment_error(self):
-        toast = self.page.locator(".toast-body")
-        toast.wait_for(state="visible")
-        return toast.inner_text().strip()
+        card = submission_data["payment_card"]
+        card_frame = self.modal.frame_locator(
+            "iframe[title='Secure card payment input frame']"
+        )
+        card_frame.locator("input[name='cardnumber']").fill(card["number"])
+        card_frame.locator("input[name='exp-date']").fill(card["expiry"])
+        card_frame.locator("input[name='cvc']").fill(card["cvc"])
+        postal = card_frame.locator("input[name='postal']")
+        if postal.count() > 0:
+            postal.fill(card["postal_code"])
 
+        return {
+            "email": self.modal.locator("#email").input_value(),
+            "phone": phone_input.input_value(),
+            "card_last_four": card["number"].replace(" ", "")[-4:],
+        }
 
-    # ============================================================
-    # Submit the form
-    # ============================================================
+    def submit_and_verify_payment(self):
+        self.page.evaluate(
+            "sessionStorage.removeItem('payment_succeeded')"
+        )
 
-    def submit_form(self):
-        self.page.locator("#submitNonStolen").click()
-        print("✅ Form submitted")
-        return self
+        with self.page.expect_response(
+            lambda response: (
+                "/non_stolen/stripe-payment-intent" in response.url
+                and response.request.method == "POST"
+            ),
+            timeout=90000,
+        ) as intent_info:
+            with self.page.expect_response(
+                lambda response: (
+                    "/non_stolen/non-stolen-credit-card" in response.url
+                    and response.request.method == "POST"
+                ),
+                timeout=90000,
+            ) as submission_info:
+                self.modal.locator("#submitNonStolen").click()
 
+        intent_response = intent_info.value
+        submission_response = submission_info.value
+        assert intent_response.ok, (
+            "Stripe payment-intent request failed with HTTP "
+            f"{intent_response.status}."
+        )
+        assert submission_response.ok, (
+            "Non-Stolen submission failed with HTTP "
+            f"{submission_response.status}."
+        )
 
-    # ============================================================
-    # Check if submission was successful (modal closes)
-    # ============================================================
+        intent_payload = intent_response.json()
+        assert intent_payload.get("status") is True, intent_payload
+        # A successful final response immediately reloads the page. Reading its
+        # JSON afterward is unreliable because Chromium releases the response
+        # body during that navigation. The hidden modal proves the success
+        # branch ran; a rejected response leaves the modal open with a toast.
+        self.modal.wait_for(state="hidden", timeout=30000)
+        return {
+            "intent_status": intent_payload["status"],
+            "submission_status": True,
+            "submission_http_status": submission_response.status,
+            "page_url": self.page.url,
+        }
 
-    def is_submission_successful(self):
-        self.page.wait_for_selector("#nonStolenVehicle", state="hidden")
-        return not self.page.locator("#nonStolenVehicle").is_visible()
+    def verify_negative_validation(self, valid_stock_id, invalid_stock_id):
+        payment_requests = []
+
+        def track_payment_request(request):
+            if any(
+                endpoint in request.url
+                for endpoint in self.PAYMENT_ENDPOINTS
+            ):
+                payment_requests.append(request.url)
+
+        self.page.on("request", track_payment_request)
+        try:
+            invalid_result = self.lookup_stock(invalid_stock_id)
+            assert invalid_result == {"error": "Stock ID not found."}
+
+            self.modal.locator("#stock_id").fill("")
+            self.modal.locator("#email").fill("")
+            self.modal.locator("#call_phone").fill("")
+            self.modal.locator("#submitNonStolen").click()
+
+            stock_error = self.modal.locator(".stock_id-error-text")
+            email_error = self.modal.locator(".email-error-text")
+            phone_error = self.modal.locator(".call_phone-error-text")
+            assert self._clean(stock_error.inner_text()) == (
+                "This field is required"
+            )
+            assert self._clean(email_error.inner_text()) == (
+                "This field is required"
+            )
+            assert self._clean(phone_error.inner_text()) in {
+                "Phone is required",
+                "Please select country code",
+            }
+
+            self.lookup_stock(valid_stock_id)
+            self.modal.locator("#email").fill("invalid-email")
+            self.modal.locator("#submitNonStolen").click()
+            assert self._clean(email_error.inner_text()) == (
+                "Enter valid email."
+            )
+            assert payment_requests == [], (
+                "Validation unexpectedly initiated a payment request."
+            )
+        finally:
+            self.page.remove_listener("request", track_payment_request)
+
+        return {
+            "invalid_stock": "Stock ID not found.",
+            "required_stock": "This field is required",
+            "required_email": "This field is required",
+            "invalid_email": "Enter valid email.",
+            "payment_requests": payment_requests,
+        }

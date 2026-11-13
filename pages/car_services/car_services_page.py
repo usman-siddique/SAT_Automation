@@ -25,7 +25,6 @@ class CarServicesPage:
         link.wait_for(state="visible")
         link.click()
         self.page.get_by_text("Auction Service Overview").wait_for(state="visible")
-        print("✅ Navigation to Auction Service: PASS")
 
 
     # ============================================================
@@ -38,7 +37,6 @@ class CarServicesPage:
         link.wait_for(state="visible")
         link.click()
         self.page.locator("p.see-first-para").wait_for(state="visible")
-        print("✅ Navigation to Shipping Schedule: PASS")
 
 
     # ============================================================
@@ -52,7 +50,6 @@ class CarServicesPage:
         link.click()
         self.page.wait_for_url("**/sat-warranty")
         self.page.get_by_role("heading", name="SAT Japan Warranty", exact=True).wait_for(state="visible")
-        print("✅ Navigation to Warranty Service: PASS")
 
 
     # ============================================================
@@ -64,8 +61,12 @@ class CarServicesPage:
         link = self.page.get_by_role("link", name="Storage Service", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("h2.text:has-text('Secure Storage Service')").wait_for(state="visible")
-        print("✅ Navigation to Storage Service: PASS")
+        self.page.wait_for_url("**/storage-policy")
+        self.page.get_by_role(
+            "heading",
+            name="Secure Storage Service For Your Vehicle's Safety",
+            exact=True,
+        ).wait_for(state="visible")
 
 
     # ============================================================
@@ -77,8 +78,12 @@ class CarServicesPage:
         link = self.page.get_by_role("link", name="Finance Service", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("img.banner-finance-services").wait_for(state="visible")
-        print("✅ Navigation to Finance Service: PASS")
+        self.page.wait_for_url("**/finance-services")
+        self.page.get_by_role(
+            "heading",
+            name="Enjoy flexible payment options with our Finance Service",
+            exact=True,
+        ).wait_for(state="visible")
 
 
     # ============================================================
@@ -90,8 +95,15 @@ class CarServicesPage:
         link = self.page.get_by_role("link", name="Car Carrier Service", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("h2.carrier-policy-comman-hdr:has-text('Delivery Options')").wait_for(state="visible")
-        print("✅ Navigation to Car Carrier Service: PASS")
+        self.page.wait_for_url("**/car-carrier")
+        self.page.get_by_role(
+            "heading",
+            name=(
+                "Get your vehicle delivered to your doorstep with our "
+                "Car Carrier Service"
+            ),
+            exact=True,
+        ).wait_for(state="visible")
 
 
     # ============================================================
@@ -103,8 +115,12 @@ class CarServicesPage:
         link = self.page.get_by_role("link", name="Custom Clearance", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("h1.text:has-text('Ensure Fast and Compliant Shipments')").wait_for(state="visible")
-        print("✅ Navigation to Customs Clearance: PASS")
+        self.page.wait_for_url("**/customs-clearance")
+        self.page.get_by_role(
+            "heading",
+            name="Ensure Fast and Compliant Shipments",
+            exact=True,
+        ).wait_for(state="visible")
 
 
     # ============================================================
@@ -116,8 +132,12 @@ class CarServicesPage:
         link = self.page.get_by_role("link", name="Pre Export Inspection", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("h2.title:has-text('Seal The Deal With Pre-Export Inspection')").wait_for(state="visible")
-        print("✅ Navigation to Pre Export Inspection: PASS")
+        self.page.wait_for_url("**/pre-export-inspection")
+        self.page.get_by_role(
+            "heading",
+            name="Seal The Deal With Pre-Export Inspection",
+            exact=True,
+        ).wait_for(state="visible")
 
 
     # ============================================================
@@ -129,8 +149,15 @@ class CarServicesPage:
         link = self.page.get_by_role("link", name="Marine Insurance Service", exact=True)
         link.wait_for(state="visible")
         link.click()
-        self.page.locator("img.banner-marine-insurance").wait_for(state="visible")
-        print("✅ Navigation to Marine Insurance Service: PASS")
+        self.page.wait_for_url("**/marine-insurance-services")
+        self.page.get_by_role(
+            "heading",
+            name=(
+                "Get full coverage up to the cost of the vehicle with our "
+                "Marine Insurance Service"
+            ),
+            exact=True,
+        ).wait_for(state="visible")
 
 
     # ============================================================
@@ -143,4 +170,11 @@ class CarServicesPage:
         link.wait_for(state="visible")
         link.click()
         self.page.wait_for_url("**/non-stolen-vehicle", wait_until="domcontentloaded")
-        print("✅ Navigation to Non Stolen Vehicle: PASS")
+        self.page.get_by_role(
+            "heading",
+            name=(
+                "Get a verified non-stolen vehicle certificate with our "
+                "Non-Stolen Vehicle Check Service"
+            ),
+            exact=True,
+        ).wait_for(state="visible")

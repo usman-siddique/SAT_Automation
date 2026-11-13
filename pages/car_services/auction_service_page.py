@@ -1,180 +1,379 @@
-# ============================================================
-# pages/car_services/auction_service_page.py
-# Contains the AuctionServicePage class.
-# Handles all actions on the Auction Service landing page.
-# ============================================================
-
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import re
+from decimal import Decimal
+from pathlib import Path
+from urllib.parse import urlparse
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
-# ============================================================
-# Page Class: Auction Service Page
-# ============================================================
 
 class AuctionServicePage:
-    def __init__(self, page, context=None):
+    BIDDING_QUESTIONS = (
+        "What is a “Bid Price”?",
+        "What is the advanced deposit for?",
+        "Can the advanced deposit be refunded?",
+        "What is the deadline for placing bids?",
+        "Can I place bids on multiple vehicles when I want to buy one?",
+        "What is the deadline of payment after winning a bid?",
+        "Can I cancel a purchase after winning the bid?",
+    )
+    COST_AND_SHIPPING_QUESTIONS = (
+        "What are the total costs for purchasing through bidding services?",
+        "What does the “Auction Service Fee” include and how much does it cost?",
+        "Can I get the insurance service for an auction vehicle?",
+        (
+            "Can you place autoparts inside my purchased vehicle and ship "
+            "them at the same time?"
+        ),
+    )
+    FAQ_TABS = {
+        "Bidding and Auction": "#v_pills_bidding",
+        "Costs and Shipping": "#v_pills_shipping",
+    }
+
+    def __init__(self, page):
         self.page = page
-        self.context = context
 
+    @staticmethod
+    def _money(value, optional=False):
+        cleaned = re.sub(r"[^0-9.-]", "", value or "")
+        if not cleaned:
+            if optional:
+                return None
+            raise AssertionError(f"Expected a money value, received {value!r}.")
+        return Decimal(cleaned)
 
-    # ============================================================
-    # Helper: Select Destination Country or Port dropdown
-    # ============================================================
+    def get_overview(self):
+        overview = self.page.locator(".auction-service-overview")
+        links = {
+            "start_bidding": overview.locator(
+                "a[href$='/used-cars/auction_cars']"
+            ).get_attribute("href"),
+            "calculator": overview.locator(
+                "a[href$='/auction-calculator']"
+            ).get_attribute("href"),
+            "sheet_guide": overview.locator(
+                "a[href$='/pdfs/Auction_Sheet_Guide.pdf']"
+            ).get_attribute("href"),
+            "house_map": overview.locator(
+                "a[href$='/pdfs/auctions_map_house.pdf']"
+            ).get_attribute("href"),
+        }
+        return {
+            "heading": overview.locator("h3.title").inner_text().strip(),
+            "description": overview.locator("p.para").inner_text().strip(),
+            "links": links,
+        }
 
-    def select_destination_dropdown(self, block_id, li_class, value):
-        block = self.page.locator(f"#{block_id}")
-        
-        # Retry up to 2 times if dropdown fails
-        for attempt in range(2):
-            try:
-                block.locator("button.satSelectBtn").click()
-                item = block.locator(f"li.{li_class}", has_text=value)
-                item.wait_for(state="visible", timeout=5000)
-                item.scroll_into_view_if_needed()
-                item.click()
-                return
-            except:
-                if attempt == 1:
-                    raise
-                self.page.wait_for_timeout(1000)
+    def download_overview_pdf(self, filename):
+        link = self.page.locator(f"a[href$='/pdfs/{filename}']")
+        with self.page.expect_download() as download_info:
+            link.click()
+        download = download_info.value
+        path = Path(download.path())
+        return {
+            "filename": download.suggested_filename,
+            "failure": download.failure(),
+            "size": path.stat().st_size,
+            "header": path.read_bytes()[:5],
+        }
 
+    def get_faq_tabs(self):
+        tabs = self.page.locator("#v_pills_tabs [role='tab']")
+        return [
+            {
+                "label": " ".join(tabs.nth(index).inner_text().split()),
+                "target": tabs.nth(index).get_attribute("data-bs-target"),
+                "selected": tabs.nth(index).get_attribute("aria-selected"),
+            }
+            for index in range(tabs.count())
+        ]
 
-    # ============================================================
-    # Action: Click Start Bidding, validate redirect to auction listing
-    # ============================================================
+    def select_faq_tab_and_expand_all(self, label):
+        target = self.FAQ_TABS[label]
+        tab = self.page.locator(
+            f"#v_pills_tabs [data-bs-target='{target}']"
+        )
+        tab.click()
+        self.page.wait_for_function(
+            """target => {
+                const panel = document.querySelector(target);
+                return panel && panel.classList.contains('active') &&
+                    panel.classList.contains('show');
+            }""",
+            arg=target,
+        )
 
-    def click_start_bidding(self):
-        self.page.get_by_role("link", name="Start Bidding").click()
+        panel = self.page.locator(target)
+        question_buttons = panel.locator(
+            "button[data-bs-toggle='collapse']"
+        )
+        questions = []
+        answers = []
+        for index in range(question_buttons.count()):
+            question = question_buttons.nth(index)
+            questions.append(" ".join(question.inner_text().split()))
+            answer_target = question.get_attribute("data-bs-target")
+            if not answer_target:
+                raise AssertionError("Auction FAQ has no answer target.")
+            question.click()
+            answer = self.page.locator(answer_target)
+            answer.wait_for(state="visible")
+            answers.append(" ".join(answer.inner_text().split()))
+
+        return {
+            "selected": tab.get_attribute("aria-selected"),
+            "questions": questions,
+            "answers": answers,
+        }
+
+    def open_start_bidding(self):
+        self.page.locator(
+            ".auction-service-overview "
+            "a[href$='/used-cars/auction_cars']"
+        ).click()
         self.page.wait_for_url("**/used-cars/auction_cars**")
+        auction_tab = self.page.locator("#nav-auction-tab.active")
+        auction_tab.wait_for(state="visible")
+        return {
+            "path": urlparse(self.page.url).path,
+            "auction_tab_active": auction_tab.is_visible(),
+        }
 
-        self.page.locator("#nav-auction-tab.active").wait_for(state="visible")
+    def return_to_auction_service(self):
+        parsed = urlparse(self.page.url)
+        self.page.goto(
+            f"{parsed.scheme}://{parsed.netloc}/sat-auction",
+            wait_until="domcontentloaded",
+        )
+        self.page.locator(".auction-service-overview").wait_for(
+            state="visible"
+        )
 
-        print("✅ Start Bidding redirect to Auction listing: PASS")
-
-
-    # ============================================================
-    # Action: Click Auction Cost Calculator, validate redirect
-    # ============================================================
-
-    def click_auction_cost_calculator(self):
-        self.page.get_by_role("link", name="Auction Cost Calculator").click()
+    def open_cost_calculator(self):
+        self.page.locator(
+            ".auction-service-overview a[href$='/auction-calculator']"
+        ).click()
         self.page.wait_for_url("**/auction-calculator")
+        heading = self.page.get_by_role(
+            "heading", name="Auction Cost Calculator", exact=True
+        )
+        heading.wait_for(state="visible")
+        return {
+            "path": urlparse(self.page.url).path,
+            "heading": heading.inner_text().strip(),
+        }
 
-        self.page.get_by_role("heading", name="Auction Cost Calculator").wait_for(state="visible")
+    def _select_destination(self, block_id, item_class, value):
+        block = self.page.locator(f"#{block_id}")
+        current = block.locator(".button-text").inner_text().strip()
+        if current == value:
+            return
 
-        print("✅ Auction Cost Calculator redirect: PASS")
+        block.locator("button.satSelectBtn").click()
+        item = block.locator(f"li.{item_class}", has_text=value)
+        item.first.wait_for(state="visible")
+        item.first.click()
 
-
-    # ============================================================
-    # Action: Fill Auction Cost Calculator form and validate
-    # cost breakdown fields, then validate Download Estimate
-    # opens new tab with PDF invoice
-    # ============================================================
-
-    def fill_auction_cost_calculator(self, stock_id, bid_amount, country, port):
+    def load_stock_data(self, stock_id, country, port):
         if not stock_id:
             raise AssertionError(
-                "AUCTION_CALCULATOR_STOCK_ID is missing. "
-                "Update it in .env before running."
+                "Auction Calculator stock ID is missing. Add the current "
+                "value to data/stock_ids.py."
             )
 
-        # Fill Stock ID and wait for either of the two supported API outcomes:
-        # vehicle data is returned, or the stock is no longer available.
-        normalized_stock_id = stock_id.strip().lower()
-        self.page.locator("#stock_id").fill(normalized_stock_id)
+        stock_input = self.page.locator("#stock_id")
+        stock_input.fill(stock_id.strip())
+
         try:
-            result = self.page.wait_for_function(
-                """
-                () => {
-                    const m3 = document.querySelector('#m3');
-                    if (m3 && m3.value.trim() !== '') {
-                        return 'available';
-                    }
-
-                    const notFoundMessage = Array.from(
+            outcome = self.page.wait_for_function(
+                """() => {
+                    const visibleText = Array.from(
                         document.querySelectorAll('body *')
-                    ).find((element) => {
+                    ).find(element => {
                         const text = (element.textContent || '').trim();
-                        if (text !== 'Auction car not found') {
-                            return false;
-                        }
-
                         const style = window.getComputedStyle(element);
-                        return style.display !== 'none'
-                            && style.visibility !== 'hidden'
-                            && style.opacity !== '0';
+                        return text === 'Auction car not found' &&
+                            style.display !== 'none' &&
+                            style.visibility !== 'hidden';
                     });
+                    if (visibleText) return 'not_found';
 
-                    return notFoundMessage ? 'not_found' : false;
-                }
-                """,
-                timeout=15000,
-            )
-            outcome = result.json_value()
+                    const value = selector =>
+                        (document.querySelector(selector)?.value || '').trim();
+                    const text = selector =>
+                        (document.querySelector(selector)?.textContent || '')
+                            .trim();
+                    const ready = value('#car_id') && value('#bidInput') &&
+                        value('#m3');
+                    return ready ? 'available' : false;
+                }""",
+                timeout=25000,
+            ).json_value()
         except PlaywrightTimeoutError as error:
             raise AssertionError(
-                f"Auction stock {stock_id} returned neither vehicle data nor "
-                "the expected 'Auction car not found' validation within 15 seconds."
+                f"Auction stock {stock_id} did not finish loading its vehicle "
+                "and cost data within 25 seconds."
             ) from error
 
         if outcome == "not_found":
-            not_found_message = self.page.get_by_text(
-                "Auction car not found",
-                exact=True,
-            ).first
-            assert not_found_message.is_visible(), (
-                "Expected 'Auction car not found' validation is not visible"
+            raise AssertionError(
+                f"Auction stock {stock_id} is no longer available. Replace "
+                "the auction_calculator value in data/stock_ids.py."
             )
-            print(
-                "✅ Unavailable auction stock returned the expected "
-                "'Auction car not found' validation: PASS"
+
+        self._select_destination(
+            "destination_country_block",
+            "data-li-destination_country",
+            country,
+        )
+        self.page.wait_for_timeout(800)
+        self._select_destination(
+            "destination_port_block",
+            "data-li-destination_port",
+            port,
+        )
+
+        try:
+            self.page.wait_for_function(
+                """expected => {
+                    const text = selector =>
+                        (document.querySelector(selector)?.textContent || '')
+                            .trim();
+                    const country = text(
+                        '#destination_country_block .button-text'
+                    );
+                    const port = text('#destination_port_block .button-text');
+                    return country === expected.country &&
+                        port === expected.port &&
+                        text('#agent_fee_dtl') &&
+                        text('#inspection_fee_dtl') &&
+                        text('#insurance_fee_dtl') &&
+                        text('#shipping_fee_dtl') &&
+                        Array.from(
+                            document.querySelectorAll('.total_price_of_bid')
+                        ).every(element => element.textContent.trim());
+                }""",
+                arg={"country": country, "port": port},
+                timeout=25000,
             )
-            return "not_found"
+        except PlaywrightTimeoutError as error:
+            raise AssertionError(
+                f"Auction costs did not finish loading for {country} / "
+                f"{port} within 25 seconds."
+            ) from error
 
-        print("✅ Stock ID entered, M3 auto-fetched: PASS")
+        agent_text = self.page.locator("#agent_fee_dtl").inner_text().strip()
+        total_texts = [
+            text.strip()
+            for text in self.page.locator(
+                ".total_price_of_bid"
+            ).all_inner_texts()
+            if text.strip()
+        ]
+        return {
+            "stock_id": stock_input.input_value(),
+            "car_id": self.page.locator("#car_id").input_value(),
+            "bid_input": self._money(
+                self.page.locator("#bidInput").input_value()
+            ),
+            "m3": Decimal(self.page.locator("#m3").input_value()),
+            "deposit": self._money(
+                self.page.locator(".deposit_deducted").inner_text()
+            ),
+            "country": self.page.locator(
+                "#destination_country_block .button-text"
+            ).inner_text().strip(),
+            "port": self.page.locator(
+                "#destination_port_block .button-text"
+            ).inner_text().strip(),
+            "bidding_amount": self._money(
+                self.page.locator("#bidAmount").inner_text()
+            ),
+            "agent_fee": self._money(agent_text, optional=True),
+            "agent_fee_text": agent_text,
+            "inspection": self._money(
+                self.page.locator("#inspection_fee_dtl").inner_text()
+            ),
+            "insurance": self._money(
+                self.page.locator("#insurance_fee_dtl").inner_text()
+            ),
+            "shipping": self._money(
+                self.page.locator("#shipping_fee_dtl").inner_text()
+            ),
+            "total": self._money(total_texts[0], optional=True),
+            "displayed_totals": [
+                self._money(text, optional=True) for text in total_texts
+            ],
+        }
 
-        # Select destination country and port
-        self.select_destination_dropdown("destination_country_block", "data-li-destination_country", country)
-        self.select_destination_dropdown("destination_port_block", "data-li-destination_port", port)
+    @staticmethod
+    def _display_money(amount):
+        return f"${amount:,.0f}"
 
-        print("✅ Destination Country and Port selected: PASS")
-
-        # Clear auto-filled bid amount and enter manually
-        self.page.locator("#bidInput").clear()
-        self.page.locator("#bidInput").fill(bid_amount)
-
-        # Validate cost breakdown fields are populated
-        assert self.page.locator("#bidAmount").is_visible(), "❌ Bid Amount not visible"
-        assert self.page.locator("#agent_fee_dtl").is_visible(), "❌ Agent Fee not visible"
-        assert self.page.locator("#inspection_fee_dtl").is_visible(), "❌ Inspection Fee not visible"
-        assert self.page.locator("#insurance_fee_dtl").is_visible(), "❌ Insurance Fee not visible"
-        assert self.page.locator("#shipping_fee_dtl").is_visible(), "❌ Shipping Fee not visible"
-        assert self.page.locator("span.total_price_of_bid").is_visible(), "❌ Total Price not visible"
-
-        print("✅ Cost breakdown fields populated: PASS")
-
-        # Click Download Estimate and handle new tab
-        with self.context.expect_page() as new_page_info:
+    def open_estimate(self, calculator_data):
+        country = calculator_data["country"]
+        with self.page.expect_popup() as popup_info:
             self.page.locator("#downloadEstimate").click()
+        estimate = popup_info.value
+        try:
+            estimate.wait_for_url("**/download-estimate")
+            heading = estimate.get_by_role(
+                "heading",
+                name=f"Auction Cost Calculator for {country}",
+                exact=True,
+            )
+            heading.wait_for(state="visible")
+            body_text = estimate.locator("body").inner_text()
+            expected_amounts = [
+                calculator_data["bidding_amount"],
+                calculator_data["inspection"],
+                calculator_data["insurance"],
+                calculator_data["shipping"],
+            ]
+            if calculator_data["agent_fee"] is not None:
+                expected_amounts.append(calculator_data["agent_fee"])
+            if calculator_data["total"] is not None:
+                expected_amounts.append(calculator_data["total"])
 
-        new_tab = new_page_info.value
-        new_tab.wait_for_url("**/download-estimate")
+            pdf_button = estimate.get_by_role(
+                "button", name="Download as PDF", exact=True
+            )
+            pdf_button.wait_for(state="visible")
+            estimate.evaluate(
+                """() => {
+                    window.__satPrintCalled = false;
+                    window.print = () => { window.__satPrintCalled = true; };
+                }"""
+            )
+            pdf_button.click()
+            pdf_action_working = estimate.evaluate(
+                "() => window.__satPrintCalled"
+            )
 
-        # Validate heading contains country name
-        new_tab.get_by_role("heading", name=f"Auction Cost Calculator for {country}").wait_for(state="visible")
-
-        # Validate Download as PDF button is visible
-        new_tab.locator("button.sat-btn.primary").wait_for(state="visible")
-
-        # Validate entered bid amount is shown in invoice
-        formatted_amount = f"${int(bid_amount):,}"
-        new_tab.locator("span.value", has_text=formatted_amount).wait_for(state="visible")
-
-        print("✅ Download Estimate opened with PDF invoice: PASS")
-
-        # Close new tab
-        new_tab.close()
-        return "available"
+            return {
+                "path": urlparse(estimate.url).path,
+                "heading": heading.inner_text().strip(),
+                "stock_id_visible": (
+                    calculator_data["stock_id"].lower()
+                    in body_text.lower()
+                ),
+                "cost_breakdown_visible": all(
+                    label in body_text
+                    for label in (
+                        "Auction Cost Breakdown",
+                        "Bidding Amount",
+                        "Agent Fee",
+                        "Inspection",
+                        "Insurance",
+                        "Shipping Cost",
+                        "Total Payable",
+                    )
+                ),
+                "amounts_visible": all(
+                    self._display_money(amount) in body_text
+                    for amount in expected_amounts
+                ),
+                "pdf_action_working": pdf_action_working,
+            }
+        finally:
+            estimate.close()

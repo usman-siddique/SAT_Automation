@@ -1,7 +1,7 @@
 import allure
 import pytest
 
-from config import USED_CAR_PAYGENT_URL
+from config import ACTIVE_PAYMENT_CARD, USED_CAR_PAYGENT_URL
 from tests.buy_flow.user.used_car.flow import open_used_car_payment
 
 
@@ -21,7 +21,11 @@ def test_used_car_order_with_paygent(require_state_changing_tests, page):
         )
 
     with allure.step("Enter card details and accept the purchase terms"):
-        payment.fill_card_details("5555 5555 5555 4444", "12/34", "123")
+        payment.fill_card_details(
+            ACTIVE_PAYMENT_CARD["number"],
+            ACTIVE_PAYMENT_CARD["expiry"],
+            ACTIVE_PAYMENT_CARD["cvc"],
+        )
         payment.accept_terms()
 
     with allure.step("Place the Paygent order and verify SAT confirmation"):

@@ -41,7 +41,9 @@ It covers positive and negative test scenarios, following the Page Object Model 
 ```
 SAT_Automation/
 ├── data/
-│   └── list_on_sat_data.py      # Data-driven List on SAT vehicle records
+│   ├── list_on_sat_data.py      # Data-driven List on SAT vehicle records
+│   ├── payment_cards.py         # Public payment-provider test cards
+│   └── stock_ids.py             # Frequently updated stock IDs
 │
 ├── assets/
 │   └── images/                 # Test images for form uploads
@@ -200,17 +202,25 @@ USED_CAR_PAYPAL_PATH=/used-cars/mk_suzuki?sort_by=new_arrival&per_page=25&page=1
 USED_CAR_RESERVATION_PATH=/used-cars?unreserved=1
 ```
 
-Keep records that expire or change frequently in the same private `.env` file.
-This is the only active environment file and is ignored by Git:
+Keep every manually maintained stock ID in this single file:
 
 ```text
-AUCTION_CALCULATOR_STOCK_ID=your_current_auction stock ID
-NON_STOLEN_VEHICLE_STOCK_ID=your_current stock ID for Non-Stolen verification
+data/stock_ids.py
 ```
 
-Update these stock IDs before a state-changing regression run whenever the
-configured records are no longer available. The Buy Flow automatically selects
-a visible, unreserved vehicle from its payment-specific inventory URL.
+Update the values in its `STOCK_IDS` dictionary whenever an Auction Calculator
+or Non-Stolen Vehicle record expires. The Buy Flow and Reservation tests do not
+need fixed stock IDs; they dynamically select visible, available vehicles from
+their configured inventory URLs.
+
+Development payment test cards are stored in one place:
+
+```text
+data/payment_cards.py
+```
+
+Change `ACTIVE_TEST_CARD` to `mastercard` or `visa` to select the test card used
+by payment automation. These are public provider test cards, not real card data.
 ---
 
 ## How to Run Tests
@@ -229,9 +239,13 @@ submissions run without an additional enable prompt.
 pytest tests/sell_my_car/ -v -s
 ```
 #### Car Services module
+```powershell
+$env:BASE_URL="https://development.satjapan.info"
+pytest tests/car_services/ -v -s --force-reruns 0
 ```
-pytest tests/car_services/ -v -s
-```
+
+This module creates one Non-Stolen Vehicle test-payment record on Development.
+Run it sequentially with reruns disabled.
 #### Help module
 ```
 pytest tests/help/ -v -s
@@ -243,6 +257,7 @@ pytest tests/help/ -v -s
 
 The Windows menu provides Help, Buy Now, and Reservation group choices:
 
+- **3:** Car Services, including one Development Non-Stolen test payment
 - **5:** Help header and all eleven Help destinations
 - **6:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **7:** User Used Car Reservation with a complete numeric price breakdown
@@ -253,7 +268,7 @@ The Windows menu provides Help, Buy Now, and Reservation group choices:
 For example, choose option **10** and enter `2,5,6` to run Sell My Car,
 Help, and User Used Car Buy Now tests in one pytest session and
 one Allure report. Parent groups automatically replace overlapping child
-choices. Any selection containing Buy Now or Reservation tests runs
+choices. Any selection containing Car Services, Buy Now, or Reservation tests runs
 sequentially with automatic reruns disabled, even when parallel mode was
 selected.
 
@@ -278,17 +293,17 @@ paths and page objects are used for either domain.
 | Module | Tests | Description |
 |--------|-------|-------------|
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
-| **Car Services** | 16 | Page-level content contracts plus independent Auction, download, Shipping Schedule, and Non-Stolen behaviors |
+| **Car Services** | 30 | Auction calculator and estimate, schedules, service content, PDF download, and positive/negative Non-Stolen payment coverage |
 | **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
 | **Help** | 40 | Help dropdown and destinations, How To Buy CTA coverage by account state, Dealer flows, full Seller and inquiry/request validation, and positive/negative order tracking |
 | **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **78** | |
+| **Total** | **92** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
-- **Car Services:** 16 tests
+- **Car Services:** 30 tests
 - **About Us:** 10 tests
 - **Help:** 40 tests
 - **Buy Flow (End‑to‑End):** 3 tests

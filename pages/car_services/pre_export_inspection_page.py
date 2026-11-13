@@ -1,73 +1,190 @@
-# ============================================================
-# pages/car_services/pre_export_inspection_page.py
-# Contains the PreExportInspectionPage class.
-# Handles Pre Export Inspection page content verification.
-# ============================================================
+"""Page object for the SAT Pre-Export Inspection service."""
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pathlib import Path
+from urllib.parse import urlparse
 
 
 class PreExportInspectionPage:
+    COVERAGE_ITEMS = [
+        "Engine Condition",
+        "Engine Health",
+        "Odometer Tampering",
+        "Accidental History",
+        "Interior Evaluation",
+    ]
+    BENEFITS = [
+        "Consumer Protection",
+        "Quality Assurance",
+        "Fraud Prevention",
+        "Comfort and Security",
+    ]
+    PROCESS_STEPS = [
+        "1. Place Your Order",
+        "2. Connect With Our Sales Team",
+        "3. Get Your Inspection Report",
+        "4. Receive Your Inspected Vehicle",
+    ]
+    PROCESS_GUIDANCE = [
+        "Japanese used auto collection",
+        "preferences of what you want to get inspected",
+        "thorough inspection report",
+        "decided destination port",
+    ]
+
     def __init__(self, page, download_dir):
         self.page = page
-        self.download_dir = download_dir
+        self.download_dir = Path(download_dir)
 
+    @staticmethod
+    def _clean(text):
+        return " ".join(text.split())
 
-    # ============================================================
-    # Verify: Main heading
-    # ============================================================
+    @staticmethod
+    def _assert_image_loaded(image, description):
+        assert image.evaluate(
+            "element => element.complete && element.naturalWidth > 0"
+        ), f"{description} failed to load."
 
-    def verify_main_heading(self):
-        heading = self.page.locator("h2.title:has-text('Seal The Deal With Pre-Export Inspection')")
-        if not heading.is_visible():
-            raise AssertionError("Main heading not visible")
-        print(f"✅ Main heading verified: {heading.inner_text()}")
+    def verify_overview_and_refund_policy(self):
+        hero_heading = self.page.get_by_role(
+            "heading",
+            name="Seal The Deal With Pre-Export Inspection",
+            exact=True,
+        )
+        hero_heading.wait_for(state="visible")
 
+        hero_image = self.page.locator("img.peb__bg")
+        hero_image.wait_for(state="visible")
+        self._assert_image_loaded(hero_image, "Pre-Export Inspection banner")
 
-    # ============================================================
-    # Verify: Easy Refund Policy heading
-    # ============================================================
+        refund_heading = self.page.get_by_role(
+            "heading", name="Easy Refund Policy", exact=True
+        )
+        refund_heading.scroll_into_view_if_needed()
+        refund_heading.wait_for(state="visible")
 
-    def verify_refund_heading(self):
-        heading = self.page.locator("h2.refund-title:has-text('Easy Refund Policy')")
-        if not heading.is_visible():
-            raise AssertionError("Refund Policy heading not visible")
-        print(f"✅ Refund Policy heading verified: {heading.inner_text()}")
+        body_text = self._clean(self.page.locator("body").inner_text())
+        required_details = (
+            "mechanical, electronic, and cosmetic condition",
+            "mechanical, electronic, interior, and more",
+            "compensated for the cost of all necessary repairs",
+            "up to the full amount of the damages",
+        )
+        assert all(
+            detail.lower() in body_text.lower()
+            for detail in required_details
+        )
 
+        report_link = self.page.locator("a[download][href$='.pdf']")
+        report_link.wait_for(state="visible")
+        report_url = report_link.get_attribute("href") or ""
+        assert urlparse(report_url).path.lower().endswith(".pdf")
 
-    # ============================================================
-    # Verify: Sample Report link exists
-    # ============================================================
+        return {
+            "path": urlparse(self.page.url).path,
+            "heading": self._clean(hero_heading.inner_text()),
+            "refund_heading": self._clean(refund_heading.inner_text()),
+            "report_url": report_url,
+        }
 
-    def verify_sample_report_link(self):
-        link = self.page.locator("a[download]")
-        if not link.is_visible():
-            raise AssertionError("Sample Report download link not visible")
-        print(f"✅ Sample Report link verified: {link.get_attribute('href')}")
+    def verify_coverage_and_benefits(self):
+        coverage_heading = self.page.get_by_role(
+            "heading", name="What Our Service Covers", exact=True
+        )
+        coverage_heading.scroll_into_view_if_needed()
 
+        coverage_cards = self.page.locator(".pre-card-cover")
+        assert coverage_cards.count() == len(self.COVERAGE_ITEMS)
+        coverage_items = []
+        for index in range(coverage_cards.count()):
+            card = coverage_cards.nth(index)
+            coverage_items.append(
+                self._clean(
+                    card.locator(".inspection-services-hdr").inner_text()
+                )
+            )
+            self._assert_image_loaded(
+                card.locator("img.pre-export-img"),
+                f"Inspection coverage icon {index + 1}",
+            )
+        assert coverage_items == self.COVERAGE_ITEMS
 
-    # ============================================================
-    # Download: Sample Inspection Report PDF
-    # ============================================================
+        benefits_heading = self.page.get_by_role(
+            "heading",
+            name="Benefits of Our Pre-export Inspection",
+            exact=True,
+        )
+        benefits_heading.scroll_into_view_if_needed()
+        benefit_cards = self.page.locator(".pre-export-ins-card")
+        assert benefit_cards.count() == len(self.BENEFITS)
+        benefits = [
+            self._clean(
+                benefit_cards.nth(index)
+                .locator(".pre-export-crd-hdr")
+                .inner_text()
+            )
+            for index in range(benefit_cards.count())
+        ]
+        assert benefits == self.BENEFITS
+        return {"coverage": coverage_items, "benefits": benefits}
+
+    def verify_process_steps(self):
+        heading = self.page.get_by_role(
+            "heading",
+            name="Steps to Utilize Our Inspection Service",
+            exact=True,
+        )
+        heading.scroll_into_view_if_needed()
+
+        cards = self.page.locator(".pre-export-service-crd")
+        assert cards.count() == len(self.PROCESS_STEPS)
+        steps = []
+        descriptions = []
+        for index in range(cards.count()):
+            card = cards.nth(index)
+            steps.append(
+                self._clean(card.locator(".pre-export-ser-hdr").inner_text())
+            )
+            descriptions.append(
+                self._clean(card.locator(".pre-export-bdy-para").inner_text())
+            )
+            self._assert_image_loaded(
+                card.locator("img.services-crd-icons"),
+                f"Inspection process icon {index + 1}",
+            )
+
+        assert steps == self.PROCESS_STEPS
+        assert all(
+            guidance.lower() in description.lower()
+            for guidance, description in zip(
+                self.PROCESS_GUIDANCE, descriptions
+            )
+        )
+        return steps
 
     def download_sample_report(self):
-        # Wait for download to start
+        report_link = self.page.locator("a[download][href$='.pdf']")
+        report_link.scroll_into_view_if_needed()
+
         with self.page.expect_download() as download_info:
-            self.page.locator("a[download]").click()
-        
+            report_link.click()
         download = download_info.value
-        
-        # Save the downloaded file
-        download_path = os.path.join(self.download_dir, download.suggested_filename)
-        download.save_as(download_path)
-        
-        print(f"✅ PDF downloaded: {download.suggested_filename}")
-        
-        # Verify file exists and has content
-        assert os.path.exists(download_path), "Downloaded file not found"
-        assert os.path.getsize(download_path) > 0, "Downloaded file is empty"
-        
-        print(f"✅ PDF saved to: {download_path}")
-        return download_path
+
+        assert download.suggested_filename.lower().endswith(".pdf")
+        download_path = self.download_dir / download.suggested_filename
+        download.save_as(str(download_path))
+
+        assert download_path.exists(), "Downloaded report was not saved."
+        assert download_path.stat().st_size > 1000, (
+            "Downloaded inspection report is unexpectedly small."
+        )
+        with download_path.open("rb") as report:
+            assert report.read(4) == b"%PDF", (
+                "Downloaded inspection report is not a valid PDF file."
+            )
+
+        return {
+            "filename": download.suggested_filename,
+            "size": download_path.stat().st_size,
+            "path": str(download_path),
+        }

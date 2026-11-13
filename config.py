@@ -9,6 +9,9 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
+from data.payment_cards import ACTIVE_TEST_CARD, TEST_PAYMENT_CARDS
+from data.stock_ids import STOCK_IDS
+
 # --- Base directory (folder where config.py lives) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -121,9 +124,13 @@ USED_CAR_PAYPAL_COUNTRY = "United Kingdom"
 USED_CAR_PAYPAL_PORT = "Bristol"
 USED_CAR_PAYPAL_SHIPPING_TYPE = "roro"
 
-# --- Frequently changing Auction/Service records ---
-AUCTION_CALCULATOR_STOCK_ID = os.getenv("AUCTION_CALCULATOR_STOCK_ID")
-NON_STOLEN_VEHICLE_STOCK_ID = os.getenv("NON_STOLEN_VEHICLE_STOCK_ID")
+# --- Stock IDs (all editable values live in data/stock_ids.py) ---
+AUCTION_CALCULATOR_STOCK_ID = STOCK_IDS["auction_calculator"]
+AUCTION_CALCULATOR_COUNTRY = os.getenv(
+    "AUCTION_CALCULATOR_COUNTRY", "Pakistan"
+)
+AUCTION_CALCULATOR_PORT = os.getenv("AUCTION_CALCULATOR_PORT", "Karachi")
+NON_STOLEN_VEHICLE_STOCK_ID = STOCK_IDS["non_stolen_vehicle"]
 
 # --- Image Paths ---
 IMAGES_DIR = os.path.join(BASE_DIR, "assets", "images")
@@ -164,16 +171,15 @@ SELLER_REGISTRATION_DATA = {
 # -------------------------------------------------------
 NON_STOLEN_VEHICLE_DATA = {
     "valid_stock_id": NON_STOLEN_VEHICLE_STOCK_ID,
-    "invalid_stock_id": "INVALID-ID-12345",
-    "full_name": "QA Testing Automation",   
+    "invalid_stock_id": STOCK_IDS["invalid"],
+    "full_name": "QA Testing Automation",
     "email": "qa.testmail007021@gmail.com",
     "phone": "07400000000",
-    "card_number_valid": "5555555555554444",
-    "card_number_incomplete": "555555555555",
-    "expiry": "1234",
-    "cvc": "123",
-    "zip_code": "54000",
+    "phone_country": "gb",
+    "payment_card": TEST_PAYMENT_CARDS[ACTIVE_TEST_CARD],
 }
+
+ACTIVE_PAYMENT_CARD = TEST_PAYMENT_CARDS[ACTIVE_TEST_CARD]
 
 # -------------------------------------------------------
 # Get Price Quote - Step 1: Basic car details
@@ -227,28 +233,3 @@ AUCTION_DATA = {
     "description": "Everything is in genuine condition. Condition is as good as a brand-new car.",
     "phone": "+447412000000",
 }
-
-# -------------------------------------------------------
-# Shipping Schedule - Test Data (Multiple Scenarios)
-# -------------------------------------------------------
-SHIPPING_SCHEDULE_SCENARIOS = [
-    {
-        "name": "Valid filters - shows results",
-        "departure_port": "Yokohama",
-        "region": "Africa",
-        "arrival_port": "Durban",
-        "ship_name": "Orion Leader",
-        "expected": "results"
-    },
-    {
-        "name": "Invalid filters - shows no results",
-        "departure_port": "Moji",
-        "region": "Chile",
-        "arrival_port": "Iquique",
-        "ship_name": "Orion Leader",
-        "expected": "no_results"
-    },
-]
-
-# Keep original single data for backward compatibility
-SHIPPING_SCHEDULE_DATA = SHIPPING_SCHEDULE_SCENARIOS[0]

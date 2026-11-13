@@ -1,125 +1,113 @@
-# ============================================================
-# tests/car_services/test_shipping_schedule.py
-#
-# HOW TO RUN:
-#   pytest tests/car_services/test_shipping_schedule.py -v -s
-# ============================================================
+"""Business coverage for the Shipping Schedule page."""
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+import allure
 
 from pages.car_services.car_services_page import CarServicesPage
 from pages.car_services.shipping_schedule_page import ShippingSchedulePage
-from config import SHIPPING_SCHEDULE_SCENARIOS
 
 
-def setup_shipping_schedule(page_no_login):
-    CarServicesPage(page_no_login).go_to_shipping_schedule()
-    return ShippingSchedulePage(page_no_login)
+def open_shipping_schedule(page):
+    CarServicesPage(page).go_to_shipping_schedule()
+    return ShippingSchedulePage(page)
 
 
-def test_shipping_schedule_all(page_no_login):
-    print("\n" + "="*60)
-    print("✅ SHIPPING SCHEDULE - COMPLETE VERIFICATION")
-    print("="*60)
-    
-    # ============================================================
-    # Part 1: Page verification
-    # ============================================================
-    print("\n✅  PART 1: PAGE VERIFICATION")
-    shipping = setup_shipping_schedule(page_no_login)
-    shipping.verify_page_load()
-    shipping.verify_filters_visible()
-    shipping.verify_table_loads()
-    shipping.verify_shipping_notes_link()
-    
-    # ============================================================
-    # Part 2: Dropdown filters - Valid scenario
-    # ============================================================
-    print("\n✅  PART 2: DROPDOWN FILTERS - VALID SCENARIO")
-    valid_scenario = SHIPPING_SCHEDULE_SCENARIOS[0]  # Yokohama + Africa + Durban + Orion Leader
-    
-    shipping.select_departure_port(valid_scenario["departure_port"])
-    shipping.select_region(valid_scenario["region"])
-    shipping.select_arrival_port(valid_scenario["arrival_port"])
-    shipping.select_ship_name(valid_scenario["ship_name"])
-    shipping.click_search()
-    
-    # FIX: Wait for title to be visible before reading
-    title_locator = shipping.page.locator("span#title-page")
-    title_locator.wait_for(state="visible")
-    title_text = title_locator.inner_text().strip()
-    
-    if title_text:
-        print(f"✅ Verified - title shows: {title_text}")
-    else:
-        # If title is empty but visible, check for no-results message
-        no_results = shipping.page.locator("h2.not-found-text")
-        if no_results.is_visible():
-            print("✅ No results shown - server data not available")
-        else:
-            raise AssertionError("❌ Neither title nor no-results message visible after search")
-    
-    shipping.click_reset()
-    
-    # ============================================================
-    # Part 3: Dropdown filters - Invalid scenario (always no results)
-    # ============================================================
-    print("\n✅  PART 3: DROPDOWN FILTERS - INVALID SCENARIO (NO RESULTS)")
-    invalid_scenario = SHIPPING_SCHEDULE_SCENARIOS[1]  # Moji + Chile + Iquique + Orion Leader
-    
-    shipping.select_departure_port(invalid_scenario["departure_port"])
-    shipping.select_region(invalid_scenario["region"])
-    shipping.select_arrival_port(invalid_scenario["arrival_port"])
-    shipping.select_ship_name(invalid_scenario["ship_name"])
-    shipping.click_search()
-    
-    # For invalid scenario, we expect the no-results message
-    shipping.page.locator("h2.not-found-text").wait_for(state="visible")
-    print("✅ No results message shown")
-    
-    shipping.click_reset()
-    
-    # ============================================================
-    # Part 4: Date filters - Valid scenario (using stable days 5 and 25)
-    # ============================================================
-    print("\n✅  PART 4: DATE FILTERS - VALID SCENARIO")
-    shipping.select_date(".departure_date_from", 5)
-    shipping.select_date(".departure_date_to", 25)
-    shipping.select_date(".arrival_date_from", 5)
-    shipping.select_date(".arrival_date_to", 25)
-    shipping.click_search()
-    
-    # Wait for either title or no-results message
-    shipping.page.wait_for_function(
-        "document.querySelector('span#title-page')?.innerText?.trim() !== '' || "
-        "document.querySelector('h2.not-found-text') !== null",
-        timeout=30000
-    )
-    
-    if shipping.page.locator("h2.not-found-text").is_visible():
-        print("✅ No results message shown")
-    else:
-        shipping.verify_table_loads()
-    
-    shipping.click_reset()
-    
-    # ============================================================
-    # Part 5: Date filters - Invalid scenario (same, expecting no results)
-    # ============================================================
-    print("\n✅  PART 5: DATE FILTERS - INVALID SCENARIO (SAME, NO RESULTS)")
-    shipping.select_date(".departure_date_from", 5)
-    shipping.select_date(".departure_date_to", 25)
-    shipping.select_date(".arrival_date_from", 5)
-    shipping.select_date(".arrival_date_to", 25)
-    shipping.click_search()
-    
-    shipping.page.locator("h2.not-found-text").wait_for(state="visible")
-    print("✅ No results message shown")
-    
-    shipping.click_reset()
-    
-    print("\n" + "="*60)
-    print("✅ SHIPPING SCHEDULE - ALL TESTS COMPLETE")
-    print("="*60)
+def get_live_filter_data(shipping):
+    schedules = shipping.verify_initial_schedule_data()
+    first = schedules[0]
+    departure = first["fields"]["Departure Port"]
+    ship = first["fields"]["Ship Name"]
+    arrival = first["arrivals"][0]["port"]
+    region = shipping.find_region_for_arrival(arrival)
+    return schedules, departure, region, arrival, ship
+
+
+def test_shipping_schedule_page_and_schedule_details(page_no_login):
+    shipping = open_shipping_schedule(page_no_login)
+
+    with allure.step("Verify page content and all schedule controls"):
+        assert shipping.verify_page_contract() == {
+            "path": "/shipping-schedule",
+            "heading": "Shipping Schedule",
+            "intro_present": True,
+            "controls_visible": True,
+        }
+
+    with allure.step("Verify live schedule fields and expandable arrival data"):
+        shipping.verify_initial_schedule_data()
+        assert shipping.expand_first_schedule() > 0
+
+    with allure.step("Verify the Shipping Notes link and all six notices"):
+        assert shipping.verify_shipping_notes() == 6
+
+
+def test_shipping_schedule_positive_filters_and_dates(page_no_login):
+    shipping = open_shipping_schedule(page_no_login)
+    (
+        _,
+        departure,
+        region,
+        arrival,
+        ship,
+    ) = get_live_filter_data(shipping)
+
+    with allure.step("Filter using a live schedule and verify every result"):
+        shipping.select_filters(departure, region, arrival, ship)
+        query = shipping.search()
+        assert set(
+            ("departure_port", "region", "arrival_port", "ship_name")
+        ).issubset(query)
+        assert shipping.verify_results_match(
+            departure, arrival, ship
+        ) > 0
+
+    with allure.step("Reset filters and restore the complete schedule"):
+        shipping.reset()
+
+    with allure.step("Verify all four date pickers populate and reset"):
+        selected_dates = {
+            shipping.choose_date(".departure_date_from", 5),
+            shipping.choose_date(".departure_date_to", 25),
+            shipping.choose_date(".arrival_date_from", 5),
+            shipping.choose_date(".arrival_date_to", 25),
+        }
+        assert len(selected_dates) >= 2
+        shipping.reset()
+
+
+def test_shipping_schedule_incompatible_filters_show_no_results(
+    page_no_login,
+):
+    shipping = open_shipping_schedule(page_no_login)
+    (
+        schedules,
+        _,
+        region,
+        arrival,
+        ship,
+    ) = get_live_filter_data(shipping)
+
+    with allure.step("Build an incompatible combination from live data"):
+        used_departures = {
+            schedule["fields"]["Departure Port"]
+            for schedule in schedules
+            if schedule["fields"]["Ship Name"] == ship
+            and any(
+                item["port"] == arrival
+                for item in schedule["arrivals"]
+            )
+        }
+        invalid_departure = next(
+            departure
+            for departure in shipping.get_filter_options("departure_port")
+            if departure not in used_departures
+        )
+
+    with allure.step("Verify incompatible filters return no schedules"):
+        shipping.select_filters(
+            invalid_departure,
+            region,
+            arrival,
+            ship,
+        )
+        shipping.search()
+        assert shipping.verify_no_results()
