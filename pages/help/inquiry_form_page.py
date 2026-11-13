@@ -2,10 +2,13 @@ from urllib.parse import urlparse
 
 
 class InquiryFormPage:
-    REQUIRED_FIELDS = ("name", "email", "question")
+    REQUIRED_MARKERS = ("name", "email", "question")
     VALIDATION_ERRORS = {
         "name": ".name-error-text",
         "email": ".email-error-text",
+        "phone": ".phone-error",
+        "country": ".country-error-text",
+        "city": ".city-error-text",
         "question": ".question-error-text",
     }
 
@@ -41,36 +44,70 @@ class InquiryFormPage:
     def get_required_field_names(self):
         required = []
         form = self._form()
-        for field_name in self.REQUIRED_FIELDS:
+        for field_name in self.REQUIRED_MARKERS:
             field = form.locator(f"[name='{field_name}']")
             label = field.locator("xpath=preceding::label[1]")
             if label.locator("span.text-danger", has_text="*").count():
                 required.append(field_name)
         return required
 
-    def fill_form(self, data, omitted_field=None):
+    def fill_form(self, data):
         form = self._form()
 
         for field_name in ("name", "email"):
-            if field_name != omitted_field:
-                form.locator(f"[name='{field_name}']").fill(data[field_name])
+            form.locator(f"[name='{field_name}']").fill(data[field_name])
 
         phone = data.get("phone")
         if phone:
             form.locator("[name='phone']").fill(phone)
 
-        country = form.locator("[name='country']")
-        country.select_option(label=data["country"])
+        self.select_country_and_city(data["country"], data["city"])
+        form.locator("[name='question']").fill(data["question"])
+
+        return self
+
+    def set_field_value(self, field_name, value):
+        field = self._form().locator(f"[name='{field_name}']")
+        if field_name in ("country", "city"):
+            if value:
+                field.select_option(label=value)
+            else:
+                field.select_option(label="Select")
+        else:
+            field.fill(value)
+        return self
+
+    def select_country_and_get_cities(self, country):
+        form = self._form()
+        with self.page.expect_response(
+            lambda response: (
+                urlparse(response.url).path == "/get-ports-by-country"
+                and response.request.method == "GET"
+            )
+        ) as response_info:
+            form.locator("[name='country']").select_option(label=country)
+
+        if not response_info.value.ok:
+            raise AssertionError(
+                "Destination city loading failed with HTTP "
+                f"{response_info.value.status}."
+            )
 
         city = form.locator("[name='city']")
-        city.locator("option", has_text=data["city"]).wait_for(
-            state="attached"
-        )
-        city.select_option(label=data["city"])
+        city.locator("option").nth(1).wait_for(state="attached")
+        return [
+            text.strip()
+            for text in city.locator("option").all_inner_texts()
+            if text.strip() and text.strip() != "Select"
+        ]
 
-        if omitted_field != "question":
-            form.locator("[name='question']").fill(data["question"])
-
+    def select_country_and_city(self, country, city):
+        cities = self.select_country_and_get_cities(country)
+        if city not in cities:
+            raise AssertionError(
+                f"{city!r} was not loaded for destination {country!r}."
+            )
+        self._form().locator("[name='city']").select_option(label=city)
         return self
 
     def submit_and_get_success(self):
@@ -100,35 +137,43 @@ class InquiryFormPage:
         )
         return result
 
-    def submit_and_get_validation(self, field_name):
-        if field_name not in self.VALIDATION_ERRORS:
-            raise ValueError(f"Unsupported required field: {field_name}")
-
+    def submit_and_get_validation(self, field_names):
+        unsupported = set(field_names) - set(self.VALIDATION_ERRORS)
+        if unsupported:
+            raise ValueError(
+                f"Unsupported validation fields: {sorted(unsupported)}"
+            )
         submission_requests = []
 
-        def capture_submission(request):
+        def block_submission(route):
+            request = route.request
             if (
                 urlparse(request.url).path == "/store-inquiry"
                 and request.method == "POST"
             ):
                 submission_requests.append(request)
+                route.abort()
+            else:
+                route.continue_()
 
-        self.page.on("request", capture_submission)
-        self._submit_button().click()
+        self.page.route("**/store-inquiry", block_submission)
+        try:
+            self._submit_button().click()
+            messages = {}
+            for field_name in field_names:
+                error = self._form().locator(
+                    self.VALIDATION_ERRORS[field_name]
+                )
+                error.wait_for(state="visible")
+                messages[field_name] = error.inner_text().strip()
+            self.page.wait_for_timeout(250)
+        finally:
+            self.page.unroute("**/store-inquiry", block_submission)
 
-        error = self._form().locator(self.VALIDATION_ERRORS[field_name])
-        error.wait_for(state="visible")
-        message = error.inner_text().strip()
-        self.page.wait_for_timeout(250)
-
-        if submission_requests:
-            raise AssertionError(
-                "The invalid Inquiry Form unexpectedly called /store-inquiry."
-            )
-        return message
-
-    def submit_and_get_invalid_email_validation(self):
-        return self.submit_and_get_validation("email")
+        return {
+            "errors": messages,
+            "post_count": len(submission_requests),
+        }
 
     def get_submit_button_text(self):
         button = self._submit_button()
