@@ -50,7 +50,16 @@ ELIGIBLE_DEALER_USER_PASSWORD = os.getenv("ELIGIBLE_DEALER_USER_PASSWORD")
 DEALER_TEST_PASSWORD = os.getenv("DEALER_TEST_PASSWORD")
 PAYPAL_SANDBOX_EMAIL = os.getenv("PAYPAL_SANDBOX_EMAIL")
 PAYPAL_SANDBOX_PASSWORD = os.getenv("PAYPAL_SANDBOX_PASSWORD")
-TRACK_ORDER_ID = os.getenv("TRACK_ORDER_ID", "874401098")
+TRACK_ORDER_ID = os.getenv("TRACK_ORDER_ID", "804655248")
+TRACK_ORDER_EMAIL = os.getenv(
+    "TRACK_ORDER_EMAIL", "dealerflow2@gmail.com"
+)
+TRACK_ORDER_MISMATCH_EMAIL = os.getenv(
+    "TRACK_ORDER_MISMATCH_EMAIL", "usmanqaengineer@gmail.com"
+)
+TRACK_ORDER_UNKNOWN_ID = os.getenv(
+    "TRACK_ORDER_UNKNOWN_ID", "999999999999999"
+)
 
 # --- Inquiry Form test data ---
 INQUIRY_FORM_DATA = {
@@ -62,6 +71,25 @@ INQUIRY_FORM_DATA = {
     "question": os.getenv(
         "INQUIRY_QUESTION",
         "Automated QA test inquiry from SAT Automation. Please ignore.",
+    ),
+}
+
+VEHICLE_INFORMATION_REQUEST_DATA = {
+    "make": "Toyota",
+    "model": "AQUA",
+    "body_type": "Hatchback",
+    "steering": "RHD",
+    "country": "Pakistan",
+    "email": INQUIRY_FORM_DATA["email"],
+    "min_year": "2020",
+    "max_year": "2022",
+    "min_price": "3,000",
+    "max_price": "10,000",
+    "min_mileage": "10,000",
+    "max_mileage": "100,000",
+    "question": (
+        "Automated vehicle information request from SAT Automation. "
+        "Please ignore."
     ),
 }
 

@@ -1,31 +1,77 @@
+import re
+
+
 class BankInformationPage:
     CURRENCY_SECTIONS = (
-        "Bank Information (USD)",
-        "Bank Information (EUR)",
-        "Bank Information (JPY)",
-        "Bank Information (AUD)",
-        "Bank Information (GBP)",
-        "Bank Information (NZD)",
-        "Bank Information (CAD)",
-        "Bank Information (CNY)",
+        "USD",
+        "EUR",
+        "JPY",
+        "AUD",
+        "GBP",
+        "NZD",
+        "CAD",
+        "CNY",
     )
 
     def __init__(self, page):
         self.page = page
 
-    def get_currency_sections(self):
-        sections = []
-        for name in self.CURRENCY_SECTIONS:
-            heading = self.page.get_by_role("heading", name=name, exact=True)
-            heading.wait_for(state="visible")
-            sections.append(heading.inner_text().strip())
-        return sections
+    @staticmethod
+    def _clean(text):
+        return " ".join(text.split()).strip()
 
-    def get_detail_labels(self):
-        labels = ("Bank Name:", "Swift Code:", "Branch Name:", "Account Number:")
-        visible = []
-        for label in labels:
-            item = self.page.get_by_role("heading", name=label, exact=True).first
-            item.wait_for(state="visible")
-            visible.append(item.inner_text().strip())
-        return visible
+    def get_bank_sections(self):
+        sections = self.page.locator(
+            "#v-pills-Bank-Information > section"
+        )
+        result = {}
+
+        for section_index in range(sections.count()):
+            section = sections.nth(section_index)
+            heading = self._clean(
+                section.locator(".bank-info-top-hdr").inner_text()
+            )
+            currency_match = re.fullmatch(
+                r"Bank Information \(([A-Z]{3})\)", heading
+            )
+            if not currency_match:
+                raise AssertionError(
+                    f"Unexpected bank-information heading: {heading!r}"
+                )
+
+            banks = []
+            rows = section.locator(":scope > .row.mt-4.mb-4")
+            for row_index in range(rows.count()):
+                row = rows.nth(row_index)
+                labels = row.locator(".bank-name-label")
+                values = row.locator(".bank-name-label-spn")
+                if labels.count() != values.count():
+                    raise AssertionError(
+                        f"Mismatched bank labels and values in {heading}."
+                    )
+
+                details = {}
+                for detail_index in range(labels.count()):
+                    label = self._clean(
+                        labels.nth(detail_index).inner_text()
+                    ).rstrip(":")
+                    value = self._clean(
+                        values.nth(detail_index).inner_text()
+                    )
+                    details[label] = value
+                banks.append(details)
+
+            result[currency_match.group(1)] = banks
+
+        return result
+
+    def get_currency_icon_states(self):
+        sections = self.page.locator(
+            "#v-pills-Bank-Information > section"
+        )
+        return [
+            sections.nth(index)
+            .locator("img.bank-info-top-img")
+            .evaluate("image => image.complete && image.naturalWidth > 0")
+            for index in range(sections.count())
+        ]
