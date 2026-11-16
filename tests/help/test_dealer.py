@@ -103,7 +103,7 @@ def test_eligible_user_help_dealer_link_targets_join_form(
 def test_become_dealer_for_rejected_user(rejected_dealer_user_page):
     dealer = _open_dealer_from_help(
         rejected_dealer_user_page,
-        "/dealers/sign-up",
+        "/dealers/join-as-dealer",
         "Your Dealer Account Was Rejected",
     )
 
