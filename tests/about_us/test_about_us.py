@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from config import BASE_URL
 from pages.about_us.about_us_page import AboutUsPage
+from pages.about_us.customer_reviews_page import CustomerReviewsPage
 from pages.about_us.loyalty_program_page import LoyaltyProgramPage
 from pages.about_us.join_sat_pro_page import JoinSatProPage
 
@@ -146,6 +147,85 @@ def test_company_profile_mobile_navigation_and_layout(about_us_mobile_page):
     about = AboutUsPage(about_us_mobile_page)
     about.go_to_company_profile_mobile()
     about.verify_company_profile_mobile_layout()
+
+
+# ============================================================
+# Corporate: content, navigation cards, destinations, and media
+# ============================================================
+
+def test_corporate_overview_cards_and_media(page_no_login):
+    about = AboutUsPage(page_no_login)
+    about.go_to_corporate()
+    about.verify_corporate_overview_cards_and_media()
+
+
+# ============================================================
+# Corporate: every blog, review, vehicle-search, and share link
+# ============================================================
+
+def test_corporate_blog_and_review_links(page_no_login):
+    about = AboutUsPage(page_no_login)
+    about.go_to_corporate()
+    about.verify_corporate_blog_and_review_links()
+
+
+# ============================================================
+# Corporate: real mobile menu navigation
+# ============================================================
+
+def test_corporate_mobile_navigation(about_us_mobile_page):
+    about = AboutUsPage(about_us_mobile_page)
+    about.go_to_corporate_mobile()
+
+
+# ============================================================
+# Corporate: direct mobile layout, content, images, and card grids
+# ============================================================
+
+def test_corporate_mobile_layout(about_us_mobile_page):
+    about = AboutUsPage(about_us_mobile_page)
+    about.open_corporate_direct()
+    about.verify_corporate_mobile_layout()
+
+
+# ============================================================
+# Customer Reviews: filter contract, review metadata, and video links
+# ============================================================
+
+def test_customer_reviews_filters_content_and_celebrity_links(page_no_login):
+    reviews = CustomerReviewsPage(page_no_login)
+    reviews.go_to_customer_reviews()
+    reviews.verify_filter_controls_reviews_and_celebrity_links()
+
+
+# ============================================================
+# Customer Reviews: populated countries, empty country, and clear filter
+# ============================================================
+
+def test_customer_reviews_country_filters_and_empty_state(page_no_login):
+    reviews = CustomerReviewsPage(page_no_login)
+    reviews.go_to_customer_reviews()
+    reviews.verify_country_filters_and_empty_state()
+
+
+# ============================================================
+# Customer Reviews: dependent Make/Model and star filters
+# ============================================================
+
+def test_customer_reviews_make_model_and_star_filters(page_no_login):
+    reviews = CustomerReviewsPage(page_no_login)
+    reviews.go_to_customer_reviews()
+    reviews.verify_make_model_and_star_filters()
+
+
+# ============================================================
+# Customer Reviews: real mobile navigation, country filter, reset, and layout
+# ============================================================
+
+def test_customer_reviews_mobile_country_filter_and_layout(about_us_mobile_page):
+    reviews = CustomerReviewsPage(about_us_mobile_page)
+    reviews.go_to_customer_reviews_mobile()
+    reviews.verify_mobile_country_filter_reset_and_layout()
 
 
 # ============================================================
