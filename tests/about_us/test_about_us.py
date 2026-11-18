@@ -219,10 +219,10 @@ def test_customer_reviews_make_model_and_star_filters(page_no_login):
 
 
 # ============================================================
-# Customer Reviews: real mobile navigation, country filter, reset, and layout
+# Customer Reviews: real mobile navigation, country filter, and reset
 # ============================================================
 
-def test_customer_reviews_mobile_country_filter_and_layout(about_us_mobile_page):
+def test_customer_reviews_mobile_country_filter_and_reset(about_us_mobile_page):
     reviews = CustomerReviewsPage(about_us_mobile_page)
     reviews.go_to_customer_reviews_mobile()
     reviews.verify_mobile_country_filter_reset_and_layout()

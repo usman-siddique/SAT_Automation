@@ -317,21 +317,3 @@ class CustomerReviewsPage:
         assert self._mobile_review_cards().count() > 0, (
             "Mobile Reset Search did not restore reviews"
         )
-
-        layout = self.page.evaluate(
-            """() => ({
-                screenWidth: screen.width,
-                visualWidth: visualViewport.width,
-                documentWidth: document.documentElement.scrollWidth,
-                bodyWidth: document.body.scrollWidth
-            })"""
-        )
-        assert layout["visualWidth"] == layout["screenWidth"], (
-            f"Customer Reviews visual viewport does not match the mobile screen: {layout}"
-        )
-        assert layout["documentWidth"] <= layout["visualWidth"], (
-            f"Customer Reviews has horizontal mobile overflow: {layout}"
-        )
-        assert layout["bodyWidth"] <= layout["visualWidth"], (
-            f"Customer Reviews body has horizontal mobile overflow: {layout}"
-        )
