@@ -7,17 +7,17 @@ echo SAT Automation Test Runner
 echo ========================================
 echo.
 echo Select test environment:
-echo 1. Sprint - https://sprint.shineauto.info/ (default)
-echo 2. Development - https://development.satjapan.info/
+echo 1. Development - https://development.satjapan.info/ (default)
+echo 2. Sprint - https://sprint.shineauto.info/
 echo.
 set /p environment_choice="Enter choice (1 or 2): "
 
 if "%environment_choice%"=="2" (
-    set "BASE_URL=https://development.satjapan.info"
-    echo Running against DEVELOPMENT
-) else (
     set "BASE_URL=https://sprint.shineauto.info"
     echo Running against SPRINT
+) else (
+    set "BASE_URL=https://development.satjapan.info"
+    echo Running against DEVELOPMENT
 )
 
 echo.
@@ -80,13 +80,19 @@ echo 6. Run User Used Car Buy Now tests (Paygent + Bank + PayPal)
 echo 7. Run User Used Car Reservation (priced / no Ask)
 echo 8. Run User Used Car Reservation (Ask / invoice pending)
 echo 9. Run all User Used Car Reservation tests (priced + Ask)
-echo 10. Choose multiple test groups to run
+echo 10. Choose multiple test groups to run (or enter 3,4,5 directly)
 echo 11. Run Dealer checks (no submission)
 echo 12. Run full Dealer flow (creates records)
 echo 13. Run Seller Registration flow (creates one record)
 echo 14. Exit
 echo.
-set /p choice="Enter your choice (1-14): "
+set "MULTI_CHOICES="
+set /p choice="Enter one choice (1-14) or multiple groups (example 3,4,5): "
+
+if not "!choice:,=!"=="!choice!" (
+    set "MULTI_CHOICES=!choice!"
+    goto multiple_tests
+)
 
 if "%choice%"=="1" goto all
 if "%choice%"=="2" goto sell
@@ -204,10 +210,15 @@ goto report
 
 :multiple_tests
 echo.
-echo Enter menu choices separated by commas.
-echo Example: 2,5,8
-echo Overlapping groups will run only once.
-set "MULTI_CHOICES="
+if not defined MULTI_CHOICES (
+    echo Enter menu choices separated by commas.
+    echo Example: 3,4,5 for Car Services, About Us, and Help.
+    echo Overlapping groups will run only once.
+    set /p MULTI_CHOICES="Enter choices 1-9 (example 3,4,5): "
+) else (
+    echo Multiple test groups selected: !MULTI_CHOICES!
+    echo Overlapping groups will run only once.
+)
 set "MULTI_TARGETS="
 set "MULTI_INVALID="
 set "MULTI_ANY="
@@ -222,8 +233,6 @@ set "MULTI_USED_BUY="
 set "MULTI_PRICED_RESERVATION="
 set "MULTI_ASK_RESERVATION="
 set "MULTI_ALL_RESERVATIONS="
-set /p MULTI_CHOICES="Enter choices 1-9 (example 2,5,6): "
-
 if not defined MULTI_CHOICES (
     echo No test choices were entered.
     goto end
