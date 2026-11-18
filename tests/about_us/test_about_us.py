@@ -13,10 +13,17 @@ from playwright.sync_api import Error as PlaywrightError
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from config import BASE_URL
-from pages.about_us.about_us_page import AboutUsPage
+from pages.about_us.about_sat_page import AboutSatPage
+from pages.about_us.company_profile_page import CompanyProfilePage
+from pages.about_us.corporate_page import CorporatePage
 from pages.about_us.customer_reviews_page import CustomerReviewsPage
 from pages.about_us.loyalty_program_page import LoyaltyProgramPage
 from pages.about_us.join_sat_pro_page import JoinSatProPage
+from pages.about_us.privacy_policy_page import PrivacyPolicyPage
+from pages.about_us.security_export_control_page import SecurityExportControlPage
+from pages.about_us.shipping_agents_page import ShippingAgentsPage
+from pages.about_us.terms_conditions_page import TermsConditionsPage
+from pages.about_us.why_choose_sat_page import WhyChooseSatPage
 
 
 # ============================================================
@@ -24,7 +31,7 @@ from pages.about_us.join_sat_pro_page import JoinSatProPage
 # ============================================================
 
 def test_about_sat_content_and_milestones(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = AboutSatPage(page_no_login)
     about.go_to_about_sat()
     about.verify_about_sat()
 
@@ -34,7 +41,7 @@ def test_about_sat_content_and_milestones(page_no_login):
 # ============================================================
 
 def test_about_sat_media_and_carousel(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = AboutSatPage(page_no_login)
     about.go_to_about_sat()
     about.verify_about_sat_media_and_carousel()
 
@@ -44,7 +51,7 @@ def test_about_sat_media_and_carousel(page_no_login):
 # ============================================================
 
 def test_about_sat_feature_links_and_pdf(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = AboutSatPage(page_no_login)
     about.go_to_about_sat()
     about.verify_about_sat_feature_links_and_pdf()
 
@@ -104,7 +111,7 @@ def about_us_mobile_page(browser, request):
 # ============================================================
 
 def test_about_sat_mobile_navigation_and_layout(about_us_mobile_page):
-    about = AboutUsPage(about_us_mobile_page)
+    about = AboutSatPage(about_us_mobile_page)
     about.go_to_about_sat_mobile()
     about.verify_about_sat_mobile_layout()
 
@@ -114,7 +121,7 @@ def test_about_sat_mobile_navigation_and_layout(about_us_mobile_page):
 # ============================================================
 
 def test_company_profile_overview_and_details(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = CompanyProfilePage(page_no_login)
     about.go_to_company_profile()
     about.verify_company_profile_overview_and_details()
 
@@ -124,7 +131,7 @@ def test_company_profile_overview_and_details(page_no_login):
 # ============================================================
 
 def test_company_profile_milestones_services_and_values(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = CompanyProfilePage(page_no_login)
     about.go_to_company_profile()
     about.verify_company_profile_milestones_services_and_values()
 
@@ -134,7 +141,7 @@ def test_company_profile_milestones_services_and_values(page_no_login):
 # ============================================================
 
 def test_company_profile_feature_links_and_pdf(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = CompanyProfilePage(page_no_login)
     about.go_to_company_profile()
     about.verify_company_profile_feature_links_and_pdf()
 
@@ -144,7 +151,7 @@ def test_company_profile_feature_links_and_pdf(page_no_login):
 # ============================================================
 
 def test_company_profile_mobile_navigation_and_layout(about_us_mobile_page):
-    about = AboutUsPage(about_us_mobile_page)
+    about = CompanyProfilePage(about_us_mobile_page)
     about.go_to_company_profile_mobile()
     about.verify_company_profile_mobile_layout()
 
@@ -154,7 +161,7 @@ def test_company_profile_mobile_navigation_and_layout(about_us_mobile_page):
 # ============================================================
 
 def test_corporate_overview_cards_and_media(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = CorporatePage(page_no_login)
     about.go_to_corporate()
     about.verify_corporate_overview_cards_and_media()
 
@@ -164,7 +171,7 @@ def test_corporate_overview_cards_and_media(page_no_login):
 # ============================================================
 
 def test_corporate_blog_and_review_links(page_no_login):
-    about = AboutUsPage(page_no_login)
+    about = CorporatePage(page_no_login)
     about.go_to_corporate()
     about.verify_corporate_blog_and_review_links()
 
@@ -174,7 +181,7 @@ def test_corporate_blog_and_review_links(page_no_login):
 # ============================================================
 
 def test_corporate_mobile_navigation(about_us_mobile_page):
-    about = AboutUsPage(about_us_mobile_page)
+    about = CorporatePage(about_us_mobile_page)
     about.go_to_corporate_mobile()
 
 
@@ -183,7 +190,7 @@ def test_corporate_mobile_navigation(about_us_mobile_page):
 # ============================================================
 
 def test_corporate_mobile_layout(about_us_mobile_page):
-    about = AboutUsPage(about_us_mobile_page)
+    about = CorporatePage(about_us_mobile_page)
     about.open_corporate_direct()
     about.verify_corporate_mobile_layout()
 
@@ -228,68 +235,120 @@ def test_customer_reviews_mobile_country_filter_and_reset(about_us_mobile_page):
     reviews.verify_mobile_country_filter_reset_and_layout()
 
 
-# ============================================================
-# Test 3: Why Choose SAT
-# ============================================================
+# Why Choose SAT: full content, loaded media, and alternating desktop layout
 
-def test_why_choose_sat(page_no_login):
-    print("\n" + "="*60)
-    print("✅ WHY CHOOSE SAT - CONTENT VERIFICATION")
-    print("="*60)
-
-    about = AboutUsPage(page_no_login)
-    about.go_to_why_choose_sat()
-    about.verify_why_choose_sat()
-
-    print("\n✅ WHY CHOOSE SAT TEST COMPLETE")
+def test_why_choose_sat_content_images_and_desktop_layout(page_no_login):
+    why_choose = WhyChooseSatPage(page_no_login)
+    why_choose.go_to_why_choose_sat()
+    why_choose.verify_content_images_and_desktop_layout()
 
 
-# ============================================================
-# Test 4: Privacy Policy
-# ============================================================
+# Why Choose SAT: page-specific inquiry link destination
 
-def test_privacy_policy(page_no_login):
-    print("\n" + "="*60)
-    print("✅ PRIVACY POLICY - CONTENT VERIFICATION")
-    print("="*60)
-
-    about = AboutUsPage(page_no_login)
-    about.go_to_privacy_policy()
-    about.verify_privacy_policy()
-
-    print("\n✅ PRIVACY POLICY TEST COMPLETE")
+def test_why_choose_sat_inquiry_link_navigation(page_no_login):
+    why_choose = WhyChooseSatPage(page_no_login)
+    why_choose.go_to_why_choose_sat()
+    why_choose.verify_inquiry_link()
 
 
-# ============================================================
-# Test 5: Terms and Conditions
-# ============================================================
+# Why Choose SAT: mobile navigation, content, images, stacking, and overflow
 
-def test_terms_and_conditions(page_no_login):
-    print("\n" + "="*60)
-    print("✅ TERMS AND CONDITIONS - CONTENT VERIFICATION")
-    print("="*60)
-
-    about = AboutUsPage(page_no_login)
-    about.go_to_terms_and_conditions()
-    about.verify_terms_and_conditions()
-
-    print("\n✅ TERMS AND CONDITIONS TEST COMPLETE")
+def test_why_choose_sat_mobile_content_navigation_and_layout(
+    about_us_mobile_page,
+):
+    why_choose = WhyChooseSatPage(about_us_mobile_page)
+    why_choose.go_to_why_choose_sat_mobile()
+    why_choose.verify_mobile_content_and_layout()
 
 
-# ============================================================
-# Test 6: Shipping Agents
-# ============================================================
+# Policy pages: browser titles and all page headings
 
-def test_shipping_agents(page_no_login):
-    print("\n" + "="*60)
-    print("✅ SHIPPING AGENTS - CONTENT VERIFICATION")
-    print("="*60)
+def test_policy_pages_titles_and_headings(page_no_login):
+    privacy = PrivacyPolicyPage(page_no_login)
+    terms = TermsConditionsPage(page_no_login)
+    failures = []
 
-    about = AboutUsPage(page_no_login)
-    about.go_to_shipping_agents()
-    about.verify_shipping_agents()
+    privacy.go_to_privacy_policy()
+    try:
+        privacy.verify_privacy_title_and_headings()
+    except AssertionError as error:
+        failures.append(f"Privacy Policy: {error}")
 
-    print("\n✅ SHIPPING AGENTS TEST COMPLETE")
+    terms.go_to_terms_and_conditions()
+    try:
+        terms.verify_terms_title_and_headings()
+    except AssertionError as error:
+        failures.append(f"Terms and Conditions: {error}")
+
+    assert not failures, "Policy page failures:\n- " + "\n- ".join(failures)
+
+
+# Policy pages: Privacy email links and Terms vehicle agreement PDF
+
+def test_policy_pages_hyperlinks_and_vehicle_pdf(page_no_login):
+    privacy = PrivacyPolicyPage(page_no_login)
+    terms = TermsConditionsPage(page_no_login)
+    privacy.go_to_privacy_policy()
+    privacy.verify_privacy_email_links()
+    terms.go_to_terms_and_conditions()
+    terms.verify_terms_vehicle_agreement_pdf()
+
+
+# Policy pages: mobile navigation, headings, links, and responsive layout
+
+def test_policy_pages_mobile_navigation_content_and_layout(
+    about_us_mobile_page,
+):
+    privacy = PrivacyPolicyPage(about_us_mobile_page)
+    terms = TermsConditionsPage(about_us_mobile_page)
+    privacy.go_to_privacy_policy_mobile()
+    privacy.verify_privacy_policy_mobile()
+    terms.go_to_terms_and_conditions_mobile()
+    terms.verify_terms_and_conditions_mobile()
+
+
+# Shipping Agents: page content, all agent details, map, and card media
+
+def test_shipping_agents_content_cards_and_media(page_no_login):
+    shipping = ShippingAgentsPage(page_no_login)
+    shipping.go_to_shipping_agents()
+    shipping.verify_content_cards_and_media()
+
+
+# Shipping Agents: every country filter and All reset behavior
+
+def test_shipping_agents_every_country_filter_and_reset(page_no_login):
+    shipping = ShippingAgentsPage(page_no_login)
+    shipping.go_to_shipping_agents()
+    shipping.verify_every_country_filter_and_reset()
+
+
+# Shipping Agents: mobile menu navigation, filtering, reset, and usable layout
+
+def test_shipping_agents_mobile_navigation_filter_and_layout(
+    about_us_mobile_page,
+):
+    shipping = ShippingAgentsPage(about_us_mobile_page)
+    shipping.go_to_shipping_agents_mobile()
+    shipping.verify_mobile_filter_and_layout()
+
+
+# Security Export Control: complete compliance content and desktop media
+
+def test_security_export_control_content_and_desktop_media(page_no_login):
+    security_export = SecurityExportControlPage(page_no_login)
+    security_export.go_to_security_export_control()
+    security_export.verify_desktop_content_and_media()
+
+
+# Security Export Control: real mobile navigation, responsive media, and layout
+
+def test_security_export_control_mobile_content_media_and_layout(
+    about_us_mobile_page,
+):
+    security_export = SecurityExportControlPage(about_us_mobile_page)
+    security_export.go_to_security_export_control_mobile()
+    security_export.verify_mobile_content_media_and_layout()
 
 
 # Loyalty Program: complete guest content, lock states, FAQs, and login CTA
