@@ -40,6 +40,12 @@ def build_site_url(path: str) -> str:
 # --- Login Credentials ---
 LOGIN_EMAIL = os.getenv("LOGIN_EMAIL")
 LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD")
+LOYALTY_MASTER_EMAIL = (
+    os.getenv("LOYALTY_MASTER_EMAIL") or "usmanqaengineer@gmail.com"
+)
+LOYALTY_PRO_EMAIL = (
+    os.getenv("LOYALTY_PRO_EMAIL") or "qa.testmail007021@gmail.com"
+)
 REJECTED_DEALER_USER_EMAIL = os.getenv(
     "REJECTED_DEALER_USER_EMAIL", LOGIN_EMAIL
 )

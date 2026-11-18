@@ -292,63 +292,69 @@ def test_shipping_agents(page_no_login):
     print("\n✅ SHIPPING AGENTS TEST COMPLETE")
 
 
-# ============================================================
-# Test 7: Loyalty Program - Logged Out
-# ============================================================
+# Loyalty Program: complete guest content, lock states, FAQs, and login CTA
 
-def test_loyalty_program_logged_out(page_no_login):
-    print("\n" + "="*60)
-    print("✅ LOYALTY PROGRAM - LOGGED OUT STATE")
-    print("="*60)
-
+def test_loyalty_program_guest_content_locks_faqs_and_signup(page_no_login):
     loyalty = LoyaltyProgramPage(page_no_login)
     loyalty.go_to_loyalty_program()
     loyalty.verify_logged_out_state()
 
-    print("\n✅ LOYALTY PROGRAM LOGGED OUT TEST COMPLETE")
+
+# Loyalty Program: mobile navigation, content, interactions, and layout
+
+def test_loyalty_program_mobile_guest_experience(about_us_mobile_page):
+    loyalty = LoyaltyProgramPage(about_us_mobile_page)
+    loyalty.go_to_loyalty_program_mobile()
+    loyalty.verify_mobile_logged_out_state()
 
 
-# ============================================================
-# Test 8: Loyalty Program - Logged In
-# ============================================================
+# Loyalty Program: permanent Master Level 3 account state
 
-def test_loyalty_program_logged_in(page):
-    print("\n" + "="*60)
-    print("✅ LOYALTY PROGRAM - LOGGED IN STATE")
-    print("="*60)
-
-    loyalty = LoyaltyProgramPage(page)
-    loyalty.verify_logged_in_state()
-
-    print("\n✅ LOYALTY PROGRAM LOGGED IN TEST COMPLETE")
+def test_loyalty_program_master_level_three(loyalty_master_page):
+    loyalty = LoyaltyProgramPage(loyalty_master_page)
+    loyalty.go_to_loyalty_program()
+    loyalty.verify_master_level_three_state()
 
 
-# ============================================================
-# Test 9: Join SAT Pro - Logged Out Flow
-# Uses a fresh anonymous context, then validates the post-login membership state
-# ============================================================
+# Loyalty Program: active SAT Pro account state
 
-def test_join_sat_pro_logged_out(page_no_login):
-    print("\n" + "="*60)
-    print("✅ JOIN SAT PRO - LOGGED OUT FLOW")
-    print("="*60)
+def test_loyalty_program_sat_pro_member(loyalty_pro_page):
+    loyalty = LoyaltyProgramPage(loyalty_pro_page)
+    loyalty.go_to_loyalty_program()
+    loyalty.verify_sat_pro_member_state()
 
+
+# Join SAT Pro: complete guest content and all three login redirects
+
+def test_join_sat_pro_guest_content_faqs_and_all_cta_redirects(page_no_login):
     sat_pro = JoinSatProPage(page_no_login)
-    sat_pro.flow_logged_out()
+    sat_pro.go_to_sat_pro()
+    sat_pro.verify_landing_content()
+    sat_pro.verify_all_guest_join_redirects()
 
-    print("\n✅ JOIN SAT PRO LOGGED OUT TEST COMPLETE")
+
+# Join SAT Pro: mobile menu, content, CTA, and layout
+
+def test_join_sat_pro_mobile_guest_experience(about_us_mobile_page):
+    sat_pro = JoinSatProPage(about_us_mobile_page)
+    sat_pro.go_to_sat_pro_mobile()
+    sat_pro.verify_mobile_guest_experience()
 
 
-# ============================================================
-# Test 10: Join SAT Pro - Logged In Flow
-# ============================================================
+# Join SAT Pro: non-Pro user payment page and safe popup checks
 
-def test_join_sat_pro_logged_in(page):
-    print("\n" + "="*60)
-    print("✅ JOIN SAT PRO - LOGGED IN FLOW")
-    print("="*60)
+def test_join_sat_pro_non_member_payment_options(loyalty_master_page):
+    sat_pro = JoinSatProPage(loyalty_master_page)
+    sat_pro.go_to_sat_pro()
+    sat_pro.open_non_member_payment_page()
+    sat_pro.verify_payment_page_and_safe_popups()
 
-    sat_pro = JoinSatProPage(page)
-    sat_pro.flow_logged_in()
 
-    print("\n✅ JOIN SAT PRO LOGGED IN TEST COMPLETE")
+# Join SAT Pro: active member CTAs and non-destructive membership management
+
+def test_join_sat_pro_active_member_management_without_cancellation(
+    loyalty_pro_page,
+):
+    sat_pro = JoinSatProPage(loyalty_pro_page)
+    sat_pro.go_to_sat_pro()
+    sat_pro.verify_active_member_and_membership_page()

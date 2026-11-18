@@ -16,6 +16,9 @@ from config import (
     DEALER_LOGIN_PASSWORD,
     ELIGIBLE_DEALER_USER_EMAIL,
     ELIGIBLE_DEALER_USER_PASSWORD,
+    LOGIN_PASSWORD,
+    LOYALTY_MASTER_EMAIL,
+    LOYALTY_PRO_EMAIL,
     REJECTED_DEALER_USER_EMAIL,
     REJECTED_DEALER_USER_PASSWORD,
 )
@@ -256,6 +259,61 @@ def page(context, request):
             pg.close()
 
 
+def _isolated_authenticated_page(
+    browser,
+    request,
+    email,
+    password,
+    account_label,
+):
+    """Create one authenticated browser context for a specific account state."""
+    if not email or not password:
+        raise RuntimeError(
+            f"{account_label} credentials are missing from the private .env."
+        )
+
+    ctx = browser.new_context(**_context_options())
+    pg = _prepare_page(ctx.new_page(), request)
+    try:
+        LoginPage(pg).login(
+            email=email,
+            password=password,
+            account_label=account_label,
+        )
+        yield pg
+    except Exception:
+        _attach_browser_evidence(request.node, pg, "setup")
+        raise
+    finally:
+        if not pg.is_closed():
+            pg.close()
+        ctx.close()
+
+
+@pytest.fixture(scope="function")
+def loyalty_master_page(browser, request):
+    """Authenticated account whose permanent level is Master Level 3."""
+    yield from _isolated_authenticated_page(
+        browser,
+        request,
+        LOYALTY_MASTER_EMAIL,
+        LOGIN_PASSWORD,
+        "Loyalty Master Level 3 User",
+    )
+
+
+@pytest.fixture(scope="function")
+def loyalty_pro_page(browser, request):
+    """Authenticated account with an active SAT Pro membership."""
+    yield from _isolated_authenticated_page(
+        browser,
+        request,
+        LOYALTY_PRO_EMAIL,
+        LOGIN_PASSWORD,
+        "SAT Pro Member",
+    )
+
+
 @pytest.fixture(scope="function")
 def eligible_dealer_user_page(eligible_dealer_user_context, request):
     """Authenticated User who has not submitted a Dealer application."""
@@ -362,6 +420,8 @@ def pytest_runtest_makereport(item, call):
             or item.funcargs.get("eligible_dealer_user_page")
             or item.funcargs.get("rejected_dealer_user_page")
             or item.funcargs.get("dealer_page")
+            or item.funcargs.get("loyalty_master_page")
+            or item.funcargs.get("loyalty_pro_page")
             or item.funcargs.get("page_no_login")
             or getattr(item, "_sat_active_page", None)
         )

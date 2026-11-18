@@ -1,182 +1,331 @@
-# ============================================================
-# pages/about_us/join_sat_pro_page.py
-# Handles Join SAT Pro page flow.
-# Supports both membership states:
-# - Non-member: Join button leads to login/payment.
-# - Existing member: active SAT Pro benefits page is verified.
-# ============================================================
+from urllib.parse import urlparse
 
-import sys
-import os
-import re
-import time
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import BASE_URL
-from pages.auth.login_page import LoginPage
 
 
 class JoinSatProPage:
+    PATH = "/sat-pro"
+    PAYMENT_PATH = "/sat-pro-payment"
+    MEMBERSHIP_PATH = "/sat-pro-membership"
+
+    BENEFIT_COPY = (
+        ("Free Car Carrier Service", "Cover damages repairs during delivery"),
+        (
+            "Free Customs Clearance Service",
+            "Ensure fast and compliant shipments",
+        ),
+        ("Free Car Insurance Service", "Ensure safe vehicle transport"),
+        ("Free Storage Service", "Safely store your order for 60 days"),
+        ("20% Off on Auction Service", "Bid and win your dream car"),
+        ("20% Off on Marine Insurance", "Cover damages during transport"),
+        ("20% Off on Stolen Car Check", "Verify car theft before purcahse"),
+        (
+            "Dedicated Auction Agent",
+            "Get support to bid your favorite car",
+        ),
+        ("Free OBL Amendment", "Make changes to your bill of lading"),
+        (
+            "Priority Support Service",
+            "Get any query answered with 24/7 support",
+        ),
+    )
+    WHY_JOIN_COPY = (
+        "Get more SAT Points per order than normal users",
+        "Get exclusive discounts on premium car services",
+        "Access special cars only available for PRO members",
+    )
+    FAQ_PREFIXES = (
+        "Which orders contribute",
+        "How are the loyalty program discounts",
+        "Why is my Master level",
+        "Can my Master Level decrease",
+        "What is SAT Pro",
+        "Can | cancel my SAT Pro subscription",
+    )
+    CANCELLATION_REASONS = (
+        "Not saving enough",
+        "Issues with my Orders",
+        "Not Satisfied with SAT benefits",
+        "Want to take break",
+        "Something else",
+    )
+
     def __init__(self, page):
         self.page = page
 
-    def _active_heading(self):
-        return self.page.get_by_role(
-            "heading",
-            name=re.compile(r"You.?re a SAT Pro!?", re.IGNORECASE),
-        ).first
+    @staticmethod
+    def _normalized_text(locator):
+        return " ".join(locator.inner_text().split())
 
-    def _join_button(self):
-        # The site has rendered this action as both an anchor and a button.
-        # Its exact user-visible label is the stable contract.
+    def _path(self):
+        return urlparse(self.page.url).path.rstrip("/") or "/"
+
+    def _join_buttons(self):
         return self.page.get_by_text(
             "Join SAT Pro",
             exact=True,
-        ).filter(visible=True).first
+        ).filter(visible=True)
 
-    def _payment_heading(self):
-        return self.page.locator(
-            "h2.payment-card-title:has-text('Payment Details')"
-        ).first
-
-    def _wait_for_sat_pro_state(self, timeout=30000):
-        """Return the first real SAT Pro state rendered by the application."""
-        deadline = time.monotonic() + (timeout / 1000)
-
-        while time.monotonic() < deadline:
-            if self._active_heading().is_visible():
-                return "active"
-            if self._payment_heading().is_visible() or "sat-pro-payment" in self.page.url:
-                return "payment"
-            if self._join_button().is_visible():
-                return "join"
-            if self.page.locator("#login_email").is_visible() or "/login" in self.page.url:
-                return "login"
-            self.page.wait_for_timeout(250)
-
-        raise AssertionError(
-            "SAT Pro page did not render an active membership, Join button, "
-            "payment page, or login page within 30 seconds"
-        )
-
-
-    # ============================================================
-    # Navigation: Go to SAT Pro page directly via URL
-    # ============================================================
+    def _wait_for_landing(self):
+        self.page.locator("h1:visible,h2:visible").filter(
+            has_text="SAT Pro"
+        ).first.wait_for(state="visible")
+        assert self._path() == self.PATH
 
     def go_to_sat_pro(self):
-        self.page.goto(f"{BASE_URL}/sat-pro", wait_until="domcontentloaded")
-        state = self._wait_for_sat_pro_state()
-        assert state in ("active", "join"), (
-            f"Unexpected SAT Pro landing state: {state}"
+        menu = self.page.locator("p.cnm-cls:has-text('About Us')").locator("..")
+        menu.hover()
+        link = menu.locator(".dropdown_content_header a[href$='/sat-pro']")
+        link.wait_for(state="visible")
+        link.click()
+        self.page.wait_for_url("**/sat-pro", wait_until="domcontentloaded")
+        self._wait_for_landing()
+
+    def go_to_sat_pro_mobile(self):
+        self.page.locator(
+            "#menu_logo_mobile span[data-bs-target='#sidebarmobile']"
+        ).click()
+        self.page.locator("#sidebarmobile a.main-items-sidebar-content").filter(
+            has_text="Loyalty Program"
+        ).click()
+        submenu = self.page.locator("#offcanvasLoyaltyProgram")
+        link = submenu.locator("a[href$='/sat-pro']")
+        link.wait_for(state="visible")
+        link.click()
+        self.page.wait_for_url("**/sat-pro", wait_until="domcontentloaded")
+        self._wait_for_landing()
+
+    def verify_landing_content(self, include_desktop_hero_copy=True):
+        assert self.page.get_by_role(
+            "heading",
+            name="SAT Pro Benefits",
+            exact=True,
+        ).filter(visible=True).count() == 1
+        body_text = self._normalized_text(self.page.locator("body"))
+        required_copy = (
+            "Flexible Pricing For All Your Needs",
+            "No hidden charges and cancel anytime",
+            "$19.99 per month",
+            "Save an average of $600 per order with SAT Pro",
+            "Why Join SAT Pro",
         )
-        print(f"✅ Navigation to SAT Pro ({state} membership state): PASS")
-        return state
+        if include_desktop_hero_copy:
+            required_copy += (
+                "Become a SAT Pro member and get exclusive perks and benefits.",
+                "Join for just $19.99 /month and cancel anytime.",
+            )
+        for expected in required_copy + self.WHY_JOIN_COPY:
+            assert expected in body_text, (
+                f"SAT Pro landing page is missing expected text: {expected}"
+            )
 
+        for title, description in self.BENEFIT_COPY:
+            assert title in body_text, f"SAT Pro benefit is missing: {title}"
+            assert description in body_text, (
+                f"SAT Pro benefit description is missing: {description}"
+            )
 
-    # ============================================================
-    # Helper: Click Join SAT Pro button
-    # ============================================================
+        all_accordion_buttons = self.page.locator(
+            "button.accordion-button:visible"
+        )
+        faq_buttons = []
+        for index in range(all_accordion_buttons.count()):
+            button = all_accordion_buttons.nth(index)
+            question = self._normalized_text(button)
+            if question.startswith(self.FAQ_PREFIXES):
+                faq_buttons.append(button)
 
-    def click_join_button(self):
-        btn = self._join_button()
-        btn.wait_for(state="visible")
-        btn.click()
+        assert len(faq_buttons) == 6, (
+            f"Expected 6 SAT Pro FAQs, found {len(faq_buttons)}"
+        )
+        for button in faq_buttons:
+            target = button.get_attribute("data-bs-target")
+            assert target, "A SAT Pro FAQ has no answer target"
+            button.click()
+            panel = self.page.locator(target)
+            panel.wait_for(state="visible")
+            assert self._normalized_text(panel), "A SAT Pro FAQ answer is empty"
 
+    def verify_all_guest_join_redirects(self):
+        for index in range(3):
+            if index:
+                self.page.goto(
+                    f"{BASE_URL}{self.PATH}",
+                    wait_until="domcontentloaded",
+                )
+                self._wait_for_landing()
 
-    # ============================================================
-    # Verify: Payment page elements
-    # PayPal buttons load inside an iframe
-    # ============================================================
+            buttons = self._join_buttons()
+            assert buttons.count() == 3, (
+                f"Expected 3 Join SAT Pro buttons, found {buttons.count()}"
+            )
+            href = buttons.nth(index).get_attribute("href")
+            assert urlparse(href).path == self.PAYMENT_PATH
+            buttons.nth(index).click()
+            self.page.wait_for_url("**/login*", wait_until="domcontentloaded")
+            assert self._path() == "/login", (
+                f"Join button {index + 1} did not redirect guests to login"
+            )
+            self.page.locator("#login_email").wait_for(state="visible")
 
-    def verify_payment_page(self):
-        self.page.locator("h2.payment-card-title:has-text('Payment Details')").wait_for(state="visible")
-        assert self.page.locator("h2.payment-card-title:has-text('Payment Details')").is_visible(), \
-            "❌ Payment Details heading not visible"
+    def verify_mobile_guest_experience(self):
+        self.verify_landing_content(include_desktop_hero_copy=False)
+        buttons = self._join_buttons()
+        assert buttons.count() == 3, (
+            f"Expected 3 mobile Join SAT Pro buttons, found {buttons.count()}"
+        )
 
-        self.page.locator("h3.sat-pro-ben-title:has-text('Become a PRO and Start Saving Today')").wait_for(state="visible")
-        assert self.page.locator("h3.sat-pro-ben-title:has-text('Become a PRO and Start Saving Today')").is_visible(), \
-            "❌ SAT Pro benefits heading not visible"
+        layout = self.page.evaluate(
+            """() => ({
+                viewportWidth: visualViewport.width,
+                documentWidth: document.documentElement.scrollWidth,
+                buttons: [...document.querySelectorAll("a[href$='/sat-pro-payment']")]
+                    .filter(button => button.offsetParent !== null)
+                    .map(button => {
+                        const box = button.getBoundingClientRect();
+                        return {left: box.left, right: box.right, width: box.width};
+                    })
+            })"""
+        )
+        assert layout["documentWidth"] <= layout["viewportWidth"], (
+            f"SAT Pro has horizontal mobile overflow: {layout}"
+        )
+        for box in layout["buttons"]:
+            assert box["left"] >= 0 and box["right"] <= layout["viewportWidth"], (
+                f"A Join SAT Pro button is clipped on mobile: {box}"
+            )
 
-        assert self.page.locator("h3.user-profile-title").is_visible(), \
-            "❌ User name not visible on payment page"
+        buttons.first.click()
+        self.page.wait_for_url("**/login*", wait_until="domcontentloaded")
+        assert self._path() == "/login"
+        self.page.locator("#login_email").wait_for(state="visible")
 
-        assert self.page.locator("p.user-profile-email").is_visible(), \
-            "❌ User email not visible on payment page"
+    def open_non_member_payment_page(self):
+        buttons = self._join_buttons()
+        assert buttons.count() == 3, (
+            f"Non-Pro user should see 3 Join buttons, found {buttons.count()}"
+        )
+        buttons.first.click()
+        self.page.wait_for_url(
+            "**/sat-pro-payment",
+            wait_until="domcontentloaded",
+        )
+        assert self._path() == self.PAYMENT_PATH
 
-        assert self.page.locator("span.badge.bg-blue-50").is_visible(), \
-            "❌ Master Level badge not visible on payment page"
+    def verify_payment_page_and_safe_popups(self):
+        self.page.get_by_role(
+            "heading",
+            name="Payment Details",
+            exact=True,
+        ).wait_for(state="visible")
+        assert self.page.get_by_text(
+            "Enter the following details to subscribe to SAT Pro",
+            exact=True,
+        ).is_visible()
+        assert self._normalized_text(
+            self.page.locator("h3.user-profile-title")
+        ) == "USM USER QA USER"
+        assert self._normalized_text(
+            self.page.locator("p.user-profile-email")
+        ) == "usmanqaengineer@gmail.com"
+        assert self._normalized_text(
+            self.page.locator("span.badge.bg-blue-50")
+        ) == "Master Level 3"
+        assert self.page.get_by_role(
+            "heading",
+            name="Become a PRO and Start Saving Today",
+            exact=True,
+        ).is_visible()
 
-        print("✅ SAT Pro payment page verified")
+        # The PayPal iframe becomes visible before its popup click handlers
+        # finish initializing on Development.
+        self.page.wait_for_timeout(3000)
+        for payment_method in ("PayPal", "Debit or Credit Card"):
+            paypal_frame = self.page.frame_locator(
+                "iframe[title='PayPal']:visible"
+            ).first
+            method = paypal_frame.get_by_role(
+                "link",
+                name=payment_method,
+                exact=True,
+            )
+            method.wait_for(state="visible", timeout=30000)
+            with self.page.context.expect_page(timeout=30000) as popup_info:
+                method.click()
+            popup = popup_info.value
+            try:
+                assert not popup.is_closed(), (
+                    f"{payment_method} did not open a payment popup"
+                )
+                assert "PayPal" in popup.title(), (
+                    f"Unexpected {payment_method} popup title: {popup.title()}"
+                )
+            finally:
+                if not popup.is_closed():
+                    popup.close()
+            self.page.wait_for_timeout(1000)
+            assert self._path() == self.PAYMENT_PATH
 
-
-    # ============================================================
-    # Verify: Existing SAT Pro membership page
-    # ============================================================
-
-    def verify_active_pro_page(self):
-        heading = self._active_heading()
+    def verify_active_member_and_membership_page(self):
+        heading = self.page.locator("h1:visible,h2:visible").filter(
+            has_text="You're a SAT Pro!"
+        ).first
         heading.wait_for(state="visible")
-        assert heading.is_visible(), "❌ Active SAT Pro heading not visible"
+        assert self._normalized_text(heading) == "You're a SAT Pro!"
 
-        place_order = self.page.get_by_text("Place an Order", exact=True).first
-        assert place_order.is_visible(), "❌ Place an Order action not visible"
+        place_orders = self.page.get_by_role(
+            "link",
+            name="Place an Order",
+            exact=True,
+        ).filter(visible=True)
+        assert place_orders.count() == 2, (
+            f"Expected 2 Place an Order CTAs, found {place_orders.count()}"
+        )
+        for index in range(place_orders.count()):
+            assert urlparse(
+                place_orders.nth(index).get_attribute("href")
+            ).path == "/used-cars"
 
-        benefits = self.page.get_by_text("SAT Pro Benefits", exact=True).first
-        assert benefits.is_visible(), "❌ SAT Pro Benefits section not visible"
+        manage = self.page.get_by_role(
+            "link",
+            name="Manage membership",
+            exact=True,
+        )
+        assert urlparse(manage.get_attribute("href")).path == self.MEMBERSHIP_PATH
+        manage.click()
+        self.page.wait_for_url(
+            "**/sat-pro-membership",
+            wait_until="domcontentloaded",
+        )
+        assert self._path() == self.MEMBERSHIP_PATH
 
-        print("✅ Existing SAT Pro membership page verified")
+        for title in ("Your Membership", "Manage Subscription", "You're a SAT Pro!"):
+            assert self.page.get_by_role(
+                "heading",
+                name=title,
+                exact=True,
+            ).filter(visible=True).count() == 1, (
+                f"Membership heading is missing: {title}"
+            )
 
+        membership_order = self.page.get_by_role(
+            "link",
+            name="Place an Order",
+            exact=True,
+        ).filter(visible=True)
+        assert membership_order.count() == 1
+        assert urlparse(membership_order.get_attribute("href")).path == "/used-cars"
 
-    def _verify_post_join_state(self):
-        state = self._wait_for_sat_pro_state()
-        if state == "active":
-            self.verify_active_pro_page()
-            return
-        if state == "payment":
-            self.verify_payment_page()
-            return
-        raise AssertionError(f"Unexpected state after joining SAT Pro: {state}")
-
-
-    # ============================================================
-    # Flow: Logged out
-    # Anonymous context clicks Join → redirects to /login → logs in.
-    # After login, verifies either an existing active membership or
-    # the payment page offered to a non-member.
-    # ============================================================
-
-    def flow_logged_out(self):
-        state = self.go_to_sat_pro()
-
-        if state == "active":
-            self.verify_active_pro_page()
-            return
-
-        self.click_join_button()
-        state = self._wait_for_sat_pro_state()
-        assert state == "login", "❌ Join SAT Pro did not redirect to /login"
-        print("✅ Redirected to login page")
-
-        LoginPage(self.page).login()
-        state = self.go_to_sat_pro()
-        if state == "active":
-            self.verify_active_pro_page()
-            return
-
-        self.click_join_button()
-        self._verify_post_join_state()
-
-
-    # ============================================================
-    # Flow: Logged in
-    # Navigate to /sat-pro and verify the account's real membership state.
-    # ============================================================
-
-    def flow_logged_in(self):
-        state = self.go_to_sat_pro()
-        if state == "active":
-            self.verify_active_pro_page()
-            return
-
-        self.click_join_button()
-        self._verify_post_join_state()
+        end_membership = self.page.locator(".drp-sat-memeber-end")
+        assert end_membership.get_attribute("aria-expanded") == "false"
+        end_membership.click()
+        panel = self.page.locator("#collapseSatmemberEnd")
+        panel.wait_for(state="visible")
+        assert end_membership.get_attribute("aria-expanded") == "true"
+        panel_text = self._normalized_text(panel)
+        for reason in self.CANCELLATION_REASONS:
+            assert reason in panel_text, f"Cancellation reason is missing: {reason}"
+        assert panel.locator("input[name='reason']").count() == 5
+        submit = panel.get_by_role("button", name="Submit", exact=True)
+        assert submit.is_visible(), "End Membership Submit button is missing"
+        assert self._path() == self.MEMBERSHIP_PATH
