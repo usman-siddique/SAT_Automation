@@ -15,7 +15,7 @@ This framework automates core workflows on the SAT Japan platform, including:
 
 - **Sell My Car Module:** Price quote, listing, auction
 - **Car Services Module:** Auction, Shipping Schedule, Warranty, Storage, Finance, Car Carrier, Customs Clearance, Pre‑Export Inspection, Marine Insurance, Non‑Stolen Vehicle
-- **About Us Module:** Company info, loyalty program, SAT Pro membership
+- **About Us Module:** Company information, Corporate, Customer Reviews, policies, shipping agents, security/export control, loyalty program, and SAT Pro membership
 - **Help Module:** Header navigation, buying/payment guides, forms, bank information, FAQ, anonymous order tracking, and safety guidance
 - **Buy Flow (End‑to‑End):** Complete order placement from car selection to payment confirmation on 3 Roles (Guest/User/Dealer).
 - **Reservation:** Authenticated User Used Car priced and ASK reservation flows with invoice and My Booking validation
@@ -54,6 +54,7 @@ SAT_Automation/
 │   ├── about_us/               # About Us module page objects
 │   ├── buy_flow/               # End‑to‑end order placement page objects
 │   ├── car_services/           # Car Services module page objects
+│   ├── help/                   # Help module page objects
 │   ├── reservation/            # Authenticated User reservation page objects
 │   └── sell_my_car/            # Sell My Car module page objects
 │
@@ -68,6 +69,7 @@ SAT_Automation/
 │   ├── about_us/               # About Us tests
 │   ├── buy_flow/               # End‑to‑end order placement tests
 │   ├── car_services/           # Car Services tests
+│   ├── help/                   # Help tests
 │   ├── reservation/            # Authenticated User reservation tests
 │   └── sell_my_car/            # Sell My Car tests (positive and negative)
 │
@@ -255,15 +257,21 @@ pytest tests/help/ -v -s
 .\run_tests.bat
 ```
 
-The Windows menu provides Help, Buy Now, and Reservation group choices:
+The Windows menu provides all-suite and module-specific choices:
 
+- **1:** All 117 tests, run sequentially with automatic reruns disabled
+- **2:** Sell My Car
 - **3:** Car Services, including one Development Non-Stolen test payment
+- **4:** About Us, including Corporate, Customer Reviews, and Security Export Control
 - **5:** Help header and all eleven Help destinations
 - **6:** Used Car Buy Now only (Paygent, Bank Transfer, and PayPal)
 - **7:** User Used Car Reservation with a complete numeric price breakdown
 - **8:** User Used Car Reservation with ASK pricing and Invoice Pending
 - **9:** Both User Used Car Reservation tests, run sequentially
 - **10:** Choose multiple test groups with comma-separated menu numbers
+- **11:** Dealer checks without form submission
+- **12:** Full Dealer flow, which creates records
+- **13:** Seller Registration flow, which creates one record
 
 For example, choose option **10** and enter `2,5,6` to run Sell My Car,
 Help, and User Used Car Buy Now tests in one pytest session and
@@ -294,17 +302,17 @@ paths and page objects are used for either domain.
 |--------|-------|-------------|
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 30 | Auction calculator and estimate, schedules, service content, PDF download, and positive/negative Non-Stolen payment coverage |
-| **About Us** | 10 | About SAT, Company Profile, Why Choose SAT, Privacy Policy, Terms & Conditions, Shipping Agents, Loyalty Program (logged in/out), Join SAT Pro (logged in/out) |
+| **About Us** | 35 | About SAT, Company Profile, Corporate, Customer Reviews, Why Choose SAT, policies, Shipping Agents, Security Export Control, Loyalty Program, and Join SAT Pro across desktop/mobile and relevant account states |
 | **Help** | 40 | Help dropdown and destinations, How To Buy CTA coverage by account state, Dealer flows, full Seller and inquiry/request validation, and positive/negative order tracking |
 | **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **92** | |
+| **Total** | **117** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 30 tests
-- **About Us:** 10 tests
+- **About Us:** 35 tests
 - **Help:** 40 tests
 - **Buy Flow (End‑to‑End):** 3 tests
 - **Reservation:** 2 tests
