@@ -33,7 +33,9 @@ def open_site_home(page: Page):
             last_error = _backend_error(page, response) or ""
 
             if not last_error:
-                page.locator("header").wait_for(state="visible", timeout=10000)
+                page.locator(
+                    "header:visible, #navbar_mobile_header:visible"
+                ).first.wait_for(state="visible", timeout=10000)
                 return page
         except (PlaywrightError, AssertionError) as error:
             last_error = str(error)

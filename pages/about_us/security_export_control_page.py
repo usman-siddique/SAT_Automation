@@ -111,6 +111,26 @@ class SecurityExportControlPage:
             assert expected_file in (image.get_attribute("src") or ""), (
                 f"{label} image source changed: {expected_file}"
             )
+            image.evaluate(
+                """element => new Promise((resolve, reject) => {
+                    if (element.complete && element.naturalWidth > 0) {
+                        resolve(true);
+                        return;
+                    }
+                    const timeout = setTimeout(
+                        () => reject(new Error('image load timeout')),
+                        10000
+                    );
+                    element.addEventListener('load', () => {
+                        clearTimeout(timeout);
+                        resolve(true);
+                    }, {once: true});
+                    element.addEventListener('error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('image failed to load'));
+                    }, {once: true});
+                })"""
+            )
             assert image.evaluate(
                 "element => element.complete && element.naturalWidth > 0"
             ), f"{label} image did not load: {expected_file}"
@@ -154,8 +174,8 @@ class SecurityExportControlPage:
                 bodyWidth: document.body.scrollWidth
             })"""
         )
-        assert layout["screenWidth"] == layout["visualWidth"] == 390, (
-            f"Security Export Control mobile viewport is incorrect: {layout}"
+        assert 0 < layout["visualWidth"] <= layout["screenWidth"], (
+            f"Security Export Control device viewport is invalid: {layout}"
         )
         assert layout["documentWidth"] <= layout["visualWidth"], (
             f"Security Export Control has horizontal overflow: {layout}"
@@ -171,7 +191,10 @@ class SecurityExportControlPage:
             })"""
         )
         for box in boxes:
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box["x"] >= 0
+                and box["x"] + box["width"] <= layout["visualWidth"]
+            ), (
                 f"Security Export card is clipped on mobile: {box}"
             )
         assert boxes[0]["y"] + boxes[0]["height"] <= boxes[1]["y"], (
@@ -179,6 +202,44 @@ class SecurityExportControlPage:
         )
         for index in range(images.count()):
             box = images.nth(index).bounding_box()
-            assert box and box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box
+                and box["x"] >= 0
+                and box["x"] + box["width"] <= layout["visualWidth"]
+            ), (
                 f"Security Export image is clipped on mobile: {box}"
             )
+
+    def verify_tablet_content_media_and_layout(self):
+        cards = self._verify_content()
+        images = self._verify_images(
+            ".security-export-control-mob-new-banner:visible, "
+            ".security-export-card-mob-img:visible",
+            self.MOBILE_IMAGES,
+            "tablet",
+        )
+        assert self._content().locator(
+            ".security-export-control-new-banner:visible, "
+            ".security-export-card-img:visible"
+        ).count() == 0, "Desktop Security Export media is visible on tablet"
+
+        layout = self.page.evaluate(
+            """() => ({
+                viewportWidth: visualViewport.width,
+                documentWidth: document.documentElement.scrollWidth,
+                bodyWidth: document.body.scrollWidth
+            })"""
+        )
+        assert layout["documentWidth"] <= layout["viewportWidth"], (
+            f"Security Export tablet document overflows: {layout}"
+        )
+        assert layout["bodyWidth"] <= layout["viewportWidth"], (
+            f"Security Export tablet body overflows: {layout}"
+        )
+        for elements, label in ((cards, "card"), (images, "image")):
+            for index in range(elements.count()):
+                box = elements.nth(index).bounding_box()
+                assert box and box["x"] >= 0
+                assert box["x"] + box["width"] <= layout["viewportWidth"], (
+                    f"Security Export tablet {label} is clipped: {box}"
+                )

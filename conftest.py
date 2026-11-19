@@ -277,6 +277,7 @@ def _isolated_authenticated_page(
     email,
     password,
     account_label,
+    context_options=None,
 ):
     """Create one authenticated browser context for a specific account state."""
     if not email or not password:
@@ -284,7 +285,7 @@ def _isolated_authenticated_page(
             f"{account_label} credentials are missing from the private .env."
         )
 
-    ctx = browser.new_context(**_context_options())
+    ctx = browser.new_context(**(context_options or _context_options()))
     pg = _prepare_page(ctx.new_page(), request)
     try:
         LoginPage(pg).login(
@@ -323,6 +324,65 @@ def loyalty_pro_page(browser, request):
         LOYALTY_PRO_EMAIL,
         LOGIN_PASSWORD,
         "SAT Pro Member",
+    )
+
+
+def _mobile_loyalty_page(
+    browser,
+    playwright_instance,
+    request,
+    email,
+    account_label,
+):
+    device_name = request.param
+    allure.dynamic.parameter("mobile_device", device_name)
+    yield from _isolated_authenticated_page(
+        browser,
+        request,
+        email,
+        LOGIN_PASSWORD,
+        account_label,
+        context_options=playwright_instance.devices[device_name],
+    )
+
+
+@pytest.fixture(
+    scope="function",
+    params=("iPhone 13", "Pixel 5"),
+    ids=("iphone-13", "pixel-5"),
+)
+def loyalty_master_mobile_page(
+    browser,
+    playwright_instance,
+    request,
+):
+    """Master Level 3 session on named iPhone and Pixel profiles."""
+    yield from _mobile_loyalty_page(
+        browser,
+        playwright_instance,
+        request,
+        LOYALTY_MASTER_EMAIL,
+        "Loyalty Master Level 3 Mobile User",
+    )
+
+
+@pytest.fixture(
+    scope="function",
+    params=("iPhone 13", "Pixel 5"),
+    ids=("iphone-13", "pixel-5"),
+)
+def loyalty_pro_mobile_page(
+    browser,
+    playwright_instance,
+    request,
+):
+    """Active SAT Pro session on named iPhone and Pixel profiles."""
+    yield from _mobile_loyalty_page(
+        browser,
+        playwright_instance,
+        request,
+        LOYALTY_PRO_EMAIL,
+        "SAT Pro Mobile Member",
     )
 
 
@@ -483,6 +543,8 @@ def pytest_runtest_makereport(item, call):
             or item.funcargs.get("dealer_page")
             or item.funcargs.get("loyalty_master_page")
             or item.funcargs.get("loyalty_pro_page")
+            or item.funcargs.get("loyalty_master_mobile_page")
+            or item.funcargs.get("loyalty_pro_mobile_page")
             or item.funcargs.get("page_no_login")
             or item.funcargs.get("mobile_page")
             or getattr(item, "_sat_active_page", None)

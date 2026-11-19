@@ -180,6 +180,26 @@ class CustomerReviewsPage:
             "Celebrity Reviews View More link has the wrong destination"
         )
 
+    def verify_tablet_filter_controls_and_layout(self):
+        controls = self.page.locator(
+            "select.testimonial_country:visible, #make:visible, "
+            "#model:visible, #star:visible, #submitTestimonial:visible"
+        )
+        assert controls.count() == 5, (
+            f"Expected five tablet review controls, found {controls.count()}"
+        )
+        assert self._desktop_review_cards().count() > 0, (
+            "Customer Reviews did not display tablet review cards"
+        )
+
+        viewport_width = self.page.evaluate("visualViewport.width")
+        for index in range(controls.count()):
+            box = controls.nth(index).bounding_box()
+            assert box and box["width"] > 0 and box["height"] > 0
+            assert box["x"] >= 0 and box["x"] + box["width"] <= viewport_width, (
+                f"Tablet review control {index + 1} is clipped: {box}"
+            )
+
     def verify_country_filters_and_empty_state(self):
         country_filter = self.page.locator("select.testimonial_country")
 
@@ -285,6 +305,15 @@ class CustomerReviewsPage:
             "Mobile country search did not narrow the list to Pakistan"
         )
         pakistan.click()
+        if picker.is_visible():
+            dismiss = picker.locator(
+                "[data-bs-dismiss='offcanvas']:visible"
+            ).first
+            assert dismiss.count() == 1, (
+                "Mobile country picker stayed open without a close control"
+            )
+            dismiss.click()
+        picker.wait_for(state="hidden", timeout=10000)
         assert self.page.locator("#MakeItem").inner_text().strip() == "Pakistan"
 
         with self.page.expect_navigation(

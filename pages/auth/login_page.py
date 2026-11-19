@@ -1,6 +1,6 @@
 from playwright.sync_api import Error as PlaywrightError
 
-from config import LOGIN_EMAIL, LOGIN_PASSWORD
+from config import BASE_URL, LOGIN_EMAIL, LOGIN_PASSWORD
 from pages.site_navigation import open_site_home
 
 
@@ -17,16 +17,26 @@ class LoginPage:
         # session merely because it has no Sign in link.
         open_site_home(self.page)
 
-        # On a confirmed homepage, no Sign in link means this isolated browser
-        # context already has the requested account's authenticated session.
-        sign_in_btn = self.page.locator("header").get_by_role(
-            "link", name="Sign in"
-        )
-        if not sign_in_btn.is_visible(timeout=3000):
-            print(f"{account_label} already logged in, skipping login")
-            return self
-
-        sign_in_btn.click()
+        # Desktop exposes Sign in in the header. Phone profiles keep it inside
+        # a closed menu, so use the direct login route when no visible control
+        # is available instead of assuming the context is authenticated.
+        sign_in_btn = self.page.get_by_role(
+            "link", name="Sign in", exact=True
+        ).filter(visible=True).first
+        if sign_in_btn.is_visible(timeout=3000):
+            login_url = sign_in_btn.get_attribute("href") or ""
+            assert login_url.endswith("/login"), (
+                f"{account_label} Sign in link changed: {login_url}"
+            )
+            self.page.goto(login_url, wait_until="domcontentloaded")
+        else:
+            self.page.goto(
+                f"{BASE_URL}/login",
+                wait_until="domcontentloaded",
+            )
+            if not self.page.url.startswith(f"{BASE_URL}/login"):
+                print(f"{account_label} already logged in, skipping login")
+                return self
 
         email_input = self.page.locator("#login_email")
         email_input.wait_for(state="visible")
@@ -46,11 +56,8 @@ class LoginPage:
         # Login may redirect to a profile/dashboard. Return to a verified
         # public homepage so every test starts from the same navigation state.
         open_site_home(self.page)
-        sign_in_btn = self.page.locator("header").get_by_role(
-            "link", name="Sign in"
-        )
-        assert not sign_in_btn.is_visible(timeout=3000), (
-            f"{account_label} login did not create an authenticated session."
+        assert not self.page.locator("#login_email").is_visible(), (
+            f"{account_label} login did not leave the login page."
         )
 
         print(f"{account_label} login: PASS")

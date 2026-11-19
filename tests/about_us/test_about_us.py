@@ -5,10 +5,10 @@
 #   pytest tests/about_us/test_about_us.py -v -s
 # ============================================================
 
-import sys
 import os
+import sys
+
 import pytest
-from playwright.sync_api import Error as PlaywrightError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -57,53 +57,63 @@ def test_about_sat_feature_links_and_pdf(page_no_login):
 
 
 @pytest.fixture
-def about_us_mobile_page(browser, request):
-    context = browser.new_context(
-        viewport={"width": 390, "height": 844},
-        screen={"width": 390, "height": 844},
-        user_agent=(
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) "
-            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 "
-            "Mobile/15E148 Safari/604.1"
-        ),
-        device_scale_factor=3,
-        is_mobile=True,
-        has_touch=True,
-    )
-    mobile_page = context.new_page()
-    mobile_page.set_default_timeout(30000)
-    request.node._sat_active_page = mobile_page
+def about_us_mobile_page(mobile_page):
+    """Use Playwright's named iPhone and Pixel profiles."""
+    return mobile_page
 
-    last_error = "unknown mobile homepage error"
-    for attempt in range(1, 4):
-        try:
-            response = mobile_page.goto(
-                BASE_URL,
-                wait_until="domcontentloaded",
-                timeout=60000,
-            )
-            if response is not None and response.status >= 500:
-                raise AssertionError(f"Homepage returned HTTP {response.status}")
-            mobile_page.locator("#navbar_mobile_header").wait_for(
-                state="visible",
-                timeout=10000,
-            )
-            break
-        except (PlaywrightError, AssertionError) as error:
-            last_error = str(error)
-            if attempt == 3:
-                context.close()
-                raise AssertionError(
-                    "Development mobile homepage did not become ready after "
-                    f"3 attempts: {last_error}"
-                ) from error
+
+@pytest.fixture(
+    params=("Galaxy S24", "iPad Mini", "iPhone 13 landscape"),
+    ids=("galaxy-s24", "ipad-mini", "iphone-13-landscape"),
+)
+def about_us_responsive_device_page(
+    browser,
+    playwright_instance,
+    request,
+):
+    """Use named Playwright phone, tablet, and landscape profiles."""
+    device_name = request.param
+    context = browser.new_context(
+        **playwright_instance.devices[device_name]
+    )
+    page = context.new_page()
+    page.set_default_timeout(30000)
+    request.node._sat_active_page = page
 
     try:
-        yield mobile_page
+        response = page.goto(
+            BASE_URL,
+            wait_until="domcontentloaded",
+            timeout=60000,
+        )
+        assert response is None or response.status < 500
+        page.locator(
+            "#navbar_mobile_header:visible, header:visible"
+        ).first.wait_for(
+            state="visible",
+            timeout=10000,
+        )
+        yield page
     finally:
-        if not mobile_page.is_closed():
-            mobile_page.close()
+        if not page.is_closed():
+            page.close()
         context.close()
+
+
+def _assert_device_page_fits(page, page_name):
+    layout = page.evaluate(
+        """() => ({
+            viewportWidth: visualViewport.width,
+            documentWidth: document.documentElement.scrollWidth,
+            bodyWidth: document.body.scrollWidth
+        })"""
+    )
+    assert layout["documentWidth"] <= layout["viewportWidth"], (
+        f"{page_name} has horizontal document overflow: {layout}"
+    )
+    assert layout["bodyWidth"] <= layout["viewportWidth"], (
+        f"{page_name} has horizontal body overflow: {layout}"
+    )
 
 
 # ============================================================
@@ -417,3 +427,99 @@ def test_join_sat_pro_active_member_management_without_cancellation(
     sat_pro = JoinSatProPage(loyalty_pro_page)
     sat_pro.go_to_sat_pro()
     sat_pro.verify_active_member_and_membership_page()
+
+
+# ============================================================
+# Named phone profiles: authenticated Loyalty account states
+# ============================================================
+
+def test_loyalty_program_mobile_master_level_three(
+    loyalty_master_mobile_page,
+):
+    loyalty = LoyaltyProgramPage(loyalty_master_mobile_page)
+    loyalty.go_to_loyalty_program_mobile()
+    loyalty.verify_mobile_master_level_three_state()
+
+
+def test_loyalty_program_mobile_sat_pro_member(loyalty_pro_mobile_page):
+    loyalty = LoyaltyProgramPage(loyalty_pro_mobile_page)
+    loyalty.go_to_loyalty_program_mobile()
+    loyalty.verify_mobile_sat_pro_member_state()
+
+
+# ============================================================
+# Named phone profiles: safe payment and membership controls
+# ============================================================
+
+def test_join_sat_pro_mobile_non_member_payment_controls(
+    loyalty_master_mobile_page,
+):
+    sat_pro = JoinSatProPage(loyalty_master_mobile_page)
+    sat_pro.go_to_sat_pro_mobile()
+    sat_pro.open_non_member_payment_page()
+    sat_pro.verify_mobile_payment_page_controls()
+
+
+def test_join_sat_pro_mobile_active_member_management_without_cancellation(
+    loyalty_pro_mobile_page,
+):
+    sat_pro = JoinSatProPage(loyalty_pro_mobile_page)
+    sat_pro.go_to_sat_pro_mobile()
+    sat_pro.verify_mobile_active_member_and_membership_page()
+
+
+# ============================================================
+# Named Galaxy, iPad, and iPhone landscape responsive profiles
+# ============================================================
+
+def test_about_us_mobile_device_profiles_cover_key_user_paths(
+    about_us_responsive_device_page,
+):
+    page = about_us_responsive_device_page
+
+    if not page.locator("#navbar_mobile_header").is_visible():
+        about = AboutSatPage(page)
+        about.go_to_about_sat()
+        about.verify_about_sat()
+        _assert_device_page_fits(page, "About SAT tablet page")
+
+        page.goto(BASE_URL, wait_until="domcontentloaded")
+        reviews = CustomerReviewsPage(page)
+        reviews.go_to_customer_reviews()
+        reviews.verify_tablet_filter_controls_and_layout()
+        _assert_device_page_fits(page, "Customer Reviews tablet page")
+
+        page.goto(BASE_URL, wait_until="domcontentloaded")
+        security = SecurityExportControlPage(page)
+        security.go_to_security_export_control()
+        security.verify_tablet_content_media_and_layout()
+        _assert_device_page_fits(page, "Security Export tablet page")
+
+        page.goto(BASE_URL, wait_until="domcontentloaded")
+        sat_pro = JoinSatProPage(page)
+        sat_pro.go_to_sat_pro()
+        sat_pro.verify_landing_content()
+        _assert_device_page_fits(page, "SAT Pro tablet page")
+        return
+
+    about = AboutSatPage(page)
+    about.go_to_about_sat_mobile()
+    about.verify_about_sat_mobile_layout()
+
+    page.goto(BASE_URL, wait_until="domcontentloaded")
+    page.locator("#navbar_mobile_header").wait_for(state="visible")
+    reviews = CustomerReviewsPage(page)
+    reviews.go_to_customer_reviews_mobile()
+    reviews.verify_mobile_country_filter_reset_and_layout()
+
+    page.goto(BASE_URL, wait_until="domcontentloaded")
+    page.locator("#navbar_mobile_header").wait_for(state="visible")
+    security = SecurityExportControlPage(page)
+    security.go_to_security_export_control_mobile()
+    security.verify_mobile_content_media_and_layout()
+
+    page.goto(BASE_URL, wait_until="domcontentloaded")
+    page.locator("#navbar_mobile_header").wait_for(state="visible")
+    sat_pro = JoinSatProPage(page)
+    sat_pro.go_to_sat_pro_mobile()
+    sat_pro.verify_mobile_guest_experience()

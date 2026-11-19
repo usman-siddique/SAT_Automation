@@ -259,6 +259,13 @@ profiles, with automatic reruns disabled:
 ```powershell
 pytest tests/help/test_mobile_help.py -v -s --force-reruns 0
 ```
+
+To run only the non-destructive About Us device-profile checks on Playwright's
+iPhone 13, Pixel 5, Galaxy S24, iPad Mini, and iPhone landscape profiles:
+
+```powershell
+pytest tests/about_us/ -k "mobile" -v -s --force-reruns 0
+```
 #### Using batch files (Windows):
 ```
 .\run_tests.bat
@@ -266,7 +273,7 @@ pytest tests/help/test_mobile_help.py -v -s --force-reruns 0
 
 The Windows menu provides all-suite and module-specific choices:
 
-- **1:** All 131 tests, run sequentially with automatic reruns disabled
+- **1:** All 153 tests, run sequentially with automatic reruns disabled
 - **2:** Sell My Car
 - **3:** Car Services, including one Development Non-Stolen test payment
 - **4:** About Us, including Corporate, Customer Reviews, and Security Export Control
@@ -280,6 +287,7 @@ The Windows menu provides all-suite and module-specific choices:
 - **12:** Full Dealer flow, which creates records
 - **13:** Seller Registration flow, which creates one record
 - **14:** Mobile Help checks on iPhone 13 and Pixel 5 profiles without record creation
+- **15:** Mobile About Us checks on named phone and tablet profiles without payments or membership cancellation
 
 For example, choose option **10** and enter `2,5,6` to run Sell My Car,
 Help, and User Used Car Buy Now tests in one pytest session and
@@ -310,17 +318,17 @@ paths and page objects are used for either domain.
 |--------|-------|-------------|
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
 | **Car Services** | 30 | Auction calculator and estimate, schedules, service content, PDF download, and positive/negative Non-Stolen payment coverage |
-| **About Us** | 35 | About SAT, Company Profile, Corporate, Customer Reviews, Why Choose SAT, policies, Shipping Agents, Security Export Control, Loyalty Program, and Join SAT Pro across desktop/mobile and relevant account states |
+| **About Us** | 57 | Desktop plus named iPhone, Pixel, Galaxy, iPad, and landscape coverage, including authenticated Loyalty states and safe SAT Pro payment/membership controls |
 | **Help** | 54 | Desktop and mobile Help navigation, all destinations, responsive form/layout checks on iPhone and Pixel, Dealer flows, Seller and inquiry/request validation, and order tracking |
 | **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **131** | |
+| **Total** | **153** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
 - **Car Services:** 30 tests
-- **About Us:** 35 tests
+- **About Us:** 57 tests
 - **Help:** 54 tests
 - **Buy Flow (End‑to‑End):** 3 tests
 - **Reservation:** 2 tests

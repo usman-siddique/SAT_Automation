@@ -200,6 +200,46 @@ class JoinSatProPage:
         assert self._path() == "/login"
         self.page.locator("#login_email").wait_for(state="visible")
 
+    def _verify_mobile_layout(self, page_name, elements):
+        # Allow a few CSS pixels for browser rounding/decorative overflow. This
+        # avoids reporting invisible 2-5px differences as user-facing defects,
+        # while still catching meaningful overflow on narrow mobile viewports.
+        overflow_tolerance = 5
+        layout = self.page.evaluate(
+            """() => ({
+                viewportWidth: visualViewport.width,
+                documentWidth: document.documentElement.scrollWidth,
+                bodyWidth: document.body.scrollWidth
+            })"""
+        )
+        assert layout["documentWidth"] <= (
+            layout["viewportWidth"] + overflow_tolerance
+        ), (
+            f"{page_name} has horizontal document overflow: {layout}"
+        )
+        assert layout["bodyWidth"] <= (
+            layout["viewportWidth"] + overflow_tolerance
+        ), (
+            f"{page_name} has horizontal body overflow: {layout}"
+        )
+        assert elements.count() > 0, f"{page_name} has no usable controls"
+        for index in range(elements.count()):
+            element = elements.nth(index)
+            element.scroll_into_view_if_needed()
+            box = element.bounding_box()
+            assert box and box["width"] > 0 and box["height"] > 0, (
+                f"{page_name} control {index + 1} has no usable size"
+            )
+            assert box["x"] >= -overflow_tolerance, (
+                f"{page_name} control {index + 1} is clipped on the left: {box}"
+            )
+            assert box["x"] + box["width"] <= (
+                layout["viewportWidth"] + overflow_tolerance
+            ), (
+                f"{page_name} control {index + 1} is clipped on the right: {box}"
+            )
+        return layout
+
     def open_non_member_payment_page(self):
         buttons = self._join_buttons()
         assert buttons.count() == 3, (
@@ -266,6 +306,44 @@ class JoinSatProPage:
             self.page.wait_for_timeout(1000)
             assert self._path() == self.PAYMENT_PATH
 
+    def verify_mobile_payment_page_controls(self):
+        self.page.get_by_role(
+            "heading",
+            name="Payment Details",
+            exact=True,
+        ).wait_for(state="visible")
+        assert self._path() == self.PAYMENT_PATH
+        assert self.page.get_by_text(
+            "Enter the following details to subscribe to SAT Pro",
+            exact=True,
+        ).is_visible()
+
+        iframe = self.page.locator("iframe[title='PayPal']:visible").first
+        iframe.wait_for(state="visible", timeout=30000)
+        self._verify_mobile_layout(
+            "SAT Pro payment page",
+            self.page.locator(
+                "h3.user-profile-title:visible, "
+                "span.badge.bg-blue-50:visible, "
+                "iframe[title='PayPal']:visible"
+            ),
+        )
+
+        payment_frame = self.page.frame_locator(
+            "iframe[title='PayPal']:visible"
+        ).first
+        for payment_method in ("PayPal", "Debit or Credit Card"):
+            control = payment_frame.get_by_role(
+                "link",
+                name=payment_method,
+                exact=True,
+            )
+            control.wait_for(state="visible", timeout=30000)
+            assert control.is_enabled(), (
+                f"{payment_method} is disabled on the mobile payment page"
+            )
+        assert self._path() == self.PAYMENT_PATH
+
     def verify_active_member_and_membership_page(self):
         heading = self.page.locator("h1:visible,h2:visible").filter(
             has_text="You're a SAT Pro!"
@@ -328,4 +406,30 @@ class JoinSatProPage:
         assert panel.locator("input[name='reason']").count() == 5
         submit = panel.get_by_role("button", name="Submit", exact=True)
         assert submit.is_visible(), "End Membership Submit button is missing"
+        assert self._path() == self.MEMBERSHIP_PATH
+
+    def verify_mobile_active_member_and_membership_page(self):
+        self._verify_mobile_layout(
+            "Active SAT Pro landing page",
+            self.page.get_by_role(
+                "link",
+                name="Place an Order",
+                exact=True,
+            ).filter(visible=True).or_(
+                self.page.get_by_role(
+                    "link",
+                    name="Manage membership",
+                    exact=True,
+                ).filter(visible=True)
+            ),
+        )
+        self.verify_active_member_and_membership_page()
+        self._verify_mobile_layout(
+            "SAT Pro membership page",
+            self.page.locator(
+                ".drp-sat-memeber-end:visible, "
+                "#collapseSatmemberEnd input[name='reason']:visible, "
+                "#collapseSatmemberEnd button:visible"
+            ),
+        )
         assert self._path() == self.MEMBERSHIP_PATH

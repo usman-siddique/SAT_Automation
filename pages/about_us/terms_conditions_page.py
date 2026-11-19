@@ -119,7 +119,7 @@ class TermsConditionsPage:
                 bodyWidth: document.body.scrollWidth
             })"""
         )
-        assert layout["viewportWidth"] == 390
+        assert layout["viewportWidth"] > 0
         assert layout["documentWidth"] <= layout["viewportWidth"], (
             f"{page_name} has horizontal mobile overflow: {layout}"
         )
@@ -128,11 +128,17 @@ class TermsConditionsPage:
         )
         content_box = content.bounding_box()
         assert content_box["x"] >= 0
-        assert content_box["x"] + content_box["width"] <= 390
+        assert (
+            content_box["x"] + content_box["width"]
+            <= layout["viewportWidth"]
+        )
         for index in range(page_links.count()):
             box = page_links.nth(index).bounding_box()
             assert box, f"{page_name} link has no mobile layout box"
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box["x"] >= 0
+                and box["x"] + box["width"] <= layout["viewportWidth"]
+            ), (
                 f"{page_name} link is clipped on mobile: {box}"
             )
 

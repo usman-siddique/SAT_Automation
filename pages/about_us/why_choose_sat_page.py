@@ -123,6 +123,26 @@ class WhyChooseSatPage:
                 f"Why Choose SAT section has the wrong image: {title}"
             )
             image.scroll_into_view_if_needed()
+            image.evaluate(
+                """element => new Promise((resolve, reject) => {
+                    if (element.complete && element.naturalWidth > 0) {
+                        resolve(true);
+                        return;
+                    }
+                    const timeout = setTimeout(
+                        () => reject(new Error('image load timeout')),
+                        10000
+                    );
+                    element.addEventListener('load', () => {
+                        clearTimeout(timeout);
+                        resolve(true);
+                    }, {once: true});
+                    element.addEventListener('error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('image failed to load'));
+                    }, {once: true});
+                })"""
+            )
             assert image.evaluate(
                 "element => element.complete && element.naturalWidth > 0"
             ), f"Why Choose SAT image did not load: {title}"
@@ -182,7 +202,7 @@ class WhyChooseSatPage:
                 bodyWidth: document.body.scrollWidth
             })"""
         )
-        assert layout["viewportWidth"] == 390
+        assert layout["viewportWidth"] > 0
         assert layout["documentWidth"] <= layout["viewportWidth"], (
             f"Why Choose SAT has horizontal mobile overflow: {layout}"
         )
@@ -199,9 +219,15 @@ class WhyChooseSatPage:
             )
             previous_bottom = section_box["y"] + section_box["height"]
             assert section_box["x"] >= 0
-            assert section_box["x"] + section_box["width"] <= 390
+            assert (
+                section_box["x"] + section_box["width"]
+                <= layout["viewportWidth"]
+            )
             assert image_box["x"] >= 0
-            assert image_box["x"] + image_box["width"] <= 390
+            assert (
+                image_box["x"] + image_box["width"]
+                <= layout["viewportWidth"]
+            )
 
         inquiry = self.page.locator("a[href$='/inquiry-form']:visible").filter(
             has_text="http://satjapan.com/inquiry-form"
@@ -209,4 +235,7 @@ class WhyChooseSatPage:
         assert inquiry.count() == 1
         inquiry_box = inquiry.bounding_box()
         assert inquiry_box["x"] >= 0
-        assert inquiry_box["x"] + inquiry_box["width"] <= 390
+        assert (
+            inquiry_box["x"] + inquiry_box["width"]
+            <= layout["viewportWidth"]
+        )

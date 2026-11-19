@@ -280,6 +280,41 @@ class LoyaltyProgramPage:
                 f"A Loyalty benefit card is clipped on mobile: {box}"
             )
 
+    def _verify_mobile_member_layout(self, account_state):
+        assert self.page.locator("#navbar_mobile_header").is_visible(), (
+            f"{account_state} Loyalty page is missing the mobile header"
+        )
+        layout = self.page.evaluate(
+            """() => ({
+                viewportWidth: visualViewport.width,
+                documentWidth: document.documentElement.scrollWidth,
+                bodyWidth: document.body.scrollWidth,
+                cards: [...document.querySelectorAll('.benfit-card-more')]
+                    .filter(card => card.offsetParent !== null)
+                    .map(card => {
+                        const box = card.getBoundingClientRect();
+                        return {
+                            left: box.left,
+                            right: box.right,
+                            width: box.width,
+                            height: box.height
+                        };
+                    })
+            })"""
+        )
+        assert layout["documentWidth"] <= layout["viewportWidth"], (
+            f"{account_state} Loyalty page has horizontal overflow: {layout}"
+        )
+        assert layout["bodyWidth"] <= layout["viewportWidth"], (
+            f"{account_state} Loyalty body has horizontal overflow: {layout}"
+        )
+        assert len(layout["cards"]) == len(self.BENEFIT_CARDS)
+        for box in layout["cards"]:
+            assert box["width"] > 0 and box["height"] > 0
+            assert box["left"] >= 0 and box["right"] <= layout["viewportWidth"], (
+                f"A {account_state} Loyalty card is clipped: {box}"
+            )
+
     def verify_member_state(self, expected_welcome, expected_assets):
         self.verify_page_content()
         self._verify_sat_pro_link()
@@ -294,8 +329,26 @@ class LoyaltyProgramPage:
             [self.UNLOCK_ASSET] * 3 + [self.LOCK_ASSET],
         )
 
+    def verify_mobile_master_level_three_state(self):
+        self.verify_page_content()
+        welcome = self.page.locator("h2.login-sat-user:visible")
+        welcome.wait_for(state="visible")
+        assert self._normalized_text(welcome) == self.MASTER_WELCOME
+        self._assert_card_lock_states(
+            [self.UNLOCK_ASSET] * 3 + [self.LOCK_ASSET]
+        )
+        self._verify_mobile_member_layout("Master Level 3")
+
     def verify_sat_pro_member_state(self):
         self.verify_member_state(
             self.PRO_WELCOME,
             [self.UNLOCK_ASSET] * 4,
         )
+
+    def verify_mobile_sat_pro_member_state(self):
+        self.verify_page_content()
+        welcome = self.page.locator("h2.login-sat-user:visible")
+        welcome.wait_for(state="visible")
+        assert self._normalized_text(welcome) == self.PRO_WELCOME
+        self._assert_card_lock_states([self.UNLOCK_ASSET] * 4)
+        self._verify_mobile_member_layout("SAT Pro")

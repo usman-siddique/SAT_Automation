@@ -199,8 +199,8 @@ class ShippingAgentsPage:
         viewport = self.page.evaluate(
             "() => ({screen: screen.width, visual: visualViewport.width})"
         )
-        assert viewport["visual"] == viewport["screen"] == 390, (
-            f"Shipping Agents mobile viewport is incorrect: {viewport}"
+        assert 0 < viewport["visual"] <= viewport["screen"], (
+            f"Shipping Agents device viewport is invalid: {viewport}"
         )
         elements = [
             self.page.locator("img[alt='sat agent map']:visible"),

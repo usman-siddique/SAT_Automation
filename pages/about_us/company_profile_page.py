@@ -354,8 +354,8 @@ class CompanyProfilePage:
                 bodyWidth: document.body.scrollWidth
             })"""
         )
-        assert layout["viewportWidth"] == 390, (
-            f"Unexpected Company Profile mobile viewport: {layout}"
+        assert layout["viewportWidth"] > 0, (
+            f"Invalid Company Profile mobile viewport: {layout}"
         )
         assert layout["documentWidth"] <= layout["viewportWidth"], (
             f"Company Profile has page-level horizontal overflow: {layout}"
@@ -399,7 +399,11 @@ class CompanyProfilePage:
             f"Expected {len(self.COMPANY_MILESTONES)} mobile milestones, found "
             f"{timeline_cards.count()}"
         )
-        self._assert_mobile_cards_fit(timeline_cards, "milestone")
+        self._assert_mobile_cards_fit(
+            timeline_cards,
+            "milestone",
+            layout["viewportWidth"],
+        )
 
         service_cards = self.page.locator(
             ".key-services-offered .company-key-services-crd:visible"
@@ -407,7 +411,11 @@ class CompanyProfilePage:
         assert service_cards.count() == len(self.COMPANY_SERVICES), (
             "Company service cards are missing on mobile"
         )
-        self._assert_mobile_cards_fit(service_cards, "service")
+        self._assert_mobile_cards_fit(
+            service_cards,
+            "service",
+            layout["viewportWidth"],
+        )
 
         value_cards = self.page.locator(
             ".core-values-company .core-value-card:visible"
@@ -415,10 +423,14 @@ class CompanyProfilePage:
         assert value_cards.count() == len(self.COMPANY_VALUES), (
             "Company core-value cards are missing on mobile"
         )
-        self._assert_mobile_cards_fit(value_cards, "core-value")
+        self._assert_mobile_cards_fit(
+            value_cards,
+            "core-value",
+            layout["viewportWidth"],
+        )
 
     @staticmethod
-    def _assert_mobile_cards_fit(cards, label):
+    def _assert_mobile_cards_fit(cards, label, viewport_width):
         boxes = cards.evaluate_all(
             """elements => elements.map(element => {
                 const box = element.getBoundingClientRect();
@@ -426,7 +438,10 @@ class CompanyProfilePage:
             })"""
         )
         for box in boxes:
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box["x"] >= 0
+                and box["x"] + box["width"] <= viewport_width
+            ), (
                 f"Company {label} card extends outside the mobile viewport: {box}"
             )
         ordered = sorted(boxes, key=lambda box: box["y"])

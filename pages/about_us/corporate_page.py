@@ -192,7 +192,11 @@ class CorporatePage:
         assert not failures, f"{label} link failures:\n- " + "\n- ".join(failures)
 
     @staticmethod
-    def _assert_mobile_elements_fit_without_overlap(elements, label):
+    def _assert_mobile_elements_fit_without_overlap(
+        elements,
+        label,
+        viewport_width,
+    ):
         boxes = elements.evaluate_all(
             """elements => elements.map(element => {
                 const box = element.getBoundingClientRect();
@@ -205,7 +209,10 @@ class CorporatePage:
             })"""
         )
         for box in boxes:
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box["x"] >= 0
+                and box["x"] + box["width"] <= viewport_width
+            ), (
                 f"Corporate {label} extends outside the mobile viewport: {box}"
             )
 
@@ -366,8 +373,8 @@ class CorporatePage:
                 bodyWidth: document.body.scrollWidth
             })"""
         )
-        assert layout["viewportWidth"] == 390, (
-            f"Unexpected Corporate mobile viewport: {layout}"
+        assert layout["viewportWidth"] > 0, (
+            f"Invalid Corporate mobile viewport: {layout}"
         )
         assert layout["documentWidth"] <= layout["viewportWidth"], (
             f"Corporate has page-level horizontal overflow: {layout}"
@@ -396,19 +403,28 @@ class CorporatePage:
         self._assert_mobile_elements_fit_without_overlap(
             corporate_cards,
             "navigation cards",
+            layout["viewportWidth"],
         )
 
         blog_cards = self.page.locator("a.car-talks-card:visible")
         assert blog_cards.count() == 5, (
             f"Expected five mobile Corporate blog cards, found {blog_cards.count()}"
         )
-        self._assert_mobile_elements_fit_without_overlap(blog_cards, "blog cards")
+        self._assert_mobile_elements_fit_without_overlap(
+            blog_cards,
+            "blog cards",
+            layout["viewportWidth"],
+        )
 
         review_cards = self.page.locator("article.cr-card:visible")
         assert review_cards.count() == 3, (
             "Corporate review previews are missing on mobile"
         )
-        self._assert_mobile_elements_fit_without_overlap(review_cards, "review cards")
+        self._assert_mobile_elements_fit_without_overlap(
+            review_cards,
+            "review cards",
+            layout["viewportWidth"],
+        )
 
         self._assert_lazy_images_loaded(
             self.page.locator(

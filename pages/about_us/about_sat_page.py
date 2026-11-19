@@ -324,8 +324,8 @@ class AboutSatPage:
                 bodyWidth: document.body.scrollWidth
             })"""
         )
-        assert layout["viewportWidth"] == 390, (
-            f"Unexpected mobile viewport width: {layout['viewportWidth']}"
+        assert layout["viewportWidth"] > 0, (
+            f"Mobile viewport width is invalid: {layout['viewportWidth']}"
         )
         assert layout["documentWidth"] <= layout["viewportWidth"], (
             f"Page has horizontal overflow: {layout}"
@@ -349,12 +349,22 @@ class AboutSatPage:
         ]
         boxes = [card.bounding_box() for card in cards]
         assert all(boxes), "A Mission, Vision, or Values card has no mobile layout box"
-        for current, following in zip(boxes, boxes[1:]):
-            assert current["y"] + current["height"] <= following["y"], (
-                "Mission, Vision, and Values cards overlap on mobile"
-            )
+        for index, current in enumerate(boxes):
+            for following in boxes[index + 1:]:
+                overlaps = not (
+                    current["x"] + current["width"] <= following["x"]
+                    or following["x"] + following["width"] <= current["x"]
+                    or current["y"] + current["height"] <= following["y"]
+                    or following["y"] + following["height"] <= current["y"]
+                )
+                assert not overlaps, (
+                    "Mission, Vision, and Values cards overlap on mobile"
+                )
         for box in boxes:
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box["x"] >= 0
+                and box["x"] + box["width"] <= layout["viewportWidth"]
+            ), (
                 f"Mission card extends outside the mobile viewport: {box}"
             )
 
@@ -373,7 +383,10 @@ class AboutSatPage:
                 "Mobile footer accordion rows overlap"
             )
         for box in footer_boxes:
-            assert box["x"] >= 0 and box["x"] + box["width"] <= 390, (
+            assert (
+                box["x"] >= 0
+                and box["x"] + box["width"] <= layout["viewportWidth"]
+            ), (
                 f"Mobile footer row extends outside the viewport: {box}"
             )
 
