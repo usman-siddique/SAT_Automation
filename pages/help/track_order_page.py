@@ -33,7 +33,7 @@ class TrackOrderPage:
             "submit_visible": submit_button.is_visible(),
         }
 
-    def get_client_validation(self, order_id, email):
+    def get_client_validation(self, order_id, email, click_count=1):
         submission_requests = []
 
         def record_submission(request):
@@ -49,7 +49,7 @@ class TrackOrderPage:
             self.page.locator("input[name='email']").fill(email)
             self.page.get_by_role(
                 "button", name="Submit", exact=True
-            ).click()
+            ).click(click_count=click_count)
             self.page.wait_for_timeout(200)
 
             return {

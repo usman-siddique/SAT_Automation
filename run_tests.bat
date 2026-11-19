@@ -84,10 +84,11 @@ echo 10. Choose multiple test groups to run (or enter 3,4,5 directly)
 echo 11. Run Dealer checks (no submission)
 echo 12. Run full Dealer flow (creates records)
 echo 13. Run Seller Registration flow (creates one record)
-echo 14. Exit
+echo 14. Run mobile Help checks (iPhone + Pixel, no submissions)
+echo 15. Exit
 echo.
 set "MULTI_CHOICES="
-set /p choice="Enter one choice (1-14) or multiple groups (example 3,4,5): "
+set /p choice="Enter one choice (1-15) or multiple groups (example 3,4,5): "
 
 if not "!choice:,=!"=="!choice!" (
     set "MULTI_CHOICES=!choice!"
@@ -107,7 +108,8 @@ if "%choice%"=="10" goto multiple_tests
 if "%choice%"=="11" goto dealer_checks
 if "%choice%"=="12" goto dealer_full
 if "%choice%"=="13" goto seller_registration
-if "%choice%"=="14" goto end
+if "%choice%"=="14" goto mobile_help
+if "%choice%"=="15" goto end
 
 echo Invalid test selection. No tests were started.
 goto end
@@ -176,6 +178,15 @@ echo Parallel execution and reruns are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/help/test_seller_registration.py %PYTEST_ARGS% --force-reruns 0
+goto report
+
+:mobile_help
+echo Running mobile Help checks on iPhone 13 and Pixel 5 profiles...
+echo Form submissions remain invalid or blocked; no records are created.
+echo Reruns are disabled.
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/help/test_mobile_help.py %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :used_car_buy_flow

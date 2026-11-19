@@ -93,6 +93,24 @@ class DealerPage:
         ).wait_for(state="visible")
         return self
 
+    def click_create_next_without_server_write(self, click_count=1):
+        attempts = []
+
+        def block_submission(route):
+            attempts.append(route.request)
+            route.abort()
+
+        pattern = "**/dealers/dealer-signup-process*"
+        self.page.route(pattern, block_submission)
+        try:
+            self.wait_for_create_account_next().click(
+                click_count=click_count
+            )
+            self.page.wait_for_timeout(300)
+        finally:
+            self.page.unroute(pattern, block_submission)
+        return attempts
+
     def get_email_validation_message(self):
         field = self._create_form().locator("#dealer-email")
         return field.evaluate("element => element.validationMessage")

@@ -97,10 +97,12 @@ class SellerRegistrationPage:
             self.page.remove_listener("request", capture)
         return posts
 
-    def continue_without_submission(self):
+    def continue_without_submission(self, click_count=1):
         section = self._active_section()
         posts = self._capture_post_while(
-            lambda: section.locator("[data-step-continue]").click()
+            lambda: section.locator("[data-step-continue]").click(
+                click_count=click_count
+            )
         )
         return {
             "step": self.get_active_step(),
@@ -108,10 +110,12 @@ class SellerRegistrationPage:
             "post_count": len(posts),
         }
 
-    def submit_invalid_without_server_write(self):
+    def submit_invalid_without_server_write(self, click_count=1):
         section = self._active_section()
         posts = self._capture_post_while(
-            lambda: section.locator("[data-step-submit]").click()
+            lambda: section.locator("[data-step-submit]").click(
+                click_count=click_count
+            )
         )
         return {
             "step": self.get_active_step(),

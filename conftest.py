@@ -8,7 +8,7 @@ from pathlib import Path
 import allure
 import pytest
 from allure_commons.types import AttachmentType
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error as PlaywrightError, sync_playwright
 
 from config import (
     BASE_URL,
@@ -189,21 +189,33 @@ def _context_options():
 
 
 @pytest.fixture(scope="session")
-def browser():
+def playwright_instance():
+    """Keep Playwright available for named desktop and mobile contexts."""
+    with sync_playwright() as playwright:
+        yield playwright
+
+
+@pytest.fixture(scope="session")
+def browser(playwright_instance):
     """Launch one browser per pytest worker; role contexts remain isolated."""
     headless = os.getenv("HEADLESS", "false").lower() == "true"
     browser_name = os.getenv("BROWSER", "chromium").lower()
 
-    with sync_playwright() as playwright:
-        if browser_name == "firefox":
-            launched_browser = playwright.firefox.launch(headless=headless)
-        elif browser_name == "webkit":
-            launched_browser = playwright.webkit.launch(headless=headless)
-        else:
-            launched_browser = playwright.chromium.launch(headless=headless)
+    if browser_name == "firefox":
+        launched_browser = playwright_instance.firefox.launch(
+            headless=headless
+        )
+    elif browser_name == "webkit":
+        launched_browser = playwright_instance.webkit.launch(
+            headless=headless
+        )
+    else:
+        launched_browser = playwright_instance.chromium.launch(
+            headless=headless
+        )
 
-        yield launched_browser
-        launched_browser.close()
+    yield launched_browser
+    launched_browser.close()
 
 
 @pytest.fixture(scope="session")
@@ -408,6 +420,55 @@ def page_no_login(browser, request):
         anonymous_context.close()
 
 
+@pytest.fixture(
+    scope="function",
+    params=("iPhone 13", "Pixel 5"),
+    ids=("iphone-13", "pixel-5"),
+)
+def mobile_page(browser, playwright_instance, request):
+    """Fresh anonymous page using Playwright's real mobile device profiles."""
+    device_name = request.param
+    mobile_context = browser.new_context(
+        **playwright_instance.devices[device_name]
+    )
+    pg = _prepare_page(mobile_context.new_page(), request)
+    allure.dynamic.parameter("mobile_device", device_name)
+
+    try:
+        last_error = "unknown mobile homepage error"
+        for attempt in range(1, 4):
+            try:
+                response = pg.goto(
+                    BASE_URL,
+                    wait_until="domcontentloaded",
+                    timeout=60000,
+                )
+                if response is not None and response.status >= 500:
+                    raise AssertionError(
+                        f"Mobile homepage returned HTTP {response.status}."
+                    )
+                pg.locator("#navbar_mobile_header").wait_for(
+                    state="visible",
+                    timeout=10000,
+                )
+                break
+            except (PlaywrightError, AssertionError) as error:
+                last_error = str(error)
+                if attempt == 3:
+                    raise AssertionError(
+                        f"{BASE_URL} did not return a usable mobile homepage "
+                        f"after 3 attempts. Last error: {last_error}"
+                    ) from error
+        yield pg
+    except Exception:
+        _attach_browser_evidence(request.node, pg, "setup")
+        raise
+    finally:
+        if not pg.is_closed():
+            pg.close()
+        mobile_context.close()
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Attach browser evidence for setup, test, and teardown failures."""
@@ -423,6 +484,7 @@ def pytest_runtest_makereport(item, call):
             or item.funcargs.get("loyalty_master_page")
             or item.funcargs.get("loyalty_pro_page")
             or item.funcargs.get("page_no_login")
+            or item.funcargs.get("mobile_page")
             or getattr(item, "_sat_active_page", None)
         )
         _attach_browser_evidence(item, active_page, report.when)

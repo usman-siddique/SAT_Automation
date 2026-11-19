@@ -143,7 +143,11 @@ class VehicleInformationRequestPage:
             )
         }
 
-    def submit_invalid_without_server_write(self, field_names):
+    def submit_invalid_without_server_write(
+        self,
+        field_names,
+        click_count=1,
+    ):
         form = self._form()
         submission_requests = []
 
@@ -160,7 +164,7 @@ class VehicleInformationRequestPage:
 
         self.page.route("**/store-request-a-car", block_submission)
         try:
-            self._submit_button().click()
+            self._submit_button().click(click_count=click_count)
             self.page.wait_for_timeout(250)
             validation = {
                 field_name: form.locator(

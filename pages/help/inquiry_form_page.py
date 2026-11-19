@@ -137,7 +137,7 @@ class InquiryFormPage:
         )
         return result
 
-    def submit_and_get_validation(self, field_names):
+    def submit_and_get_validation(self, field_names, click_count=1):
         unsupported = set(field_names) - set(self.VALIDATION_ERRORS)
         if unsupported:
             raise ValueError(
@@ -158,7 +158,7 @@ class InquiryFormPage:
 
         self.page.route("**/store-inquiry", block_submission)
         try:
-            self._submit_button().click()
+            self._submit_button().click(click_count=click_count)
             messages = {}
             for field_name in field_names:
                 error = self._form().locator(

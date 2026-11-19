@@ -143,7 +143,13 @@ class FaqPage:
             ).is_visible(),
         }
 
-    def get_question_form_validation(self, question, name, email):
+    def get_question_form_validation(
+        self,
+        question,
+        name,
+        email,
+        click_count=1,
+    ):
         form = self.page.locator("form[action$='/faq-store']")
         submission_requests = []
 
@@ -161,7 +167,7 @@ class FaqPage:
             form.locator("input[name='email']").fill(email)
             form.get_by_role(
                 "button", name="Send Question", exact=True
-            ).click()
+            ).click(click_count=click_count)
             self.page.wait_for_timeout(200)
 
             field_states = {}
