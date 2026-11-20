@@ -2,6 +2,8 @@
 
 from urllib.parse import urlparse
 
+from pages.car_services.image_assertions import assert_image_loaded
+
 
 class StorageServicePage:
     COUNTRIES = [
@@ -96,9 +98,11 @@ class StorageServicePage:
             first_period_icon = cells.nth(1).locator("img.check-icon")
             icon_loaded = False
             if first_period_icon.count():
-                icon_loaded = first_period_icon.evaluate(
-                    "image => image.complete && image.naturalWidth > 0"
+                assert_image_loaded(
+                    first_period_icon,
+                    f"{self._clean(cells.nth(0).inner_text())} fee icon",
                 )
+                icon_loaded = True
             records.append(
                 {
                     "country": self._clean(cells.nth(0).inner_text()),
@@ -125,12 +129,11 @@ class StorageServicePage:
             ).all_inner_texts()
         ]
         assert texts == self.BENEFITS
-        assert all(
-            cards.nth(index).locator("img").evaluate(
-                "image => image.complete && image.naturalWidth > 0"
+        for index in range(cards.count()):
+            assert_image_loaded(
+                cards.nth(index).locator("img"),
+                f"Storage benefit icon {index + 1}",
             )
-            for index in range(cards.count())
-        ), "One or more Storage benefit icons failed to load."
         return texts
 
     def verify_use_cases(self):
@@ -146,10 +149,9 @@ class StorageServicePage:
             ).all_inner_texts()
         ]
         assert texts == self.USE_CASES
-        assert all(
-            cards.nth(index).locator("img").evaluate(
-                "image => image.complete && image.naturalWidth > 0"
+        for index in range(cards.count()):
+            assert_image_loaded(
+                cards.nth(index).locator("img"),
+                f"Storage use-case image {index + 1}",
             )
-            for index in range(cards.count())
-        ), "One or more Storage use-case images failed to load."
         return texts

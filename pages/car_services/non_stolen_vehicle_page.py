@@ -2,6 +2,8 @@
 
 from urllib.parse import urlparse
 
+from pages.car_services.image_assertions import assert_image_loaded
+
 
 class NonStolenVehiclePage:
     PROCESS_STEPS = [
@@ -36,9 +38,7 @@ class NonStolenVehiclePage:
 
     @staticmethod
     def _assert_image_loaded(image, description):
-        assert image.evaluate(
-            "element => element.complete && element.naturalWidth > 0"
-        ), f"{description} failed to load."
+        assert_image_loaded(image, description)
 
     @property
     def modal(self):
@@ -221,44 +221,79 @@ class NonStolenVehiclePage:
             "sessionStorage.removeItem('payment_succeeded')"
         )
 
-        with self.page.expect_response(
-            lambda response: (
-                "/non_stolen/stripe-payment-intent" in response.url
-                and response.request.method == "POST"
-            ),
-            timeout=90000,
-        ) as intent_info:
+        intent_capture = {}
+        submission_capture = {}
+        intent_pattern = "**/non_stolen/stripe-payment-intent*"
+        submission_pattern = "**/non_stolen/non-stolen-credit-card*"
+
+        def capture_json_response(route, request, capture):
+            if request.method != "POST":
+                route.continue_()
+                return
+            upstream = route.fetch()
+            capture["http_status"] = upstream.status
+            capture["payload"] = upstream.json()
+            route.fulfill(response=upstream)
+
+        def capture_intent(route, request):
+            capture_json_response(route, request, intent_capture)
+
+        def capture_submission(route, request):
+            capture_json_response(route, request, submission_capture)
+
+        # Capture the response before the success handler reloads the page.
+        # route.fetch sends the original request once; fulfill reuses that
+        # response and does not create a duplicate payment.
+        self.page.route(intent_pattern, capture_intent)
+        self.page.route(submission_pattern, capture_submission)
+
+        try:
             with self.page.expect_response(
                 lambda response: (
-                    "/non_stolen/non-stolen-credit-card" in response.url
+                    "/non_stolen/stripe-payment-intent" in response.url
                     and response.request.method == "POST"
                 ),
                 timeout=90000,
-            ) as submission_info:
-                self.modal.locator("#submitNonStolen").click()
+            ):
+                with self.page.expect_response(
+                    lambda response: (
+                        "/non_stolen/non-stolen-credit-card" in response.url
+                        and response.request.method == "POST"
+                    ),
+                    timeout=90000,
+                ):
+                    self.modal.locator("#submitNonStolen").click()
+        finally:
+            self.page.unroute(intent_pattern, capture_intent)
+            self.page.unroute(submission_pattern, capture_submission)
 
-        intent_response = intent_info.value
-        submission_response = submission_info.value
-        assert intent_response.ok, (
+        assert "payload" in intent_capture, (
+            "Stripe payment-intent response was not captured before reload."
+        )
+        assert "payload" in submission_capture, (
+            "Non-Stolen submission response was not captured before reload."
+        )
+
+        assert 200 <= intent_capture["http_status"] < 300, (
             "Stripe payment-intent request failed with HTTP "
-            f"{intent_response.status}."
+            f"{intent_capture['http_status']}."
         )
-        assert submission_response.ok, (
+        assert 200 <= submission_capture["http_status"] < 300, (
             "Non-Stolen submission failed with HTTP "
-            f"{submission_response.status}."
+            f"{submission_capture['http_status']}."
         )
 
-        intent_payload = intent_response.json()
+        intent_payload = intent_capture["payload"]
+        assert isinstance(intent_payload, dict), intent_payload
         assert intent_payload.get("status") is True, intent_payload
-        # A successful final response immediately reloads the page. Reading its
-        # JSON afterward is unreliable because Chromium releases the response
-        # body during that navigation. The hidden modal proves the success
-        # branch ran; a rejected response leaves the modal open with a toast.
+        submission_payload = submission_capture["payload"]
+        assert isinstance(submission_payload, dict), submission_payload
+        assert submission_payload.get("status") is True, submission_payload
         self.modal.wait_for(state="hidden", timeout=30000)
         return {
             "intent_status": intent_payload["status"],
-            "submission_status": True,
-            "submission_http_status": submission_response.status,
+            "submission_status": submission_payload["status"],
+            "submission_http_status": submission_capture["http_status"],
             "page_url": self.page.url,
         }
 

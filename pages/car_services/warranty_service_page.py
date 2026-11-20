@@ -2,6 +2,8 @@
 
 from urllib.parse import urlparse
 
+from pages.car_services.image_assertions import assert_image_loaded
+
 
 class WarrantyServicePage:
     COVERAGE_ITEMS = [
@@ -79,12 +81,11 @@ class WarrantyServicePage:
         ]
         assert card_texts == self.COVERAGE_ITEMS
         assert cards.count() == len(self.COVERAGE_ITEMS)
-        assert all(
-            cards.nth(index).locator("img").evaluate(
-                "image => image.complete && image.naturalWidth > 0"
+        for index in range(cards.count()):
+            assert_image_loaded(
+                cards.nth(index).locator("img"),
+                f"Warranty coverage icon {index + 1}",
             )
-            for index in range(cards.count())
-        ), "One or more Warranty coverage icons failed to load."
         return card_texts
 
     def verify_coverage_limits(self):
@@ -167,18 +168,19 @@ class WarrantyServicePage:
             "heading", name="Frequently Asked Questions", exact=True
         )
         faq_heading.scroll_into_view_if_needed()
-        buttons = self.page.locator(
-            "button.accordion-button[data-bs-target^='#flush-collapse']:visible"
-        )
-        assert buttons.count() == len(self.FAQ_QUESTIONS), (
-            f"Expected {len(self.FAQ_QUESTIONS)} visible Warranty FAQs, "
-            f"found {buttons.count()}."
-        )
-
         questions = []
         answers = []
-        for index in range(buttons.count()):
-            button = buttons.nth(index)
+        for index, expected_question in enumerate(self.FAQ_QUESTIONS):
+            buttons = self.page.get_by_role(
+                "button",
+                name=expected_question,
+                exact=True,
+            ).filter(visible=True)
+            assert buttons.count() == 1, (
+                f"Expected one visible Warranty FAQ for {expected_question!r}, "
+                f"found {buttons.count()}."
+            )
+            button = buttons.first
             questions.append(" ".join(button.inner_text().split()))
             target = button.get_attribute("data-bs-target")
             assert target, "Warranty FAQ button has no answer target."

@@ -7,7 +7,7 @@ stock ID elsewhere.
 
 
 STOCK_IDS = {
-    "auction_calculator": "SAT-19695181",
+    "auction_calculator": "SAT-72073082",
     "non_stolen_vehicle": "SAT-58989252",
     "invalid": "INVALID-ID-12345",
 }

@@ -306,6 +306,128 @@ class AuctionServicePage:
             ],
         }
 
+    def _estimate_opens(self):
+        try:
+            with self.page.expect_popup(timeout=3000) as popup_info:
+                self.page.locator("#downloadEstimate").click()
+        except PlaywrightTimeoutError:
+            return False
+
+        popup = popup_info.value
+        popup.close()
+        return True
+
+    def verify_unknown_stock_blocks_estimate(self, stock_id):
+        stock_input = self.page.locator("#stock_id")
+        stock_input.fill(stock_id)
+        stock_input.dispatch_event("keyup")
+        stock_input.dispatch_event("change")
+        self.page.wait_for_function(
+            """() => Array.from(document.querySelectorAll('body *')).some(
+                element => element.textContent.trim() === 'Auction car not found' &&
+                    getComputedStyle(element).display !== 'none' &&
+                    getComputedStyle(element).visibility !== 'hidden'
+            )""",
+            timeout=25000,
+        )
+        message = self.page.get_by_text(
+            "Auction car not found", exact=True
+        ).filter(visible=True).first
+        assert not self.page.locator("#car_id").input_value().strip()
+        return {
+            "message": message.inner_text().strip(),
+            "estimate_generated": self._estimate_opens(),
+        }
+
+    def verify_missing_destinations_block_estimate(
+        self,
+        stock_id,
+        country,
+        port,
+    ):
+        self.load_stock_data(stock_id, country, port)
+        country_value = self.page.locator("#destination_country_val")
+        port_value = self.page.locator("#destination_port_val")
+        original_country = country_value.input_value()
+        original_port = port_value.input_value()
+        assert original_country and original_port
+
+        def set_hidden_value(locator, value):
+            locator.evaluate(
+                """(element, nextValue) => {
+                    element.value = nextValue;
+                    element.dispatchEvent(new Event('input', {bubbles: true}));
+                    element.dispatchEvent(new Event('change', {bubbles: true}));
+                }""",
+                value,
+            )
+
+        results = {}
+        try:
+            set_hidden_value(country_value, "")
+            results["missing_country"] = self._estimate_opens()
+
+            set_hidden_value(country_value, original_country)
+            set_hidden_value(port_value, "")
+            results["missing_port"] = self._estimate_opens()
+        finally:
+            set_hidden_value(country_value, original_country)
+            set_hidden_value(port_value, original_port)
+        return results
+
+    def verify_bid_boundaries(self, stock_id, country, port):
+        data = self.load_stock_data(stock_id, country, port)
+        bid = self.page.locator("#bidInput")
+        original_bid = bid.input_value()
+        invalid_results = {}
+
+        try:
+            for label, value in (
+                ("empty", ""),
+                ("zero", "0"),
+                ("negative", "-1"),
+            ):
+                bid.fill(value)
+                bid.dispatch_event("change")
+                bid.blur()
+                self.page.wait_for_timeout(300)
+                invalid_results[label] = {
+                    "estimate_generated": self._estimate_opens(),
+                    "bid_amount": self.page.locator(
+                        "#bidAmount"
+                    ).inner_text().strip(),
+                    "totals": self.page.locator(
+                        ".total_price_of_bid"
+                    ).all_inner_texts(),
+                }
+
+            bid.fill("1")
+            bid.dispatch_event("change")
+            bid.blur()
+            self.page.wait_for_function(
+                "() => document.querySelector('#bidAmount')?.textContent.trim() === '1'"
+            )
+            minimum_total = self._money(
+                self.page.locator(".total_price_of_bid").first.inner_text(),
+                optional=True,
+            )
+            minimum_result = {
+                "bid_amount": self._money(
+                    self.page.locator("#bidAmount").inner_text()
+                ),
+                "total": minimum_total,
+                "estimate_generated": self._estimate_opens(),
+            }
+        finally:
+            bid.fill(original_bid)
+            bid.dispatch_event("change")
+
+        return {
+            "initial_bid": data["bid_input"],
+            "invalid": invalid_results,
+            "minimum": minimum_result,
+        }
+
     @staticmethod
     def _display_money(amount):
         return f"${amount:,.0f}"

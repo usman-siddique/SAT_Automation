@@ -2,6 +2,8 @@
 
 from urllib.parse import urlparse
 
+from pages.car_services.image_assertions import assert_image_loaded
+
 
 class CustomsClearancePage:
     BENEFITS = [
@@ -33,9 +35,7 @@ class CustomsClearancePage:
 
     @staticmethod
     def _assert_image_loaded(image, description):
-        assert image.evaluate(
-            "element => element.complete && element.naturalWidth > 0"
-        ), f"{description} failed to load."
+        assert_image_loaded(image, description)
 
     def verify_overview(self):
         heading = self.page.get_by_role(

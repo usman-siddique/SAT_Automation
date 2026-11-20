@@ -248,6 +248,13 @@ pytest tests/car_services/ -v -s --force-reruns 0
 
 This module creates one Non-Stolen Vehicle test-payment record on Development.
 Run it sequentially with reruns disabled.
+
+To run only the non-destructive Car Services mobile-web checks with Playwright's
+iPhone 13 profile at 390 x 844:
+
+```powershell
+pytest tests/car_services/test_mobile_car_services.py -v -s --force-reruns 0
+```
 #### Help module
 ```
 pytest tests/help/ -v -s --force-reruns 0
@@ -273,7 +280,7 @@ pytest tests/about_us/ -k "mobile" -v -s --force-reruns 0
 
 The Windows menu provides all-suite and module-specific choices:
 
-- **1:** All 153 tests, run sequentially with automatic reruns disabled
+- **1:** All 161 tests, run sequentially with automatic reruns disabled
 - **2:** Sell My Car
 - **3:** Car Services, including one Development Non-Stolen test payment
 - **4:** About Us, including Corporate, Customer Reviews, and Security Export Control
@@ -288,6 +295,7 @@ The Windows menu provides all-suite and module-specific choices:
 - **13:** Seller Registration flow, which creates one record
 - **14:** Mobile Help checks on iPhone 13 and Pixel 5 profiles without record creation
 - **15:** Mobile About Us checks on named phone and tablet profiles without payments or membership cancellation
+- **16:** Mobile Car Services checks at 390 x 844 without payment submission
 
 For example, choose option **10** and enter `2,5,6` to run Sell My Car,
 Help, and User Used Car Buy Now tests in one pytest session and
@@ -317,17 +325,17 @@ paths and page objects are used for either domain.
 | Module | Tests | Description |
 |--------|-------|-------------|
 | **Sell My Car** | 7 | Price quote, 2 active data-driven List on SAT cases, auction, and negative validation tests |
-| **Car Services** | 30 | Auction calculator and estimate, schedules, service content, PDF download, and positive/negative Non-Stolen payment coverage |
+| **Car Services** | 38 | Desktop and 390 x 844 mobile navigation/layout, Auction boundaries, schedules, FAQs, PDF actions, and positive/negative Non-Stolen coverage |
 | **About Us** | 57 | Desktop plus named iPhone, Pixel, Galaxy, iPad, and landscape coverage, including authenticated Loyalty states and safe SAT Pro payment/membership controls |
 | **Help** | 54 | Desktop and mobile Help navigation, all destinations, responsive form/layout checks on iPhone and Pixel, Dealer flows, Seller and inquiry/request validation, and order tracking |
 | **Buy Flow (End‑to‑End)** | 3 | Independent Used Car Paygent, Bank Transfer, and PayPal flows |
 | **Reservation** | 2 | Priced/no-Ask PDF invoice flow plus ASK/Invoice Pending flow |
-| **Total** | **153** | |
+| **Total** | **161** | |
 
 ### Module Breakdown
 
 - **Sell My Car:** 7 tests
-- **Car Services:** 30 tests
+- **Car Services:** 38 tests
 - **About Us:** 57 tests
 - **Help:** 54 tests
 - **Buy Flow (End‑to‑End):** 3 tests

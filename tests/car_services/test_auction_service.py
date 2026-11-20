@@ -156,3 +156,63 @@ def test_auction_cost_calculator_auto_fetch_and_estimate(page):
             "amounts_visible": True,
             "pdf_action_working": True,
         }
+
+
+def test_auction_calculator_unknown_stock_and_missing_destinations(
+    page_no_login,
+):
+    auction = open_auction_service(page_no_login)
+    auction.open_cost_calculator()
+
+    with allure.step("Reject an unknown stock without generating an estimate"):
+        invalid = auction.verify_unknown_stock_blocks_estimate(
+            "SAT-72073083"
+        )
+        assert invalid == {
+            "message": "Auction car not found",
+            "estimate_generated": False,
+        }
+
+    with allure.step("Reject missing country and port estimate states"):
+        page_no_login.reload(wait_until="domcontentloaded")
+        page_no_login.get_by_role(
+            "heading", name="Auction Cost Calculator", exact=True
+        ).wait_for(state="visible")
+        missing = auction.verify_missing_destinations_block_estimate(
+            AUCTION_CALCULATOR_STOCK_ID,
+            AUCTION_CALCULATOR_COUNTRY,
+            AUCTION_CALCULATOR_PORT,
+        )
+        assert missing == {
+            "missing_country": False,
+            "missing_port": False,
+        }
+
+
+def test_auction_calculator_bid_boundaries_block_invalid_estimates(
+    page_no_login,
+):
+    auction = open_auction_service(page_no_login)
+    auction.open_cost_calculator()
+
+    with allure.step("Reject empty, zero, and negative bid estimates"):
+        result = auction.verify_bid_boundaries(
+            AUCTION_CALCULATOR_STOCK_ID,
+            AUCTION_CALCULATOR_COUNTRY,
+            AUCTION_CALCULATOR_PORT,
+        )
+        failures = {
+            state: details
+            for state, details in result["invalid"].items()
+            if details["estimate_generated"]
+        }
+        assert not failures, (
+            "Invalid bid states generated auction estimates: "
+            f"{failures}"
+        )
+
+    with allure.step("Accept the minimum positive bid boundary"):
+        assert result["minimum"]["bid_amount"] == Decimal("1")
+        assert result["minimum"]["total"] is not None
+        assert result["minimum"]["total"] > Decimal("1")
+        assert result["minimum"]["estimate_generated"] is True

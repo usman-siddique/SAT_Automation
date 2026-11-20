@@ -3,6 +3,8 @@
 from pathlib import Path
 from urllib.parse import urlparse
 
+from pages.car_services.image_assertions import assert_image_loaded
+
 
 class PreExportInspectionPage:
     COVERAGE_ITEMS = [
@@ -41,9 +43,7 @@ class PreExportInspectionPage:
 
     @staticmethod
     def _assert_image_loaded(image, description):
-        assert image.evaluate(
-            "element => element.complete && element.naturalWidth > 0"
-        ), f"{description} failed to load."
+        assert_image_loaded(image, description)
 
     def verify_overview_and_refund_policy(self):
         hero_heading = self.page.get_by_role(
@@ -70,9 +70,14 @@ class PreExportInspectionPage:
             "compensated for the cost of all necessary repairs",
             "up to the full amount of the damages",
         )
-        assert all(
-            detail.lower() in body_text.lower()
+        missing_details = [
+            detail
             for detail in required_details
+            if detail.lower() not in body_text.lower()
+        ]
+        assert not missing_details, (
+            "Pre-Export Inspection is missing required visible content: "
+            + "; ".join(missing_details)
         )
 
         report_link = self.page.locator("a[download][href$='.pdf']")

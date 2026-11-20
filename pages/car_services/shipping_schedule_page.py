@@ -47,6 +47,37 @@ class ShippingSchedulePage:
             "controls_visible": True,
         }
 
+    def verify_mobile_page_contract(self):
+        self.page.wait_for_url("**/shipping-schedule*")
+        heading = self.page.locator("h1.title-page").first
+        heading.wait_for(state="visible")
+        required_controls = {
+            "departure port": "#select2-departure_port-container",
+            "region": "#select2-region-container",
+            "arrival port": "#select2-arrival_port-container",
+            "ship name": "#select2-ship_name-container",
+            "departure from": ".departure_date_from",
+            "departure to": ".departure_date_to",
+            "arrival from": ".arrival_date_from",
+            "arrival to": ".arrival_date_to",
+            "search": ".btn-search-filter",
+            "reset": ".btn-reset-filter",
+        }
+        missing = [
+            label
+            for label, selector in required_controls.items()
+            if not self.page.locator(selector).is_visible()
+        ]
+        assert not missing, (
+            "Mobile Shipping Schedule hides required filters/actions: "
+            + ", ".join(missing)
+        )
+        return {
+            "path": urlparse(self.page.url).path,
+            "heading": heading.inner_text().strip(),
+            "controls_visible": True,
+        }
+
     def get_filter_options(self, select_id):
         return [
             text.strip()

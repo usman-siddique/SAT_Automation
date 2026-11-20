@@ -2,6 +2,8 @@
 
 from urllib.parse import urlparse
 
+from pages.car_services.image_assertions import assert_image_loaded
+
 
 class FinanceServicePage:
     PROCESS_STEPS = [
@@ -53,9 +55,7 @@ class FinanceServicePage:
 
         banner = self.page.locator("img.fb__bg")
         banner.wait_for(state="visible")
-        assert banner.evaluate(
-            "image => image.complete && image.naturalWidth > 0"
-        ), "Finance Service banner failed to load."
+        assert_image_loaded(banner, "Finance Service banner")
 
         body_text = self._clean(self.page.locator("body").inner_text())
         assert "buying a car is not a small investment" in body_text
@@ -101,8 +101,9 @@ class FinanceServicePage:
                     card.locator(".finance-services-para").inner_text()
                 )
             )
-            assert card.locator("img").evaluate(
-                "image => image.complete && image.naturalWidth > 0"
+            assert_image_loaded(
+                card.locator("img"),
+                f"Finance process icon {len(headings)}",
             )
 
         assert headings == self.PROCESS_STEPS
@@ -140,8 +141,9 @@ class FinanceServicePage:
                     card.locator(".finance-services-para").inner_text()
                 )
             )
-            assert card.locator("img").evaluate(
-                "image => image.complete && image.naturalWidth > 0"
+            assert_image_loaded(
+                card.locator("img"),
+                f"Finance benefit icon {len(headings)}",
             )
 
         assert headings == self.BENEFITS

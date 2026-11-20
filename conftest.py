@@ -529,6 +529,34 @@ def mobile_page(browser, playwright_instance, request):
         mobile_context.close()
 
 
+@pytest.fixture(scope="function")
+def car_services_mobile_page(browser, playwright_instance, request):
+    """Anonymous iPhone 13 page with the required 390 x 844 viewport."""
+    device_name = "iPhone 13"
+    device = {
+        **playwright_instance.devices[device_name],
+        "viewport": {"width": 390, "height": 844},
+    }
+
+    mobile_context = browser.new_context(**device)
+    pg = _prepare_page(mobile_context.new_page(), request)
+    allure.dynamic.parameter("mobile_device", device_name)
+    try:
+        open_site_home(pg)
+        pg.locator("#navbar_mobile_header").wait_for(
+            state="visible",
+            timeout=10000,
+        )
+        yield pg
+    except Exception:
+        _attach_browser_evidence(request.node, pg, "setup")
+        raise
+    finally:
+        if not pg.is_closed():
+            pg.close()
+        mobile_context.close()
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Attach browser evidence for setup, test, and teardown failures."""

@@ -86,10 +86,11 @@ echo 12. Run full Dealer flow (creates records)
 echo 13. Run Seller Registration flow (creates one record)
 echo 14. Run mobile Help checks (iPhone + Pixel, no submissions)
 echo 15. Run mobile About Us checks (named phone/tablet profiles, safe)
-echo 16. Exit
+echo 16. Run mobile Car Services checks (390x844, no payments)
+echo 17. Exit
 echo.
 set "MULTI_CHOICES="
-set /p choice="Enter one choice (1-16) or multiple groups (example 3,4,5): "
+set /p choice="Enter one choice (1-17) or multiple groups (example 3,4,5): "
 
 if not "!choice:,=!"=="!choice!" (
     set "MULTI_CHOICES=!choice!"
@@ -111,7 +112,8 @@ if "%choice%"=="12" goto dealer_full
 if "%choice%"=="13" goto seller_registration
 if "%choice%"=="14" goto mobile_help
 if "%choice%"=="15" goto mobile_about_us
-if "%choice%"=="16" goto end
+if "%choice%"=="16" goto mobile_car_services
+if "%choice%"=="17" goto end
 
 echo Invalid test selection. No tests were started.
 goto end
@@ -198,6 +200,15 @@ echo Reruns and parallel execution are disabled.
 set HEADLESS=%HEADLESS%
 set BROWSER=%BROWSER%
 venv\Scripts\pytest tests/about_us/ -k "mobile" %PYTEST_ARGS% --force-reruns 0
+goto report
+
+:mobile_car_services
+echo Running mobile Car Services checks at 390x844...
+echo Payment submission is excluded; only safe responsive flows are exercised.
+echo Reruns and parallel execution are disabled.
+set HEADLESS=%HEADLESS%
+set BROWSER=%BROWSER%
+venv\Scripts\pytest tests/car_services/test_mobile_car_services.py %PYTEST_ARGS% --force-reruns 0
 goto report
 
 :used_car_buy_flow
